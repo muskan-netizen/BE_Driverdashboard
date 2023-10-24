@@ -4861,7 +4861,7 @@ class TaskController extends BaseController
             
             // for ($i = 1; $i <= $try; $i++) {
                 foreach ($geoagents as $key =>  $geoitem) {
-                    if (!empty($geoitem->device_token) && $geoitem->is_available == 1) {
+                   if (!empty($geoitem->device_token) && $geoitem->is_available == 1) {
                         $datas = [
                             'order_id'            => $orders_id,
                             'driver_id'           => $geoitem->id,
@@ -4880,10 +4880,11 @@ class TaskController extends BaseController
                             Order::where('id', $orders_id)->update(['driver_id'=>$geoitem->id]);
                             break;
                         }
-                    }
-                    $time = Carbon::parse($time)
-                    ->addSeconds($expriedate + 10)
-                    ->format('Y-m-d H:i:s');
+                        $time = Carbon::parse($time)
+                        ->addSeconds($expriedate + 10)
+                        ->format('Y-m-d H:i:s');
+                   }
+
                 }
             // }
             $this->dispatch(new RosterCreate($data, $extraData));

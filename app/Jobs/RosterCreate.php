@@ -30,6 +30,10 @@ class RosterCreate implements ShouldQueue
     {
         $this->data      = $data;
         $this->extraData = $extraData;
+    }
+    
+    public function handle()
+    {
         try {
             $schemaName = 'royodelivery_db';
             $default = [
@@ -53,9 +57,7 @@ class RosterCreate implements ShouldQueue
             
             DB::connection($schemaName)->table('rosters')->insert($this->data);
             
-            //\Log::info('check roster entry');
-            // Log::info(DB::connection($schemaName)->table('rosters')->get());
-            
+            // Log::info(DB::connection($schemaName)->table('rosters')->get());         
             DB::connection($schemaName)->table('roster_details')->insert($this->extraData);
             
             DB::disconnect($schemaName);
@@ -64,18 +66,11 @@ class RosterCreate implements ShouldQueue
                 'type'  => 'extra',
                 'status'=> 10
             ]);
-            $date   =  Carbon::now()->toDateTimeString();
-            
+            $date   =  Carbon::now()->toDateTimeString();         
         } catch (\Exception $ex) {
             \Log::info($ex->getMessage());
             return $ex->getMessage();
         }
-    }
-
-    public function handle()
-    {
-
-
     }
 
     public function failed(\Throwable $exception)

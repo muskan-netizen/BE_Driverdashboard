@@ -674,24 +674,27 @@ class ActivityController extends BaseController
     public function getBidRideRequests(Request $request)
     {
         $id        = Auth::user()->id;
+        \Log::info($id);
         $geo_ids   =  DriverGeo::where('driver_id', $id)->pluck('geo_id');
-        $agenttags =  Agent::with('tags')->where('id', $id)->first();
-        $tags = array();
-        foreach($agenttags->tags as $agenttags)
-        {
-            $tags[] = $agenttags->name;
-        }
+        \Log::info($geo_ids);
+        // $agenttags =  Agent::with('tags')->where('id', $id)->first();
+        // $tags = array();
+        // foreach($agenttags->tags as $agenttags)
+        // {
+        //     $tags[] = $agenttags->name;
+        // }
 
-        if(count($tags) > 0 && count($geo_ids) > 0){
+        if( count($geo_ids) > 0){
             $currenttime = Carbon::now()->format('Y-m-d H:i:s');
-            $requestdata = UserBidRideRequest::whereIn('geo_id', $geo_ids)->whereIn('agent_tag', $tags)->where('expired_at', '>', $currenttime)
+            $requestdata = UserBidRideRequest::whereIn('geo_id', $geo_ids)->where('expired_at', '>', $currenttime)
                            ->whereDoesntHave('declinedbyAgent', function($q) use ($id){
                             $q->where('agent_id', $id);
                         })->get();
         }else{
             $requestdata = [];
         }
-
+           \Log::info('request data');
+           \Log::info($requestdata);
         return response()->json([
             'data' => array('requestdata' =>$requestdata),
             'status' => 200,

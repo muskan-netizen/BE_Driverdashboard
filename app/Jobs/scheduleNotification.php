@@ -74,11 +74,11 @@ class scheduleNotification implements ShouldQueue
             Log::info($ex->getMessage());
           // return $ex->getMessage();
         }
-
-    //    Log::info('database:'.$schemaName);
-
+    }
+    
+    public function handle(){
         $databaseName = 'db_'.$this->data['database']['database_name'];
-          switch ($this->data['allocation']['auto_assign_logic']) {
+        switch ($this->data['allocation']['auto_assign_logic']) {
             case 'one_by_one':
                 //this is called when allocation type is one by one
                 $this->OneByOneNew($this->data,$databaseName);
@@ -95,32 +95,22 @@ class scheduleNotification implements ShouldQueue
                 //this is called when allocation type is batch wise
                 $this->batchWise($this->data,$databaseName);
         }
-
-
-    }
-    
-    public function handle(){
         
     }
-
 
     public function basicSetup($schemaName)
     {
 
         // DB::connection($schemaName)->table('clients')->where('database',$this->data['database']['database_name'])
         // ->with(['getAllocation', 'getPreference'])->first();
-
-
     }
 
     public function OneByOneNew($dataget,$databaseName)
     {
-        Log::info('SendToAll scheduleNotification');
         $allcation_type    = 'AR';
         $date = \Carbon\Carbon::today()->toDateString();
         //$auth              = Client::where('code', $dataget['database']['code'])->with(['getAllocation', 'getPreference'])->first();
         
-        //  Log::info($date);
         
         
         $expriedate        = (int)$dataget['database']['getAllocation']['request_expiry'];
@@ -160,8 +150,6 @@ class scheduleNotification implements ShouldQueue
         $geo = $dataget['geo'];
         
         if (!isset($geo)) {
-            Log::info('geo');
-            Log::info($dataget['agent_id']);
             $oneagent = DB::connection($databaseName)->table('agents')->where('id', $dataget['agent_id'])->first();
             $data = [
                 'order_id'            => $dataget['orders_id'],
@@ -176,8 +164,6 @@ class scheduleNotification implements ShouldQueue
                 'detail_id'           => $randem,
                 'cash_to_be_collected'=> $dataget['cash_to_be_collected']??''
             ];
-            // Log::info('resterdata');
-            // Log::info( $data);
             //DB::disconnect('db_'.$dataget['database']['code']);
             RosterCreate::dispatch($data, $extraData);
             //$this->dispatch(new RosterCreate());
@@ -194,7 +180,6 @@ class scheduleNotification implements ShouldQueue
             })->where('agents.deleted_at', NULL)
             ->groupBy('agent_logs.agent_id')
             ->get();
-            Log::info($getgeo);
             
          //   for ($i = 1; $i <= $try; $i++) {
                 foreach ($getgeo as $key =>  $geoitem) {

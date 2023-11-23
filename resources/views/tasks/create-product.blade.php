@@ -119,7 +119,20 @@
 	text-align: center;
 	padding: 5px 4px;
 }
-
+.warehouses .inventory-products .prod-pic {
+	width: auto;	
+	height: auto;
+}
+.warehouses .inventory-products span {
+    word-break: break-word;
+    text-align: left;
+    width: 60%;
+    display: inline-block;
+}
+.warehouses .prod-pic img{
+	width: 38px;
+	height: 38px;
+}
 .prod-pic img {
 	width: 100%;
 }

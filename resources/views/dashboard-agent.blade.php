@@ -12,6 +12,7 @@
     </style>
 @endsection
 @php
+
     use Carbon\Carbon;
     $color = ['one','two','three','four','five','six','seven','eight'];
     $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain/';
@@ -114,14 +115,16 @@
                     </div>
                     <div class="select_bar">
                         <div class="form-group mb-0 ml-1">
-                            <select name="agent_id[]" id="agent_id" multiple="multiple" class="form-control">
-                                @foreach ($agents as $agent)
-                                @php
-                                    $checkAgentActive = ($agent->is_available == 1) ? ' ('.__('Online').')' : ' ('.__('Offline').')';
-                                @endphp
-                                    <option value="{{$agent->id}}">{{ ucfirst($agent->name). $checkAgentActive }}</option>
-                                @endforeach
-                            </select>
+                        <select name="agent_id[]" id="agent_id" multiple="multiple" class="form-control">
+                              
+                              @foreach ($agents as $agent)
+                                  @php
+                                  
+                                      $checkAgentActive = ($agent['is_available'] == 1) ? ' ('.__('Online').')' : ' ('.__('Offline').')';
+                                  @endphp
+                                      <option value="{{$agent['id']}}">{{ ucfirst($agent['name']). $checkAgentActive }}</option>
+                                  @endforeach
+                              </select>
                         </div>
                     </div>
                 </div>
@@ -155,10 +158,12 @@
 @section('script')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.3/jquery.timeago.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="{{ asset('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+
     <script>
         // var marker;
         var show = [0];
-        let map;
+        let map,directionsRenderer;
         let markers = [];
         let driverMarkers = [];
         let privesRoute = [];
@@ -231,10 +236,26 @@
             
             //new code for route
             var color = ["blue", "green", "red", "purple", "skyblue", "yellow", "orange"];
+            // const haightAshbury = {
+            //     lat: allagent.length != 0 && allagent[0].agentlog && allagent[0].agentlog['lat']  != "0.00000000" ? parseFloat(allagent[0].agentlog['lat']):defaultlat,
+            //     lng: allagent.length != 0 && allagent[0].agentlog && allagent[0].agentlog['long'] != "0.00000000" ? parseFloat(allagent[0].agentlog['long']):defaultlong
+            // };
             const haightAshbury = {
-                lat: allagent.length != 0 && allagent[0].agentlog && allagent[0].agentlog['lat']  != "0.00000000" ? parseFloat(allagent[0].agentlog['lat']):defaultlat,
-                lng: allagent.length != 0 && allagent[0].agentlog && allagent[0].agentlog['long'] != "0.00000000" ? parseFloat(allagent[0].agentlog['long']):defaultlong
-            };
+                lat: allagent.length !== 0 &&
+                    allagent[0].agentlog &&
+                    allagent[0].agentlog['lat'] !== "0.00000000" &&
+                    allagent[0].agentlog['lat'] !== null
+                    ? parseFloat(allagent[0].agentlog['lat'])
+                    : defaultlat,
+                lng: allagent.length !== 0 &&
+                    allagent[0].agentlog &&
+                    allagent[0].agentlog['long'] !== "0.00000000" &&
+                    allagent[0].agentlog['long'] !== null
+                    ? parseFloat(allagent[0].agentlog['long'])
+                    : defaultlong,
+                };
+
+
             if(is_refresh==1)
             {
                 map = new google.maps.Map(document.getElementById("map_canvas"), {
@@ -299,14 +320,16 @@
                 var agent_locatn = allroutes[i].driver_detail;
                 calculateAndDisplayRoute(directionsService, directionsRenderer, map, al_task, agent_locatn);
             });
-    
+           
+            
             //agents markers
             for (let i = 0; i < allagent.length; i++) {
                 displayagent = allagent[i];
-                if(displayagent.agentlog != null && displayagent.agentlog['lat'] != "0.00000000" && displayagent.agentlog['long'] != "0.00000000" ){
+                if(displayagent.agentlog != null && displayagent.agentlog['lat'] != "0.00000000" && displayagent.agentlog['lat'] != null && displayagent.agentlog['long'] != "0.00000000"  && displayagent.agentlog['long'] != null){
                     if (displayagent['is_available'] == 1) {
                         images = url+'/demo/images/location.png';
                     }else {
+                       
                         images = url+'/demo/images/location_grey.png';
                     }
                     var image = {
@@ -317,7 +340,7 @@
                     };
                     send = null;
                     type = 2;
-            
+                  
                     addMarker({lat: parseFloat(displayagent.agentlog['lat']),
                     lng:  parseFloat(displayagent.agentlog['long'])
                 }, send, image,displayagent, type);
@@ -367,7 +390,7 @@
             }
         }
     );
-}
+  }
 
 function clearRoutes() {
     if (directionsArray.length <1 ) {
@@ -388,6 +411,8 @@ function clearRoutes() {
 
 // Adds a marker to the map and push to the array.
 function addMarker(location, lables, images, data, type) {
+
+    
     var contentString = '';
     if(type == 1){
         contentString =
@@ -407,7 +432,7 @@ function addMarker(location, lables, images, data, type) {
         contentString =
         '<div class="row no-gutters align-items-center">'+
             '<div class="col-sm-4">'+
-                '<div class="img_box mb-sm-0 mb-2"> <img src="https://imgproxy.royodispatch.com/insecure/fit/200/200/sm/0/plain/'+data["image_url"]+'"/></div> </div>'+
+                '<div class="img_box mb-sm-0 mb-2"> <img src="'+data["image_url"]+'"/></div> </div>'+
             '<div class="col-sm-8 pl-2 user_info">'+
                 '<div class="user_name mb-2 11"><label class="d-block m-0">'+data["name"]+'</label><span> <i class="fas fa-phone-alt"></i>'+data["phone_number"]+'</span></div>'+
                 '<div><b class="d-block mb-2"><i class="far fa-clock"></i> <span> '+jQuery.timeago(new Date(data['agentlog']['created_at']))+
@@ -426,6 +451,7 @@ function addMarker(location, lables, images, data, type) {
         minheight: 250,
     });
 
+
     const marker = new google.maps.Marker({
         position: location,
         label: lables,
@@ -433,13 +459,14 @@ function addMarker(location, lables, images, data, type) {
         map: map,
         //animation: google.maps.Animation.DROP,
     });
-    
+
+ 
     if (type == 2) {
         driverMarkers.push(marker)
     }
 
     markers.push(marker);
-
+  
     marker.addListener("click", () => {
     infowindow.open(map, marker);
     });
@@ -700,7 +727,11 @@ function loadTeams(is_load_html, is_show_loader)
             initMap(is_load_html);
         },
         error: function(data) {
-            alert('There is some issue. Try again later');
+            Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'There is some issue. Try again later',
+                });
             if(is_load_html == 1)
             {
                 spinnerJS.hideSpinner();
@@ -710,8 +741,8 @@ function loadTeams(is_load_html, is_show_loader)
 }
 
 // autoload dashbard
-function loadOrders(is_load_html, is_show_loader)
-{
+function loadOrders(is_load_html, is_show_loader, url = '')
+{ 
     if(is_load_html == 1)
     {
         closeAllAccordian();
@@ -722,15 +753,17 @@ function loadOrders(is_load_html, is_show_loader)
     }
     var checkuserroutes = $('input[name="user_routes"]:checked').val();
     var agent_id = $('#agent_id').val();
+    url = url ? url : "{{ route('dashboard.agent-orderdata')}}";
     $.ajax({
         type: 'POST',
-        url: "{{ route('dashboard.agent-orderdata')}}",
+        url: url,
         headers: {
             'X-CSRF-Token': '{{ csrf_token() }}',
         },
         data: {'agent_id':agent_id, 'checkuserroutes':checkuserroutes, 'is_load_html':is_load_html, 'routedate':$("#basic-datepicker").val()},
         success: function(result) {
             olddata = allagent = defaultmaplocation = [];
+            
             //if Html is required to load or not, for agent's log it is not required
 
             if(is_load_html == 1)
@@ -744,7 +777,7 @@ function loadOrders(is_load_html, is_show_loader)
                 }
                 initializeSortable();
 
-                if($("#newmarker_map_data").val()!=''){
+              /*  if($("#newmarker_map_data").val()!=''){
                     olddata  = JSON.parse($("#newmarker_map_data").val());
                 }
 
@@ -760,7 +793,7 @@ function loadOrders(is_load_html, is_show_loader)
                     defaultmaplocation = JSON.parse($("#agentslocations_map_data").val());
                     defaultlat = parseFloat(defaultmaplocation[0].lat);
                     defaultlong = parseFloat(defaultmaplocation[0].long);
-                }
+                }*/
             }else{
                 var data1 = JSON.parse(result);
                 if(data1['status'] == "success")
@@ -776,7 +809,11 @@ function loadOrders(is_load_html, is_show_loader)
             initMap(is_load_html);
         },
         error: function(data) {
-            alert('There is some issue. Try again later');
+            Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'There is some issue. Try again later',
+                });
             if(is_load_html == 1)
             {
                 spinnerJS.hideSpinner();
@@ -838,7 +875,11 @@ function initializeSortable()
                     $('#optimize-route-modal').modal('show');
                 },
                 error: function(response) {
-                    alert('There is some issue. Try again later');
+                    Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'There is some issue. Try again later',
+                });
                     spinnerJS.hideSpinner();
                 }
             });
@@ -1035,6 +1076,164 @@ function ListenAgentLogChannel()
     });
 }
 
+$(document).on('click', '.view_route-btn', function (e) {
+    var id = $(this).data('id');
+
+    // Remove old route and markers
+    if (typeof directionsRenderer !== 'undefined') {
+        directionsRenderer.setDirections({ routes: [] });
+    }
+    
+    if (typeof markers !== 'undefined') {
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setMap(null);
+        }
+        markers = [];
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: "{{ route('get-route-detail')}}",
+        headers: {
+            'X-CSRF-Token': '{{ csrf_token() }}',
+        },
+
+        data: { 'id': id },
+        success: function (data) {
+            var pickup_lat = data.pickup_location.lat;
+            var pickup_lng = data.pickup_location.lng;
+            var dest_lat = data.dropoff_location.lat;
+            var dest_lng = data.dropoff_location.lng;
+
+            var pickupLocation = new google.maps.LatLng(pickup_lat, pickup_lng);
+            var dropoffLocation = new google.maps.LatLng(dest_lat, dest_lng);
+
+            var request = {
+                origin: pickupLocation,
+                destination: dropoffLocation,
+                travelMode: google.maps.TravelMode.DRIVING,
+            };
+
+            if (typeof directionsRenderer === 'undefined') {
+                directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: true });
+                directionsRenderer.setMap(map);
+            }
+
+            // Assuming you have a global variable 'map'
+            if (typeof map !== 'undefined') {
+                map.setCenter(new google.maps.LatLng(pickup_lat, pickup_lng));
+                map.setZoom(10);
+            } else {
+                map = new google.maps.Map(document.getElementById("map_canvas"), {
+                    zoom: 15,
+                    center: new google.maps.LatLng(pickup_lat, pickup_lng),
+                    mapTypeId: "roadmap",
+                    styles: themeType,
+                });
+            }
+
+            var directionsService = new google.maps.DirectionsService();
+            directionsService.route(request, function (response, status) {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(response);
+
+                    var pickupMarker = new google.maps.Marker({
+                        position: pickupLocation,
+                        map: map,
+                        title: 'Pickup Location',
+                    });
+
+                    var dropoffMarker = new google.maps.Marker({
+                        position: dropoffLocation,
+                        map: map,
+                        title: 'Dropoff Location',
+                    });
+
+                    markers.push(pickupMarker);
+                    markers.push(dropoffMarker);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Directions request failed: ' + status,
+                    });
+                }
+            });
+        },
+        error: function (data) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops',
+                text: 'There is some issue. Try again later',
+            });
+            spinnerJS.hideSpinner();
+        }
+    });
+});
+
+
+$(document).on('click', '#load-more', function(e){
+    let url = $(this).data('url');
+    
+    closeAllAccordian();
+    spinnerJS.showSpinner();
+    
+    var checkuserroutes = $('input[name="user_routes"]:checked').val();
+    var agent_id = $('#agent_id').val();
+    $(this).remove();
+    $.ajax({
+        type: 'POST',
+        url: url,
+        headers: {
+            'X-CSRF-Token': '{{ csrf_token() }}',
+        },
+        data: {'agent_id':agent_id, 'checkuserroutes':checkuserroutes, 'is_load_html':1, 'routedate':$("#basic-datepicker").val()},
+        success: function(result) {
+            $("#handle-dragula-left0").append(result);
+            spinnerJS.hideSpinner();
+        },
+        error: function(data) {
+            Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'There is some issue. Try again later',
+                });
+            spinnerJS.hideSpinner();
+        }
+    });
+})
+$(document).on('click', '#load-more-teams', function(e){
+    let url = $(this).data('url');
+  
+    $('#load-more-teams').remove();
+    spinnerJS.showSpinner();
+    var checkuserstatus = $('input[name="user_status"]:checked').val();
+    $.ajax({
+        type: 'POST',
+        url: url,
+        headers: {
+            'X-CSRF-Token': '{{ csrf_token() }}',
+        },
+        data: {'userstatus':checkuserstatus,'is_load_html':1, 'routedate':$("#basic-datepicker").val()},
+        success: function(result) {
+            //if Html is required to load or not, for agent's log it is not required
+
+            $("#teams_container .teams-data:last").after(result);
+
+                spinnerJS.hideSpinner();
+
+        },
+        error: function(data) {
+            Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'There is some issue. Try again later',
+                });
+           
+                spinnerJS.hideSpinner();
+            
+        }
+    });
+})
 </script>
 
 <style>

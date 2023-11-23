@@ -57,6 +57,7 @@
                                     <th>Database Name</th>
                                     <th>Client Code</th>
                                     <th style="width: 85px;">Action</th>
+                                    <th style="width: 85px;">Lumen microservices</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -98,7 +99,19 @@
                                             </div>
                                         </div>
                                     </td>
-                                    
+                                    <td>
+                                        <div class="col-md-12">
+                                            <div class="form-group d-flex justify-content-between mb-3">
+                                                <label for="lumen" class="mr-2 mb-0">{{__("Enable")}} </label>
+                                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                                    <div class="custom-control custom-switch">
+                                                        <input type="checkbox" class="custom-control-input is_lumen" id="is_lumen_enabled{{$client->id}}" name="is_lumen_enabled" data-id = "{{$client->id}}" @if($client->is_lumen_enabled == 1) checked  @endif>
+                                                        <label class="custom-control-label" for="is_lumen_enabled{{$client->id}}"></label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -124,6 +137,12 @@
 <script src="{{asset('assets/js/pages/form-fileuploads.init.js')}}"></script>
 
 <script>
+      $(document).ready(function() {
+        $.ajaxSetup({
+            headers: {'X-CSRF-TOKEN': $('input[name="_token"]').val()}
+        });
+
+    });
     $('.mdi-delete').click(function(){
             
             var r = confirm("{{__('Are you sure?')}}");
@@ -133,6 +152,36 @@
 
             }
         });
+
+
+        $('.is_lumen').on('change',function(){
+        var is_lumen  = 0;
+        var client_id  = $(this).data('id');
+        if ($(this).is(":checked")) {
+            is_lumen  = 1;
+        }else{
+            is_lumen  = 0;
+
+        }
+
+        $.ajax({
+                    url: "{{route('enable-lumen-service')}}",
+                    type: "POST",
+                    dataType: 'json',
+                    data: 
+                    { 
+                      client_id:client_id,
+                      is_lumen:is_lumen
+                    },
+                    headers: {Accept: "application/json"},
+                    success: function(response) {
+                        console.log('in success');
+                    }
+                });
+      
+
+});
+
     </script>
 
 <!-- @parent

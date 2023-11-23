@@ -54,7 +54,6 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
 @section('content')
 <!-- Start Content-->
 <div class="container-fluid">
-
     <!-- start page title -->
     <div class="row">
         <div class="col-12">

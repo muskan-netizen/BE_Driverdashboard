@@ -201,7 +201,7 @@ trait DispatcherRouteAllocation
     function createTasksForLocation($orders, $dep_id, $route, $cus_id)
     {
         $loc_id = null;
-
+       
         if (isset($route)) {
             $loc = [
                 'latitude' => $route->latitude ?? 0.00,
@@ -222,25 +222,31 @@ trait DispatcherRouteAllocation
 
             $finalLocation = Location::where('id', $loc_id)->first();
             $warehouse =  Warehouse::find($route->id);
+            $lastTask = Task::where('order_id', $orders->id)
+            ->where('task_type_id', 1)
+            ->orderBy('id', 'desc')
 
+            ->first();
             $data = [
                 'order_id' => $orders->id,
                 'task_type_id' => 2,
                 'location_id' => $loc_id,
-                'dependent_task_id' => $dep_id,
+                'dependent_task_id' => $lastTask->id ?? '',
                 'vendor_id' => isset($warehouse) ? $warehouse->id : '',
-                'warehouse_id' =>  isset($warehouse) ? $warehouse->id : null,
+                'warehouse_id' =>  isset($warehouse) ? $warehouse->id : null
             ];
+            
+            $task1 = Task::create($data);
             $data1 = [
                 'order_id' => $orders->id,
                 'task_type_id' => 1,
                 'location_id' => $loc_id,
-                'dependent_task_id' => $dep_id,
+                'dependent_task_id' => null,
                 'vendor_id' => isset($warehouse) ? $warehouse->id : '',
-                'warehouse_id' =>  isset($warehouse) ? $warehouse->id : null,
+                'warehouse_id' =>  isset($warehouse) ? $warehouse->id : null
             ];
 
-            $task1 = Task::create($data);
+            
             $task2 = Task::create($data1);
         }
     }

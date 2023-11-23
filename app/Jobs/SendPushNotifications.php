@@ -60,10 +60,8 @@ class SendPushNotifications implements ShouldQueue
 
             Config::set("database.connections.$schemaName", $default);
             config(["database.connections.mysql.database" => $schemaName]);
-            Log::info('SendPushNotifications rosters insert');
             DB::connection($schemaName)->table('rosters')->insert($this->data);
 
-            Log::info('App\Jobs\SendPushNotifications rosters insert');
             DB::disconnect($schemaName);
         } catch (Exception $ex) {
            return $ex->getMessage();
@@ -100,7 +98,6 @@ class SendPushNotifications implements ShouldQueue
                 if(isset($item->device_token))
                 array_push($recipients,$item->device_token);
             }
-            Log::info('App\Jobs\SendPushNotifications');
             $this->sendnotification($recipients);
             sleep(5);
         }

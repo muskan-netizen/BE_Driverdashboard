@@ -101,6 +101,9 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 			Route::post('chatsocket/upDateSocket/{id}', 'Godpanel\chatSocketController@upDateSocket')->name('chatsocket.upDateSocket');
 			Route::post('chatsocket/upDateSocketStatus/{id}', 'Godpanel\chatSocketController@upDateSocketStatus')->name('chatsocket.upDateSocketStatus');
 			Route::get('chatsocket/deleteSocketUrl/{id}', 'Godpanel\chatSocketController@deleteSocketUrl')->name('chatsocket.delete');
+			Route::post('/enable-lumen-service','Godpanel\ClientController@enableLumenService')->name('enable-lumen-service');
+			Route::post('/enable-notification-service','Godpanel\ClientController@enableNotificationService')->name('enable-notification-service');
+
 		});
 	});
 
@@ -144,6 +147,8 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 			Route::get('payment/webview/khalti', 'KhaltiGatewayController@webView')->name('payment.khalti.webView');
 			Route::get('payment/paystack/completePurchase/app', 'PaystackGatewayController@paystackCompletePurchaseApp')->name('payment.paystackCompletePurchaseApp');
 			Route::get('payment/paystack/cancelPurchase/app', 'PaystackGatewayController@paystackCancelPurchaseApp')->name('payment.paystackCancelPurchaseApp');
+			Route::any('payment/livees/api', 'LiveePaymentController@payFormWeb')->name('livees.webview');
+			Route::any('livee/success','LiveePaymentController@afterPayment')->name('livee.payment');
 
 		});
 		Route::any('payment/ccavenue/success', 'CcavenueController@successForm')->name('ccavenue.success');
@@ -264,6 +269,7 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 			Route::get('get-inventory-products', 'TaskController@getInventoryProducts')->name('getInventoryProducts');
 			
 			Route::get('get-product-detail', 'TaskController@getProductDetail')->name('get-product-detail');
+			Route::post('get-route-detail', 'TaskController@getRouteDetail')->name('get-route-detail');
 			
 			
 
@@ -309,6 +315,7 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 
 			Route::resource('subclient', 'SubClientController');
 			Route::post('assign/agent', 'TaskController@assignAgent')->name('assign.agent');
+			Route::post('task_route', 'TaskController@getTaskRoute')->name('task.task_route');
 			Route::post('assign/date', 'TaskController@assignDate')->name('assign.date');
 			Route::get('/order/feedback/{clientcode}/{order_id}', 'TrackingController@OrderFeedback')->name('order.feedback');
 			Route::post('/feedback/save', 'TrackingController@SaveFeedback')->name('feedbackSave');

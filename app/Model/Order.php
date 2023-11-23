@@ -10,7 +10,7 @@ class Order extends Model
     protected $fillable = ['customer_id','scheduled_date_time','recipient_phone','Recipient_email','task_description','images_array','auto_alloction','driver_id','key_value_set','order_time','order_type','note','status'
     ,'cash_to_be_collected','base_price','base_duration','base_distance','base_waiting','duration_price','waiting_price','distance_fee','cancel_fee','agent_commission_percentage','agent_commission_fixed','freelancer_commission_percentage',
      'freelancer_commission_fixed','actual_time','actual_distance','order_cost','driver_cost','proof_image','proof_signature','unique_id','net_quantity','call_back_url', 'completion_otp','order_number','type','friend_name','friend_phone_number',
-     'request_type','is_restricted', 'vendor_id', 'order_vendor_id', 'sync_order_id','dbname', 'vendor_name','toll_fee', 'available_seats', 'no_seats_for_pooling', 'is_cab_pooling', 'is_one_push_booking','rejectable_order','refer_driver_id','is_comm_settled','order_pre_time','buffer_time','waiting_time'];
+     'request_type','is_restricted', 'vendor_id', 'order_vendor_id', 'sync_order_id','dbname', 'vendor_name','toll_fee', 'available_seats', 'no_seats_for_pooling', 'is_cab_pooling', 'is_one_push_booking','rejectable_order','refer_driver_id','is_comm_settled','order_pre_time','buffer_time','waiting_time','notify_all'];
 
     protected $appends = ['total_waiting_amount','total_waiting_time'];
 
@@ -101,7 +101,7 @@ class Order extends Model
         
         return $imgarray;
     }
-
+    
     public function fleet(){
         return $this->belongsTo('App\Model\Fleet')->select('id','name','registration_name','color','make','model','year');
     }

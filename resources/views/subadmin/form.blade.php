@@ -372,7 +372,6 @@ $('#team_access').on('change', function() {
             }
         }
     });
-    
     phoneInput();
     function phoneInput() {
         var input = document.querySelector(".xyz");
@@ -381,8 +380,8 @@ $('#team_access').on('change', function() {
             separateDialCode: true,
             hiddenInput: "full_number",
             initialCountry: '{{$selectedCountryCode}}',
-            utilsScript: "{{ asset('telinput/js/utils.js') }}",
-        });        
+            utilsScript: "{{ asset('telinput/js/utils.js') }}",        
+           });        
     }
 
     $(document).delegate('.iti__country', 'click', function() {

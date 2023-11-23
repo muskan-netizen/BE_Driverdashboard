@@ -84,6 +84,10 @@
                 $access_code = (isset($creds->access_code)) ? $creds->access_code : '';
                 $enc_key = (isset($creds->enc_key)) ? $creds->enc_key : '';
                 $custom_url = (isset($creds->custom_url)) ? $creds->custom_url : '';
+
+                $livee_merchant_key=(isset($creds->livee_merchant_key))?$creds->livee_merchant_key: '';
+                $livee_resource_key=(isset($creds->livee_resource_key))?$creds->livee_resource_key: '';
+
                 ?>
 
                 <div class="card-box h-100">
@@ -477,6 +481,26 @@
                     <!-- <div class="d-flex align-items-center justify-content-between mb-2">
                         <button class="btn btn-info d-block" type="submit"> Save </button>
                     </div> -->
+
+                    @if ( (strtolower($opt->code) == 'livee') )
+                    <div class="mt-2" id="livee_fields_wrapper" @if($opt->status != 1) style="display:none" @endif>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group mb-2">
+                                    <label for="livee_consumer_key" class="mr-3">{{ __("LIVEES MERCHANT KEY") }}</label>
+                                    <input type="password" name="livee_merchant_key" id="livee_merchant_key" class="form-control" value="{{$livee_merchant_key}}" @if($opt->status == 1) required @endif>
+                                </div>
+                            </div>
+							 <div class="col-12">
+                                <div class="form-group mb-2">
+                                    <label for="livee_consumer_secret" class="mr-3">{{ __("LIVEES RESOURCE KEY") }}</label>
+                                    <input type="password" name="livee_resource_key" id="livee_resource_key" class="form-control" value="{{$livee_resource_key}}" @if($opt->status == 1) required @endif>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                 </div>
             </div>
             @endforeach
@@ -513,6 +537,9 @@
                 $payout_secret_key = (isset($creds->secret_key)) ? $creds->secret_key : '';
                 $payout_publishable_key = (isset($creds->publishable_key)) ? $creds->publishable_key : '';
                 $payout_client_id = (isset($creds->client_id)) ? $creds->client_id : '';
+
+                $livee_payout_merchant_key=(isset($creds->livee_payout_merchant_key))?$creds->livee_payout_merchant_key: '';
+                $livee_payout_resource_key=(isset($creds->livee_payout_resource_key))?$creds->livee_payout_resource_key: '';
                 ?>
 
                 <div class="card-box h-100">
@@ -586,6 +613,26 @@
                         </div>
                     </div>
                     @endif
+
+                    @if ( (strtolower($opt->code) == 'livee') )
+                    <div class="mt-2" id="livee_payout_fields_wrapper" @if($opt->status != 1) style="display:none" @endif>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group mb-2">
+                                    <label for="livee_consumer_key" class="mr-3">{{ __("LIVEES MERCHANT KEY") }}</label>
+                                    <input type="password" name="livee_payout_merchant_key" id="livee_payout_merchant_key" class="form-control" value="{{$livee_payout_merchant_key}}" @if($opt->status == 1) required @endif>
+                                </div>
+                            </div>
+							 <div class="col-12">
+                                <div class="form-group mb-2">
+                                    <label for="livee_consumer_secret" class="mr-3">{{ __("LIVEES RESOURCE KEY") }}</label>
+                                    <input type="password" name="livee_payout_resource_key" id="livee_payout_resource_key" class="form-control" value="{{$livee_payout_resource_key}}" @if($opt->status == 1) required @endif>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                 </div>
             </div>
             @endforeach

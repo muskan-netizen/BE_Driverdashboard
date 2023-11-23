@@ -226,8 +226,9 @@ use Carbon\Carbon;
                                                     </div>
                                                     <div class="col-md-6">
                                                         <input type="text" name="address_phone_number[]"
-                                                        id="add{{ $newcount }}-address_phone_number" class="form-control address address_phone_number"
+                                                        id="add{{ $newcount }}-address_phone_number" class="form-control address address_phone_number phone_number"
                                                         placeholder="{{__('Phone Number')}}" />
+                                                        <input type="hidden" name="dialCode" id="dialCode" value="{{getCountryPhoneCode()}}">
                                                     </div>
                                                     {{-- @if($preference->route_flat_input == 1) --}}
                                                     <div class="col-md-6">

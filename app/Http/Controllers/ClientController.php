@@ -32,6 +32,7 @@ use Crypt;
 use Carbon\Carbon;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
+use App\Model\DriverRegistrationOption;
 class ClientController extends Controller
 {
     use \App\Traits\ClientPreferenceManager;
@@ -166,9 +167,63 @@ class ClientController extends Controller
         }
 
     }
-      
         
-       
+           // Enable Route Optimization
+            if($request->has('route_optimize')){
+                
+                if (!empty($request->route_optimization)) {
+                    
+                    if ($request->route_optimization == 'on') {
+                        $data = [
+                            'route_optimization' => ($request->route_optimization == 'on') ? 1 : 0
+                        ];
+                    } else {
+                        $data = [
+                            'route_optimization' => 0,
+                        ];
+                    }
+                   
+                    ClientPreference::where('client_id', $id)->update($data);
+                    return redirect()->back()->with('success', 'Preference updated successfully!');
+                }else{
+
+                    $data = [
+                            'route_optimization' => 0,
+                        ];
+                        ClientPreference::where('client_id', $id)->update($data);
+                        return redirect()->back()->with('success', 'Preference updated successfully!');
+                }
+
+            }
+            if($request->has('is_lumen')){
+                
+                if (!empty($request->is_lumen_enabled)) {
+                    
+                    if ($request->is_lumen_enabled == 'on') {
+                        $data = [
+                            'is_lumen_enabled' => ($request->is_lumen_enabled == 'on') ? 1 : 0,
+                            'lumen_access_token' => $request->lumen_access_token,
+                            'lumen_domain_url' => $request->lumen_domain_url
+                        ];
+                    } else {
+                        $data = [
+                            'is_lumen_enabled' => 0,
+                        ];
+                    }
+                   
+                    ClientPreference::where('client_id', $id)->update($data);
+                    return redirect()->back()->with('success', 'Preference updated successfully!');
+                }else{
+
+                    $data = [
+                            'is_lumen_enabled' => 0,
+                        ];
+                        ClientPreference::where('client_id', $id)->update($data);
+                        return redirect()->back()->with('success', 'Preference updated successfully!');
+                }
+
+            }
+             
         if(!empty($request->fcm_server_key)){
             $data = ['fcm_server_key'=>$request->fcm_server_key];
             ClientPreference::where('client_id', $id)->update($data);
@@ -571,6 +626,7 @@ class ClientController extends Controller
      */
     public function ShowConfiguration()
     {
+     
         $preference  = ClientPreference::where('client_id', Auth::user()->code)->first();
         $customMode  = json_decode($preference->custom_mode);
         $warehoseMode  = json_decode($preference->warehouse_mode);
@@ -581,11 +637,11 @@ class ClientController extends Controller
         $vehicleType = VehicleType::latest()->get();
         $agent_docs = DriverRegistrationDocument::get();
         $driverRatingQuestion = FormAttribute::getFormAttribute(2); // 2 for driverRatingQuestion 1 for defoult FormAttribute
-
+       
         $agents    = Agent::where('is_activated','1')->get();
         $smsTypes = SmsProvider::where('status', '1')->get();
         $data['preferenceAdditional']  = ClientPreferenceAdditional::where('client_code', Auth::user()->code)->pluck('key_value','key_name');
-
+       
         return view('configure', $data)->with(['preference' => $preference, 'customMode' => $customMode, 'client' => $client,'subClients'=> $subClients,'smtp_details'=>$smtp, 'agent_docs' => $agent_docs,'smsTypes'=>$smsTypes,'vehicleType'=>$vehicleType, 'warehoseMode' => $warehoseMode, 'dashboardMode' => $dashboardMode,'agents'=>$agents,'driverRatingQuestion'=>$driverRatingQuestion]);
     }
 
@@ -697,6 +753,20 @@ class ClientController extends Controller
             $driver_registration_document->is_required = (!empty($request->is_required))?1:0;
             $driver_registration_document->save();
             DB::commit();
+            if($request->has('option_name')){
+               
+                foreach($request->option_name as $value){
+
+                    if(isset($value[0]) && !empty($value[0])){
+                        $optionTrabslation  = new DriverRegistrationOption();
+                                $optionTrabslation->driver_registration_document_id =$driver_registration_document->id ;
+                                $optionTrabslation->driver_registartion_option_name =$value;
+                                $optionTrabslation->save();
+
+                    }
+                }
+
+            }
             return $this->successResponse($driver_registration_document, getAgentNomenclature().' Registration Document Added Successfully.');
         } catch (Exception $e) {
             DB::rollback();
@@ -712,7 +782,7 @@ class ClientController extends Controller
      */
     public function show(Request $request){
         try {
-            $driver_registration_document = DriverRegistrationDocument::where(['id' => $request->driver_registration_document_id])->firstOrFail();
+            $driver_registration_document = DriverRegistrationDocument::where(['id' => $request->driver_registration_document_id])->with('driver_option')->firstOrFail();
             return $this->successResponse($driver_registration_document, '');
         } catch (Exception $e) {
             return $this->errorResponse([], $e->getMessage());
@@ -740,6 +810,18 @@ class ClientController extends Controller
             $driver_registration_document->name = $request->name;
             $driver_registration_document->is_required = (!empty($request->is_required))?1:0;
             $driver_registration_document->save();
+
+            if($request->has('option_name')){
+                DriverRegistrationOption::whereDriverRegistrationDocumentId($driver_registration_document_id)->delete();
+                foreach($request->option_name as $value){
+                    if(isset($value[0]) && !empty($value[0])){
+                        $optionTrabslation  = new DriverRegistrationOption();
+                        $optionTrabslation->driver_registration_document_id =$driver_registration_document->id ;
+                        $optionTrabslation->driver_registartion_option_name =$value;
+                        $optionTrabslation->save();
+                    }
+                }
+            }
 
             DB::commit();
             return $this->successResponse($driver_registration_document, getAgentNomenclature().' Registration Document Updated Successfully.');

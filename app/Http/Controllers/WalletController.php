@@ -32,16 +32,12 @@ class WalletController extends Controller{
     {   
       
         $user = Agent::find($request->user_id);
-        \Log::info("user");
         
        
         if($user){
-            \Log::info("user fuinde");
             $credit_amount = $request->wallet_amount;
             $wallet = $user->wallet;
-            \Log::info($credit_amount );
             if ($credit_amount > 0) {
-                \Log::info("amount grater then 0");
                 $payment_option = '';
                 if($request->has('payment_option_id') && ($request->payment_option_id > 0) ){
                     $payment_option = PaymentOption::where('id', $request->payment_option_id)->value('title');
@@ -58,7 +54,6 @@ class WalletController extends Controller{
                 $response['wallet_balance'] = $wallet->balanceFloat;
                 $response['transactions'] = $transactions;
                 $message = 'Wallet has been credited successfully';
-                \Log::info($message);
                 return $this->success($response, $message, 201);
             }
             else{

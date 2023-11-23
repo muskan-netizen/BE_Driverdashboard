@@ -143,16 +143,27 @@ class DriverRegistrationController extends BaseController
         if (isset($data['country_code']) && !empty($data['country_code']) && isset($data['phone_number']) && !empty($data['phone_number']))
             $full_number = '+' . $data['country_code'] . $data['phone_number'];
 
-        $data['phone_number'] = '+' . $data['country_code'] . $data['phone_number'];
+        if($data['country_code'] == 91) {
+            return Validator::make($data, [
+                'phone_number' =>  ['required', 'min:10', 'max:10', Rule::unique('agents')->where(function ($query) use ($full_number) {
+                    return $query->where('phone_number', $full_number);
+                })],
+            ]);
+        } else {
+            $data['phone_number'] = '+' . $data['country_code'] . $data['phone_number'];
+            return Validator::make($data, [
+                'phone_number' =>  ['required', 'min:6', 'max:15', Rule::unique('agents')->where(function ($query) use ($full_number) {
+                    return $query->where('phone_number', $full_number);
+                })],
+            ]);
+        }
+
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required'],
            // 'vehicle_type_id' => ['required'],
             //'make_model' => ['required'],
             //'plate_number' => ['required'],
-            'phone_number' =>  ['required', 'min:6', 'max:15', Rule::unique('agents')->where(function ($query) use ($full_number) {
-                return $query->where('phone_number', $full_number);
-            })],
             //'color' => ['required'],
             'upload_photo' => ['mimes:jpeg,png,jpg,gif,svg|max:2048'],
         ]);
@@ -274,7 +285,7 @@ class DriverRegistrationController extends BaseController
             if(isset($types->show_vehicle_type_icon))
             $show_vehicle_type_icon = explode(',',$types->show_vehicle_type_icon);
             $p = 0;
-            $documents = DriverRegistrationDocument::orderBy('file_type', 'DESC')->select('name','file_type','id','is_required')->get()->toArray();
+            $documents = DriverRegistrationDocument::with('driver_option')->orderBy('file_type', 'DESC')->select('name','file_type','id','is_required')->get()->toArray();
             if((isset($documents) && count($documents)>0) && $manage_fleet)
             {
              $p = sizeof($documents) - 1;

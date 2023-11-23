@@ -82,7 +82,8 @@
                         <div class="col-md-12">
                             <div class="form-group" id="phone_numberInput">
                                 <div class="input-group">
-                                    <input type="text" name="phone_number" class="form-control phone_number" id="phone_number" placeholder="{{__('Enter mobile number')}}" maxlength="14"> <input type="hidden" id="dialCode" name="dialCode" value="{{getCountryPhoneCode()}}">
+                                    <input type="text" name="phone_number" class="form-control phone_number" id="phone_number" placeholder="{{__('Enter mobile number')}}" maxlength="14">
+<!--                                      <input type="hidden" id="dialCode" name="dialCode" value="{{getCountryPhoneCode()}}"> -->
                                 </div>
                                 <span class="invalid-feedback" role="alert"> <strong></strong>
                                 </span>
@@ -304,9 +305,10 @@
                                                                             __('Email'),'id'=>'addHeader1-address_email']) !!}</div>
                                                                         <div class="form-group mb-1 col-12">{!!
                                                                             Form::text('address_phone_number[]', null, ['class' =>
-                                                                            'form-control address
+                                                                            'form-control address phone_number
                                                                             address_phone_number','placeholder' => __('Phone
-                                                                            Number'),'id'=>'addHeader1-address_phone_number']) !!}
+                                                                            Number'),'id'=>'addHeader1-address_phone_number ']) !!}
+<!--                                                                             <input type="hidden" name="dialCode" id="dialCode" value="{{getCountryPhoneCode()}}"> -->
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -455,8 +457,9 @@
                                                                         <div class="form-group mb-1 col-12">{!!
                                                                             Form::text('address_phone_number[]',
                                                                             $vendor->phone_no, ['class' => 'form-control address
-                                                                            address_phone_number','placeholder' => __('Phone
+                                                                            address_phone_number phone_number','placeholder' => __('Phone
                                                                             Number'),'id'=>'addHeader1-address_phone_number']) !!}
+<!--                                                                             <input type="hidden" name="dialCode" id="dialCode" value="{{getCountryPhoneCode()}}"> -->
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -590,9 +593,10 @@
                                                                             __('Email'),'id'=>'addHeader1-address_email']) !!}</div>
                                                                         <div class="form-group mb-1 col-12">{!!
                                                                             Form::text('address_phone_number[]', null, ['class' =>
-                                                                            'form-control address
+                                                                            'form-control address phone_number
                                                                             address_phone_number','placeholder' => __('Phone
-                                                                            Number'),'id'=>'addHeader1-address_phone_number']) !!}
+                                                                            Number'),'id'=>'addHeader1-address_phone_number ']) !!}
+<!--                                                                             <input type="hidden" name="dialCode" id="dialCode" value="{{getCountryPhoneCode()}}"> -->
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -651,7 +655,7 @@
 
 $('.show-selected-warehouse').prop('disabled', true);
 $('.show-selected-warehouse').css('appearance', 'none');
-$('.show-selected-warehouse').css('-webkit-appearance', 'none');
+$('.show-selected-warehouse').css('-webkit-appearance', 'none'); 
 $('.show-selected-warehouse').css('-moz-appearance', 'none');
 
 $(document).on('change','.warehouse',function()

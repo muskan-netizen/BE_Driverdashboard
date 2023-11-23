@@ -72,6 +72,7 @@ trait TollFee{
                     ]
                 ],
                 'intermediates' => $waypoints,
+                "extraComputations"=>["TOLLS"],
                 "travelMode" => $travelMode,
                 "units" =>  "metric",
                 "route_modifiers" => [

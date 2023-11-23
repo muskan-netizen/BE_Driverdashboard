@@ -46,11 +46,7 @@ trait FormAttributeTrait
     {
         $attribute = json_decode($request->attribute_data, true);
         // $attribute = $request->attribute_data;
-        \Log::info('attribute');
-        \Log::info($attribute);
 
-        \Log::info('attribute_data_images');
-        \Log::info($request->attribute_data_images);
         $insert_arr = [];
         $insert_count = 0;
         foreach ($attribute as $key => $value) {
@@ -122,8 +118,6 @@ trait FormAttributeTrait
                 }
             }
         }
-        \Log::info('insert_arr');
-        \Log::info($insert_arr);
         if (!empty($insert_arr)) {
             OrderFormAttribute::insert($insert_arr);
         }

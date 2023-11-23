@@ -33,8 +33,8 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
             <label for="phone_number" class="control-label">{{__('CONTACT NUMBER')}}</label>
             <div class="input-group">
 
-                <input type="tel" name="phone_number" class="form-control xyz" id="phone" placeholder="{{__('Enter mobile number')}}" value="{{ $agent->phone_number }}" readonly>
-                {{-- <input id="phone" name="phone" type="tel" class="form-control"> --}}
+                <input type="tel" name="phone_number" class="form-control phone_number xyz" id="phone" placeholder="{{__('Enter mobile number')}}" value="{{ $agent->phone_number }}" readonly>
+<!--                 <input type="hidden" id="dialCode" name="dialCode" value="{{$customer->dial_code}}"> -->
             </div>
             <span class="invalid-feedback" role="alert">
                 <strong></strong>

@@ -68,8 +68,9 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group" id="phone_numberInput">
-                                {!! Form::text('phone_number', null, ['class' => 'form-control', 'placeholder' => __('Phone Number'),'id'=> 'phone_new'
+                                {!! Form::text('phone_number', null, ['class' => 'form-control phone_number', 'placeholder' => __('Phone Number'),'id'=> 'phone_new'
                                 ]) !!}
+                                <input type="hidden" name="dialCode" id="dialCode" value="{{getCountryPhoneCode()}}">
                                 <span class="invalid-feedback" role="alert">
                                     <strong></strong>
                                 </span>
@@ -245,7 +246,8 @@
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
-                                                {!! Form::text('address_phone_number[]', null, ['class' => 'form-control address address_phone_number','placeholder' => __('Phone Number'),'id'=>'addHeader1-address_phone_number']) !!}
+                                                {!! Form::text('address_phone_number[]', null, ['class' => 'form-control address address_phone_number phone_number','placeholder' => __('Phone Number'),'id'=>'addHeader1-address_phone_number']) !!}
+                                                <input type="hidden" name="dialCode" id="dialCode" value="{{getCountryPhoneCode()}}">
                                             </div>
                                             {{-- @if($preference->route_flat_input == 1) --}}
                                             <div class="col-md-6">

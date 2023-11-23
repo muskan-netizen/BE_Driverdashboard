@@ -60,8 +60,6 @@ class AgentPayoutController extends BaseController{
             $pending_payout_value  = AgentPayout::where('agent_id', $agent_id)->whereIn('status', [0])->sum('amount');
             $available_funds = agentEarningManager::getAgentEarning($agent_id, 1) - $pending_payout_value;
          
-            \Log::info('available_funds '.$available_funds);
-            \Log::info('amount '.$request->amount);
             //-------------------------------------------------------------------------//
             if($request->amount > $available_funds){
                 return $this->error(__('Payout amount is greater than available funds'), 402);

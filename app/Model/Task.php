@@ -36,6 +36,8 @@ class Task extends Model
         'alcoholic_item',
         'warehouse_id',
         'is_return',
+        'delivery_route_id',
+        'driver_id',
         'is_road_side'
     ];
 

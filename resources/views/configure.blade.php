@@ -1371,7 +1371,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                 </form>
             </div> 
 
-            <div class="col-md-4 mb-3">
+            <div class="col-md-4 mb-3 d-none">
                 <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
                     @csrf
                     <input type="hidden" name="send_to" id="send_to" value="customize">
@@ -1391,7 +1391,96 @@ $sms_crendential = json_decode($preference->sms_credentials);
                     </div>
                 </form>
             </div>
+            <div class="col-md-4 mb-3 d-none">
+                <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
+                @csrf
+                    <input type="hidden" name="route_optimize" value="1">
+                    <div class="card-box h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h4 class="header-title text-uppercase mb-0">{{__("Route Optimization")}}</h4>
+                            <button class="btn btn-outline-info d-block" type="submit"> {{__('Save')}} </button>
+                        </div>
+                        <div class="row align-items-start">
+                            <div class="col-md-12">
+                                <div class="form-group d-flex justify-content-between mb-3">
+                                    <label for="route_optimization" class="mr-2 mb-0">{{__("Enable")}} </label>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input " id="route_optimization" name="route_optimization" {{ (!empty($preference->route_optimization) && $preference->route_optimization > 0) ? 'checked' :'' }}>
+                                            <label class="custom-control-label" for="route_optimization"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div> 
+            <div class="col-md-4 mb-3">
+                <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
+                @csrf
+                    <input type="hidden" name="is_lumen" value="1">
+                    <div class="card-box h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h4 class="header-title text-uppercase mb-0">{{__("Lumen")}}</h4>
+                            <button class="btn btn-outline-info d-block" type="submit"> {{__('Save')}} </button>
+                        </div>
+                        <div class="row align-items-start">
+                            <div class="col-md-12">
+                                <div class="form-group d-flex justify-content-between mb-3">
+                                    <label for="lumen" class="mr-2 mb-0">{{__("Enable")}} </label>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input " id="is_lumen_enabled" name="is_lumen_enabled">
+                                            <label class="custom-control-label" for="is_lumen_enabled"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                            <div class="row lumen-field" style="display: {{ (!empty($preference->is_lumen_enabled) && $preference->is_lumen_enabled > 0) ? 'block' :'none' }}">
+                    <div class="col-12 ">
+                        <div class="form-group mb-3">
+                            <div class="domain-outer border-0 d-flex align-items-center justify-content-between">
+                                <label for="lumen_domain_url">{{ __('LUMEN DOMAIN URL') }}</label>
 
+                            </div>
+                            <input type="text" name="lumen_domain_url" id="lumen_domain_url"
+                                placeholder="" class="form-control"
+                                value="{{ old('lumen_domain_url', $preference->lumen_domain_url ?? '') }}">
+                            @if ($errors->has('lumen_domain_url'))
+                                <span class="text-danger" role="alert">
+                                    <strong>{{ $errors->first('lumen_domain_url') }}</strong>
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                            </div>
+                            <div class="row lumen-field" style="display: {{ (!empty($preference->is_lumen_enabled) && $preference->is_lumen_enabled > 0) ? 'block' :'none' }}"">
+
+                    <div class="col-12">
+                        <div class="form-group mb-3">
+                            <div class="domain-outer border-0 d-flex align-items-center justify-content-between">
+                                <label for="lumen_access_token">{{ __('LUMEN ACCESS TOKEN') }}</label>
+                                <span class="text-right col-6 col-md-6"><a
+                                        href="javascript: generateLumenToken();">{{ __('Generate Key') }}</a></span>
+
+                            </div>
+                            <input type="text" name="lumen_access_token" id="lumen_access_token"
+                                placeholder="kjadsasd66asdas" class="form-control"
+                                value="{{ old('lumen_access_token', $preference->lumen_access_token ?? '') }}">
+                            @if ($errors->has('lumen_access_token'))
+                                <span class="text-danger" role="alert">
+                                    <strong>{{ $errors->first('lumen_access_token') }}</strong>
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                    </div>
+           
+                    </div>
+                </form>
+            </div> 
         </div>
 
 
@@ -1572,11 +1661,12 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                         <div class="form-group position-relative">
                                             <label for="">Type</label>
                                             <div class="input-group mb-2">
-                                                <select class="form-control" name="file_type">
+                                                <select class="form-control" name="file_type" id="file_type_select">
                                                     <option value="Image">Image</option>
                                                     <option value="Pdf">PDF</option>
                                                     <option value="Text">Text</option>
                                                     <option value="Date">Date</option>
+                                                    <option value="selector">selector</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -1589,6 +1679,42 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                                     <label for="">{{ __('Name') }}</label>
                                                     <input class="form-control" name="name" type="text"
                                                         id="driver_registration_document_name">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="selector_div" class="col-md-12 d-none">
+                                        <div class="card">
+                                            <div class="card-box mb-0 ">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <h4 class="header-title text-uppercase">{{ __('Options') }}</h4>
+                                                </div>
+                                                <div id="option_div">
+
+                                                    <div class="">
+                                                        <div class="col-lg-12">
+                                                            <div id="opt_val_div">
+                                                                <div id="row" class="edit_option">
+                                                                    <div class="input-group m-3">
+                                                                        <div class="input-group-prepend">
+                                                                            <button class="btn btn-danger" id="DeleteRow"
+                                                                                type="button">
+                                                                                <i class="bi bi-trash"></i>
+                                                                                Delete
+                                                                            </button>
+                                                                        </div>
+                                                                        <input type="text" name="option_name[]" class="form-control m-input">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div id="newinput"></div>
+                                                            <button id="rowAdder" type="button"
+                                                                class="btn btn-dark">
+                                                                <span class="bi bi-plus-square-dotted">
+                                                                </span> ADD
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1666,6 +1792,49 @@ $sms_crendential = json_decode($preference->sms_credentials);
                 });
             }
         });
+        $(document).on("change", "#file_type_select", function() {
+            var file_type = $(this).val();
+            if (file_type == 'selector') {
+                $("#selector_div").removeClass("d-none");
+                var classoption_section = $('#option_div').find('.option_section');
+                if (classoption_section.length == 0) {
+                    //addoptionTemplate(0);
+                }
+            } else {
+                $("#selector_div").addClass("d-none");
+            }
+        });
+
+        function addoptionTemplate(section_id) {
+            section_id = parseInt(section_id);
+            section_id = section_id + 1;
+            var data = '';
+
+            var price_section_temp = $('#vendorSelectorTemp').html();
+            var modified_temp = _.template(price_section_temp);
+            var result_html = modified_temp({
+                id: section_id,
+                data: data
+            });
+            $("#vendor-selector-datatable #table_body").append(result_html);
+            $('.add_more_button').hide();
+            $('#vendor-selector-datatable #add_button_' + section_id).show();
+        }
+        var i=0;
+        $("#rowAdder").click(function() {
+            var c=i++;
+            newRowAdd =
+                '<div id="row"> <div class="input-group m-3">' +
+                '<div class="input-group-prepend">' +
+                '<button class="btn btn-danger" id="DeleteRow" type="button">' +
+                '<i class="bi bi-trash"></i> Delete</button> </div>' +
+                '<input type="text" name="option_name[]" class="form-control m-input_'+c+'"> </div> </div>';
+
+            $('#newinput').append(newRowAdd);
+        });
+        $("body").on("click", "#DeleteRow", function() {
+            $(this).parents("#row").remove();
+        })
         $(document).on('click', '.submitSaveDriverRegistrationDocument', function(e) {
             var driver_registration_document_id = $(
                 "#add_driver_registration_document_modal input[name=driver_registration_document_id]").val();
@@ -1711,6 +1880,8 @@ $sms_crendential = json_decode($preference->sms_credentials);
                 },
                 url: "{{ route('driver.registration.document.edit') }}",
                 success: function(response) {
+                    console.log(response.data.driver_option);
+                    var dynamicOption = '';
                     if (response.status = 'Success') {
                         $("#add_driver_registration_document_modal select[name=file_type]").val(response
                             .data.file_type).change();
@@ -1723,6 +1894,17 @@ $sms_crendential = json_decode($preference->sms_credentials);
                             $("#add_driver_registration_document_modal input[name=is_required]").prop(
                                 "checked", false);
                         }
+
+                        if(response.data.file_type=='selector'){
+                            $('#selector_div').removeClass('d-none');
+                            $.each(response.data.driver_option, function(i, option){
+                                dynamicOption +=  "<div id='row"+option.id+"'><div class='input-group m-3'><div class='input-group-prepend'><button class='btn btn-danger' id='DeleteRow"+option.id+"' type='button'><i class='bi bi-trash'></i>Delete</button></div><input type='text' name='option_name[]' value='"+option.driver_registartion_option_name+"' class='form-control m-input'></div></div>";
+                                $('body').on('click', '#DeleteRow'+option.id, function() {
+                                    $(this).parents('#row'+option.id).remove(); 
+                                });
+                            });
+                        }
+                        $('#opt_val_div').html(dynamicOption);
                         $('#add_driver_registration_document_modal #standard-modalLabel').html(
                             'Update {{getAgentNomenclature()}} Registration Document');
                         $('#add_driver_registration_document_modal').modal('show');
@@ -1751,6 +1933,11 @@ $sms_crendential = json_decode($preference->sms_credentials);
             $('#personal_access_token_v1').val(key);
             $('#personal_access_token_v2').val(token);
         }
+        function generateLumenToken() {
+            var token = generateRandomString(30);
+
+            $('#lumen_access_token').val(token);
+        }
 
         $(document).ready(function() {
             smsChange();
@@ -1775,6 +1962,14 @@ $sms_crendential = json_decode($preference->sms_credentials);
                 $('.batch-allocation').show();
             }else{
                 $('.batch-allocation').hide();
+            }
+        });
+        $('#is_lumen_enabled').on('change',function(){
+
+            if ($(this).is(":checked")) {
+                $('.lumen-field').show();
+            }else{
+                $('.lumen-field').hide();
             }
         });
 

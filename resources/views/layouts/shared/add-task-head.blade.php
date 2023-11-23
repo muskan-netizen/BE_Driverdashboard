@@ -397,6 +397,11 @@ session('preferences.map_key_1'):'kdsjhfkjsdhfsf'; $theme =
 	src="{{asset('assets/libs/bootstrap-datepicker/bootstrap-datepicker.min.js')}}"></script>
 <script src="{{asset('assets/libs/dropzone/dropzone.min.js')}}"></script>
 <script src="{{asset('assets/libs/dropify/dropify.min.js')}}"></script>
+<!-- <link -->
+<!-- rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/css/intlTelInput.css"> -->
+<!-- <script -->
+<!-- src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/intlTelInput.js"></script> -->
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/utils.js"></script> -->
 <!-- Page js-->
 
 <script>
@@ -520,7 +525,36 @@ session('preferences.map_key_1'):'kdsjhfkjsdhfsf'; $theme =
             }
         });
     });
-
+              /*   const phoneInputs = document.querySelectorAll(".phone_number");
+                  phoneInputs.forEach(phoneInitializer);
+                function phoneInitializer(element)
+                {
+                    let phone_number_code = window.intlTelInput(element, {
+                    separateDialCode: true,
+                    preferredCountries: ["{{getCountryCode()}}"],
+                    initialCountry: "{{getCountryCode()}}",
+                    hiddenInput: "full_number",
+                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/utils.js"
+                    });
+                    element.addEventListener("countrychange", function() {
+                    const dialCodeInput = element.nextElementSibling;
+                    dialCodeInput.value =phone_number_code.getSelectedCountryData().dialCode;
+                    });
+                }
+                function phoneInput() {
+                        let phone_number_intltel = window.intlTelInput(document.querySelector("#taskFormHeader .phone_number"),{
+                            separateDialCode: true,
+                            preferredCountries:["{{getCountryCode()}}"],
+                            initialCountry:"{{getCountryCode()}}",
+                            hiddenInput: "full_number",
+                            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/utils.js"
+                        });
+                    console.log('hello');
+                    
+                        document.querySelector("#taskFormHeader .phone_number").addEventListener("countrychange", function() {
+                            $("#taskFormHeader #dialCode").val(phone_number_intltel.getSelectedCountryData().dialCode);
+                        });
+               }     */  
     function phoneInput() {
         //initialize intlTelInput
         let phone_number_intltel = window.intlTelInput(document.querySelector("#taskFormHeader .phone_number"),{
@@ -530,12 +564,12 @@ session('preferences.map_key_1'):'kdsjhfkjsdhfsf'; $theme =
             hiddenInput: "full_number",
             utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/utils.js"
         });
-
         document.querySelector("#taskFormHeader .phone_number").addEventListener("countrychange", function() {
             $("#taskFormHeader #dialCode").val(phone_number_intltel.getSelectedCountryData().dialCode);
         });
     }
-
+   // phoneInput();
+         
     var CSRF_TOKEN = $("input[name=_token]").val();
 
     function searchRes(){

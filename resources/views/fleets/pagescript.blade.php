@@ -141,8 +141,8 @@
             mobile_number = window.intlTelInput(mobile_number_input, {
                 separateDialCode: true,
                 hiddenInput: "full_number",
-                utilsScript: "{{ asset('telinput/js/utils.js') }}",
-            });
+                utilsScript: "{{ asset('telinput/js/utils.js') }}"
+               });
 
         }
 

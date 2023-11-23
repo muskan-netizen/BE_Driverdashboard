@@ -23,6 +23,7 @@ Route::group(['middleware' => []], function() {
 Route::post('otp_test', 'Api\TaskController@smstest')->middleware('ConnectDbFromOrder');
 Route::post('check-dispatcher-keys', 'Api\TaskController@checkDispatcherKeys')->middleware('ConnectDbFromOrder');
 Route::post('get-delivery-fee', 'Api\TaskController@getDeliveryFee')->middleware('ConnectDbFromOrder');
+Route::post('get-delivery-fee-rental', 'Api\TaskController@getDeliveryFeeRental')->middleware('ConnectDbFromOrder');
 Route::post('task/create', 'Api\TaskController@CreateTask')->middleware('ConnectDbFromOrder');
 Route::any('task/callNotification', 'Api\TaskController@callNotification')->middleware('ConnectDbFromOrder');
 Route::post('task/update_order_prepration_time', 'Api\TaskController@addBufferTime')->middleware('ConnectDbFromOrder');

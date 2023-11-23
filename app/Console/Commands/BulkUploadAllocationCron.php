@@ -390,7 +390,6 @@ class BulkUploadAllocationCron extends Command
         ];
 
         if (!isset($geo)) {
-            Log::info('innergeoty');
             $oneagent = Agent::where('id', $agent_id)->first();
             if(!empty($oneagent->device_token) && $oneagent->is_available == 1){
                 $data = [

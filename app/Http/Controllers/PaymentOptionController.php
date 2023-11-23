@@ -28,8 +28,8 @@ class PaymentOptionController extends BaseController
      */
     public function index()
     {
-        $payment_codes = array('razorpay', 'stripe','vnpay','ccavenue', 'khalti','obo','paystack');
-        $payout_codes = array('cash', 'stripe', 'bank_account_m_india','razorpay','obo');
+        $payment_codes = array('razorpay', 'stripe','vnpay','ccavenue', 'khalti','obo','paystack','livee');
+        $payout_codes = array('cash', 'stripe', 'bank_account_m_india','razorpay','obo','livee');
         $payOption = PaymentOption::whereIn('code', $payment_codes)->get();
         $payoutOption = PayoutOption::whereIn('code', $payout_codes)->get();
         return view('payoption/index')->with(['payOption' => $payOption, 'payoutOption' => $payoutOption]);
@@ -273,6 +273,16 @@ class PaymentOptionController extends BaseController
                         'obo_market_place_id' => $request->obo_market_place_id,
                     ));
                 }
+                else if ((isset($method_name_arr[$key])) && (strtolower($method_name_arr[$key]) == 'livee')) {
+                    $request->validate([
+                        'livee_merchant_key' => 'required',
+                        'livee_resource_key' => 'required',
+                    ]);
+                    $json_creds = json_encode(array(
+                        'livee_merchant_key' => $request->livee_merchant_key,
+                        'livee_resource_key' => $request->livee_resource_key,
+                    ));
+                }
             }
             PaymentOption::where('id', $id)->update(['status' => $status, 'credentials' => $json_creds, 'test_mode' => $test_mode]);
         }
@@ -326,6 +336,16 @@ class PaymentOptionController extends BaseController
                     $json_creds = json_encode(array(
                         'api_key' => $request->razorpay_payout_api_key,
                         'secret_key' => $request->razorpay_payout_secret_key
+                    ));
+                }
+                else if ((isset($method_name_arr[$key])) && (strtolower($method_name_arr[$key]) == 'livee')) {
+                    $request->validate([
+                        'livee_payout_merchant_key' => 'required',
+                        'livee_payout_resource_key' => 'required',
+                    ]);
+                    $json_creds = json_encode(array(
+                        'livee_payout_merchant_key' => $request->livee_payout_merchant_key,
+                        'livee_payout_resource_key' => $request->livee_payout_resource_key,
                     ));
                 }
             }

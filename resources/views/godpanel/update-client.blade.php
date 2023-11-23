@@ -301,10 +301,33 @@
                                         </form>
                                 </div>
                             </div>
+                            
                         @endif    
                 </div>
             </div>
+            <div class="row mt-4">
+
+                <div class="col-4">
+
+                    <div class="card">
+                        <div class="card-body"><h3>{{__('Auto Allocation Microservice')}}</h3>
+                    <div class="form-group d-flex justify-content-between mb-3">
+                        <label for="notification_service" class="mr-2 mb-0">{{__("Enable")}} </label>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="notification_service" name="notification_service" data-id = "{{@$client->id}}" @if(@$client->notification_service == 1) checked  @endif>
+                                <label class="custom-control-label" for="notification_service"></label>
+                            </div>
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
         </div>
+        
     </div>
 
     
@@ -319,6 +342,15 @@
 <script src="{{asset('assets/libs/mohithg-switchery/mohithg-switchery.min.js')}}"></script>
 
 <script type="text/javascript">
+
+$(document).ready(function() {
+        $.ajaxSetup({
+            headers: {'X-CSRF-TOKEN': $('input[name="_token"]').val()}
+        });
+
+    });
+
+    
 $(document).ready(function(){
     var update_status_chat = "{{route('client.socketUpdateAction', ':id')}}";
 
@@ -334,6 +366,34 @@ $(document).ready(function(){
         elems.forEach(function(html) {
         var switchery =new Switchery(html);
     });
+});
+
+$('#notification_service').on('change',function(){
+        var is_notification  = 0;
+        var client_id  = $(this).data('id');
+        if ($(this).is(":checked")) {
+            is_notification  = 1;
+        }else{
+            is_notification  = 0;
+
+        }
+
+        $.ajax({
+                    url: "{{route('enable-notification-service')}}",
+                    type: "POST",
+                    dataType: 'json',
+                    data: 
+                    { 
+                      client_id:client_id,
+                      notification_service:is_notification
+                    },
+                    headers: {Accept: "application/json"},
+                    success: function(response) {
+                        console.log('in success');
+                    }
+                });
+      
+
 });
 </script>
 @endsection

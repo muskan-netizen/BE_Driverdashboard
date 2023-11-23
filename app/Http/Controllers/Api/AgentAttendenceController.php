@@ -99,9 +99,6 @@ class AgentAttendenceController extends BaseController
     public function create(Request $request)
     {
         try {
-            \Log::info('Add Agent Attendence API!');
-            \Log::info($request->all());
-
             $rules = [
                 'start_time' => [
                     'required'
@@ -201,8 +198,6 @@ class AgentAttendenceController extends BaseController
     public function update(Request $request, AgentAttendence $id)
     {
         try {
-            \Log::info('Add Agent Attendence API!');
-            \Log::info($request->all());
 
             $rules = [
                 'end_time' => [

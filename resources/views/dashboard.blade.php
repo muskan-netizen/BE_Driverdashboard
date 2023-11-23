@@ -83,6 +83,8 @@
 ?>
 @section('script')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.3/jquery.timeago.js"></script>
+    <script src="{{ asset('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+
     <script>
         // var marker;
         var show = [0];
@@ -575,7 +577,11 @@ function loadTeams(is_load_html, is_show_loader)
             initMap(is_load_html);
         },
         error: function(data) {
-            alert('There is some issue. Try again later');
+            Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'There is some issue. Try again later',
+                });
             if(is_load_html == 1)
             {
                 spinnerJS.hideSpinner();
@@ -637,7 +643,11 @@ function initializeSortable()
                     $('#optimize-route-modal').modal('show');
                 },
                 error: function(response) {
-                    alert('There is some issue. Try again later');
+                    Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'There is some issue. Try again later',
+                });
                     spinnerJS.hideSpinner();
                 }
             });

@@ -14,7 +14,7 @@
  }
  @endphp
 <li>
-	<div class="prod">
+	<div class="prod ">
 		<div class="prod-pic">
           <img alt="{{ $product->id }}" class="rounded-circle" src="{{  $path }}">
 		</div>
@@ -29,9 +29,9 @@
 		
 		
 		@if(empty($title))
-           {{$product->sku}}
+           <span>{{$product->sku}}</span>
         @else
-        {{$title}}
+        <span>{{$title}}</span>
         
         @endif
 		

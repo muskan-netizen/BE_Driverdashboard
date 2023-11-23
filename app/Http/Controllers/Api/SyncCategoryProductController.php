@@ -289,8 +289,6 @@ class SyncCategoryProductController extends Controller
         $categorySave = Category::updateOrCreate([
             'slug' => $slug
         ], $data);
-         \Log::info('categorySave transl_data');
-         \Log::info($cat['primary'] ?? "");
         $transl_data = [
             'name' => $cat['primary']['name'] ?? $cat['slug'],
             'trans-slug' => $cat['primary']['trans_slug'] ?? '',

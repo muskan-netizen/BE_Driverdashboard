@@ -5,6 +5,7 @@
 /public/clients
 /public/managers
 /storage/*.key
+/storage
 /app/jobs/UpdatePassword
 /vendor
 .env

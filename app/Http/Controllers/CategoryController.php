@@ -173,10 +173,8 @@ class CategoryController extends Controller
             // if( @$checkAuth['status'] == 200){
             $apiRequestURL = $url . '/api/v1/category-product-sync-dispatcher';
 
-            \Log::info('category-product-sync-dispatcher');
             // POST Data
             $Dispatcher_url = $_SERVER['HTTP_ORIGIN']; // $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'];
-            \Log::info($Dispatcher_url);
             $clients = Client::where('is_superadmin', 1)->select('id', 'code')->first();
 
             // POST Data

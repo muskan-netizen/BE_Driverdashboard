@@ -125,7 +125,8 @@ class ActivityController extends BaseController
     {
         $header = $request->header();
         $client_code = Client::where('database_name', $header['client'][0])->first();
-        $client_currency = ClientPreference::with('currency')->where('client_id', $client_code->code)->first();
+        $preferences = ClientPreference::with('currency')->where('client_id', $client_code->code)->first();
+        $client_currency = $preferences->currency;
         $tz = new Timezone();
         $client_code->timezone = $tz->timezone_name($client_code->timezone);
         $start     = Carbon::now($client_code->timezone ?? 'UTC')->startOfDay();
@@ -146,10 +147,21 @@ class ActivityController extends BaseController
 
 
         if (count($orders) > 0) {
-            $tasks = Task::whereIn('order_id', $orders)->where('task_status', '!=', 4)->Where('task_status', '!=', 5)
-            ->with(['location','tasktype','order.customer','order.customer.resources','order.task.location','order.additionData','order.waitingTimeLogs'])->orderBy("order_id", "DESC")
-            ->orderBy("id","ASC")
-            ->get();
+
+            if($preferences->is_dispatcher_allocation == 1)
+            {
+                $tasks = Task::whereIn('order_id', $orders)->where('task_status', '!=', 4)->Where('task_status', '!=', 5)->where('driver_id', $id)
+                ->with(['location','tasktype','order.customer','order.customer.resources','order.task.location','order.additionData','order.waitingTimeLogs'])->orderBy("order_id", "DESC")
+                ->orderBy("id","ASC")
+                ->get();
+            }else{
+                $tasks = Task::whereIn('order_id', $orders)->where('task_status', '!=', 4)->Where('task_status', '!=', 5)
+                ->with(['location','tasktype','order.customer','order.customer.resources','order.task.location','order.additionData','order.waitingTimeLogs'])->orderBy("order_id", "DESC")
+                ->orderBy("id","ASC")
+                ->get();
+            }
+           
+           
             if (count($tasks) > 0) {
                 //sort according to task_order
                 $tasks = $tasks->toArray();
@@ -163,7 +175,7 @@ class ActivityController extends BaseController
 
         return response()->json([
             'data' => $tasks,
-            'currency' => $client_currency->currency,
+            'currency' => $client_currency,
             'status' => 200,
             'message' => __('success')
         ], 200);
@@ -229,6 +241,7 @@ class ActivityController extends BaseController
 
     public function agentLog(Request $request)
     {
+        $user_id = Auth::user()->id;
         $header = $request->header();
         $client_code = Client::where('database_name', $header['client'][0])->first();
         $preferences = ClientPreference::with('currency')->first();
@@ -279,8 +292,16 @@ class ActivityController extends BaseController
                 if (count($orders) > 0) {
                     //\Log::info('get order');
                     
+                   
                     //get agent current task
-                    $tasks = Task::whereIn('order_id', $orders)->where('task_status', 2)->with(['location','tasktype','order.customer','order.additionData'])->orderBy('order_id', 'desc')->orderBy('id', 'ASC')->get()->first();
+                   if($preferences->is_dispatcher_allocation == 1)
+                   {
+                      $tasks = Task::whereIn('order_id', $orders)->where(['task_status' => 2,'driver_id' => $user_id ])->with(['location','tasktype','order.customer','order.additionData'])->orderBy('order_id', 'desc')->orderBy('id', 'ASC')->get()->first();
+
+                   }else{
+
+                       $tasks = Task::whereIn('order_id', $orders)->where('task_status', 2)->with(['location','tasktype','order.customer','order.additionData'])->orderBy('order_id', 'desc')->orderBy('id', 'ASC')->get()->first();
+                   }
                     if (!empty($tasks)) {
 
                         //\Log::info('get tasks--');
@@ -352,7 +373,15 @@ class ActivityController extends BaseController
 
 
         if (count($orders) > 0) {
-            $tasks = Task::whereIn('order_id', $orders)->where('task_status', '!=', 4)->Where('task_status', '!=', 5)->with(['location','tasktype','order.customer','order.additionData','order.waitingTimeLogs'])->orderBy('order_id', 'desc')->orderBy('id', 'ASC')->get();
+
+            if($preferences->is_dispatcher_allocation == 1)
+            {
+                $tasks = Task::whereIn('order_id', $orders)->where('driver_id' ,$id)->where('task_status', '!=', 4)->Where('task_status', '!=', 5)->with(['location','tasktype','order.customer','order.additionData','order.waitingTimeLogs'])->orderBy('order_id', 'desc')->orderBy('id', 'ASC')->get();
+
+            }else{
+                $tasks = Task::whereIn('order_id', $orders)->where('task_status', '!=', 4)->Where('task_status', '!=', 5)->with(['location','tasktype','order.customer','order.additionData','order.waitingTimeLogs'])->orderBy('order_id', 'desc')->orderBy('id', 'ASC')->get();
+            }
+            
             if (count($tasks) > 0) {
                 //sort according to task_order
                 $tasks = $tasks->toArray();

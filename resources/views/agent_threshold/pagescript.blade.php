@@ -1,3 +1,5 @@
+<script src="{{ asset('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+
 <script>
     var autocomplete = {};
     var autocompletesWraps = ['add0'];
@@ -180,7 +182,7 @@
             count +
             '"> <i class="mdi mdi-map-marker-radius"></i></button></div><input type="hidden" name="latitude[]" id="add' +
             count + '-latitude" value="0" /><input type="hidden" name="longitude[]" id="add' + count +
-            '-longitude" value="0" /></div></div><div class="col-lg-4 col-md-3 mb-lg-0 mb-3"><div class="form-group"><input type="text" id="add'+ count +'-email" name="address_email[]" class="form-control" placeholder="'+emailplaceholder+'" value=""><span class="invalid-feedback" role="alert"><strong></strong></span></div></div><div class="col-lg-4 col-md-3 mb-lg-0 mb-3"><div class="form-group"><input type="text" id="add'+ count +'-phone_number" name="address_phone_number[]" class="form-control" placeholder="'+phoneplaceholder+'" value=""><span class="invalid-feedback" role="alert"><strong></strong></span></div></div><div class="col-lg-4 col-md-3 mb-lg-0 mb-3"><div class="form-group d-flex align-items-center" id=""><input type="text" id="add' +
+            '-longitude" value="0" /></div></div><div class="col-lg-4 col-md-3 mb-lg-0 mb-3"><div class="form-group"><input type="text" id="add'+ count +'-email" name="address_email[]" class="form-control" placeholder="'+emailplaceholder+'" value=""><span class="invalid-feedback" role="alert"><strong></strong></span></div></div><div class="col-lg-4 col-md-3 mb-lg-0 mb-3"><div class="form-group"><input type="text" id="add'+ count +'-phone_number" name="address_phone_number[]" class=" phone_number form-control" placeholder="'+phoneplaceholder+'" value=""><span class="invalid-feedback" role="alert"><strong></strong></span></div></div><div class="col-lg-4 col-md-3 mb-lg-0 mb-3"><div class="form-group d-flex align-items-center" id=""><input type="text" id="add' +
             count + '-postcode" class="form-control" placeholder="'+postcodeplaceholder+'" name="post_code[]"><button type="button" class="btn btn-primary-outline action-icon" onclick="deleteAddress('+delbtn+')"> <i class="mdi mdi-delete"></i></button></div></div></div>'
             );
 
@@ -306,7 +308,7 @@
             '"> <i class="mdi mdi-map-marker-radius"></i></button></div><input type="hidden" name="latitude[]" id="edit' +
             editCount + '-latitude" value="0" /><input type="hidden" name="longitude[]" id="edit' +
             editCount +
-            '-longitude" value="0" /></div></div><div class="col-lg-4 col-md-3 mb-lg-0 mb-3"><div class="form-group"><input type="text" id="edit'+ editCount +'-email" name="address_email[]" class="form-control" placeholder="'+emailplaceholder+'" value=""><span class="invalid-feedback" role="alert"><strong></strong></span></div></div><div class="col-lg-4 col-md-3 mb-lg-0 mb-3"><div class="form-group"><input type="text" id="edit'+ editCount +'-phone_number" name="address_phone_number[]" class="form-control" placeholder="'+phoneplaceholder+'" value=""><span class="invalid-feedback" role="alert"><strong></strong></span></div></div><div class="col-lg-4 col-md-3 mb-lg-0 mb-3"><div class="form-group delete_btn d-flex align-items-center" id=""><input type="text" id="edit' +
+            '-longitude" value="0" /></div></div><div class="col-lg-4 col-md-3 mb-lg-0 mb-3"><div class="form-group"><input type="text" id="edit'+ editCount +'-email" name="address_email[]" class="form-control" placeholder="'+emailplaceholder+'" value=""><span class="invalid-feedback" role="alert"><strong></strong></span></div></div><div class="col-lg-4 col-md-3 mb-lg-0 mb-3"><div class="form-group"><input type="text" id="edit'+ editCount +'-phone_number" name="address_phone_number[]" class="form-control phone_number" placeholder="'+phoneplaceholder+'" value=""><span class="invalid-feedback" role="alert"><strong></strong></span></div></div><div class="col-lg-4 col-md-3 mb-lg-0 mb-3"><div class="form-group delete_btn d-flex align-items-center" id=""><input type="text" id="edit' +
                 editCount + '-postcode" class="form-control" placeholder="'+postcodeplaceholder+'" name="post_code[]"><button type="button" class="btn btn-primary-outline action-icon" onclick="deleteAddress('+delbtn+')"> <i class="mdi mdi-delete"></i></button></div></div></div>'
 
             );
@@ -409,7 +411,11 @@
                         }
                     },
                     error: function(response) {
-                        alert('There is some issue. Try again later');
+                        Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'There is some issue. Try again later',
+                });
                         // $('.pageloader').css('display','none');
                     }
                 });
@@ -454,7 +460,11 @@
                         }
                     },
                     error: function(response) {
-                        alert('There is some issue. Try again later');
+                        Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'There is some issue. Try again later',
+                });
                         // $('.pageloader').css('display','none');
                     }
                 });
@@ -502,11 +512,19 @@
                         $("#payment_status").modal('hide');
                         location.reload();
                     }else{
-                        alert('There is some issue. Try again later');
+                        Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'There is some issue. Try again later',
+                });
                     }
                 },
                 error: function(response) {
-                    alert('There is some issue. Try again later');
+                    Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'There is some issue. Try again later',
+                });
                     // $('.pageloader').css('display','none');
                 }
             });

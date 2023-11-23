@@ -23,7 +23,7 @@ class SendPushNotification
      */
     public function __construct()
     {
-        //
+
     }
     /**
      * Handle the event.
@@ -34,7 +34,6 @@ class SendPushNotification
     public function handle(PushNotification $event)
     {
         $date =  Carbon::now()->toDateTimeString();
-
         try {
             $schemaName = 'royodelivery_db';
             $default = [
@@ -56,12 +55,13 @@ class SendPushNotification
             $this->getData();
             DB::disconnect($schemaName);
         } catch (Exception $ex) {
-           return $ex->getMessage();
+            return $ex->getMessage();
         }
+
     }
 
     public function getData()
-    {
+    {        
         $schemaName       = 'royodelivery_db';
         $date             =  Carbon::now()->toDateTimeString();
         $get              =  DB::connection($schemaName)->table('rosters')
@@ -75,7 +75,8 @@ class SendPushNotification
         $getids           = $get->pluck('id')->toArray();
         $get              = $get->get();
         DB::connection($schemaName)->table('rosters')->where('status',10)->delete();
-        if(count($getids) > 0){
+                                   
+        if(count($getids) > 0){ 
             // DB::connection($schemaName)->table('rosters')->whereIn('id',$getids)->update(['status'=>1]);
             DB::connection($schemaName)->table('rosters')->whereIn('id',$getids)->delete();
             $this->sendnotification($get);
@@ -145,7 +146,7 @@ class SendPushNotification
                 }
             }
             sleep(5);
-            $this->getData();
+            // $this->getData();
         } catch (Exception $ex) {
             \Log::info($ex->getMessage());
         }

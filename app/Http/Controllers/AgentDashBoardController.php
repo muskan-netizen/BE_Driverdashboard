@@ -16,11 +16,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Model\Countries;
+use App\Traits\Dispatcher;
+use App\Traits\DispatcherOrders;
 use App\Traits\googleMapApiFunctions;
 use Log;
 class AgentDashBoardController extends Controller
 {
-    use googleMapApiFunctions;
+    use googleMapApiFunctions, Dispatcher, DispatcherOrders;
+    
     /**
      * Display a listing of the resource.
      *
@@ -107,7 +110,12 @@ class AgentDashBoardController extends Controller
         $new_order = [];
         if (is_array($orders) && count($orders)>0 && !empty($orders)) {
             $counter = 0;
+            
+            
             foreach ($orders as $order) {
+
+                
+                if(isset($order['task'] )){
                 foreach ($order['task'] as $task) {
                     $new_order[] = $order;
                     $new_order[$counter]['task_order'] = $task['task_order'];
@@ -115,6 +123,7 @@ class AgentDashBoardController extends Controller
                     $new_order[$counter]['task'][] = $task;
                     $counter++;
                 }
+             }
             }
 
             //sort array
@@ -138,13 +147,13 @@ class AgentDashBoardController extends Controller
                 'sound' =>  'default',
             ])
             ->send();
-            Log::info('sendsilentnotification');
         }
     }
 
     //function to load latest order/route and agent data with or without html
-    public function dashboardTeamData(Request $request)
+    public function dashboardTeamData_old(Request $request)
     {
+        return $this->homePage($request);
         $userstatus = isset($request->userstatus)?$request->userstatus:2;
         $team_ids = isset($request->team_id)?$request->team_id:'';
         $is_load_html = isset($request->is_load_html)?$request->is_load_html:1;
@@ -610,8 +619,17 @@ class AgentDashBoardController extends Controller
         }
     }
 
+    public function dashboardTeamData(Request $request)
+    {
+    return $this->homePage($request);
+    }
     public function dashboardOrderData(Request $request)
     {
+    return $this->orderData($request);
+    }
+    public function dashboardOrderData_old1(Request $request)
+    {
+        return $this->orderData($request);
         $userstatus = isset($request->userstatus)?$request->userstatus:2;
         $checkuserroutes = isset($request->checkuserroutes)?$request->checkuserroutes:'';
         $team_ids = isset($request->team_id)?$request->team_id:'';

@@ -86,8 +86,9 @@
                                     <div class="form-group" id="phone_numberInput">
                                         <label for="phone_number" class="control-label">CONTACT NUMBER</label>
                                         <div class="input-group">
-                                            <input type="text" name="phone_number" class="form-control" id="phone_number"
+                                            <input type="text" name="phone_number" class="form-control phone_number" id="phone_number"
                                                 placeholder="Enter mobile number" value="{{ old('phone_number', $manager->phone_number ?? '')}}" required>
+<!--                                                 <input type="hidden" id="dialCode" name="dialCode" value="{{$customer->dial_code}}"> -->
                                         </div>
                                         <span class="invalid-feedback" role="alert">
                                             <strong></strong>

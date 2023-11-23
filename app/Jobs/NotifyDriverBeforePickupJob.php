@@ -115,8 +115,6 @@ class NotifyDriverBeforePickupJob implements ShouldQueue
     }
 
     public function seperate_connection($schemaName){
-        Log::info('schemaName'.$schemaName);
-
         $default = [
             'driver' => env('DB_CONNECTION', 'mysql'),
             'host' => env('DB_HOST'),
@@ -133,7 +131,6 @@ class NotifyDriverBeforePickupJob implements ShouldQueue
         ];
 
         Config::set("database.connections.$schemaName", $default);
-        Log::info('schemaName2'.$schemaName);
 
     }
 }

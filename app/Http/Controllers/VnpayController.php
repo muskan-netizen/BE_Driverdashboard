@@ -241,7 +241,6 @@ class VnpayController extends BaseController{
     }
     public function VnpayNotify(Request $request, $domain = '')
     {
-        \Log::info("web hooke hit");
         try{
            
             $inputData = array();

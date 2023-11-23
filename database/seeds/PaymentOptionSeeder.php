@@ -30,6 +30,7 @@ class PaymentOptionSeeder extends Seeder
         array('id' => '16', 'path' => 'ccavenue', 'code' => 'ccavenue', 'title' => 'CCAvenue', 'off_site' => '1', 'status' => '0'),
         array('id' => '17', 'path' => 'khalti/khalti', 'code' => 'khalti', 'title' => 'Khalti', 'off_site' => '1', 'status' => '0'),
         array('id' => '18', 'path' => '', 'code' => 'obo', 'title' => 'Obo', 'off_site' => '1', 'status' => '0'),
+        array('id' => '19', 'path' => '', 'code' => 'livee', 'title' => 'Livee', 'off_site' => '1', 'status' => '1'),
 
       );
 

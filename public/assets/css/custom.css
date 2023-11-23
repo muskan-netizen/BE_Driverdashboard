@@ -963,7 +963,7 @@ hr.new3 {
     left: 0;
 }
 .left-sidebar .card-body {
-    border-bottom: 1px solid #ccc;
+    /* border-bottom: 1px solid #ccc; */
     cursor: grab;
 }
 .left-sidebar .card-body:last-child {
@@ -1440,7 +1440,18 @@ form#UpdateClient div#favicon_container {
         grid-gap: 0;
         padding:10px;
     }
-
+    .pick_drop_item_list .col-12 .second_list_pick, .pick_drop_item_list .col-12 h5.w-100.d-flex.align-items-center.justify-content-between{
+        padding-left: 10px!important;
+    }
+    .pick_drop_item_list i.fas.fa-bars{
+        left: -15px;
+    }
+    .row.coolcheck.no-gutters .radio label:last-child {
+        margin: 0;
+    }
+    .assigned-block .pick_drop_item_list button.assigned-btn {
+        min-width: inherit!important;
+    }
 }
 @media(max-width:1366px) {
     div#agent_route_container .assigned-btn{
@@ -3967,6 +3978,46 @@ body.light .card.main-table-card div#pricing-datatable_length label:after {
     font-size:12px;
     font-weight: 700;
 }
+.assigned-block {
+    background-color: #fff!important;
+    padding: 0!important;
+}
+.assigned-block {
+    background-color: #f5f5f5;
+    padding: 0!important;
+    margin: 5px 5px 15px;
+}
+.assigned-block .pick_drop_item_list {
+    position: relative;
+    padding: 10px 15px 20px 25px;
+    background: #fff;
+    box-shadow: 0 0 5px #ccc;
+    border-radius: 6px;
+}
+.assigned-block .pick_drop_item_list button.assigned-btn {
+    min-width: 79px;
+}
+.assigned-block .pick_drop_item_list button.assigned-btn.green_ {
+    color: black;
+}
+button.view_route-btn {
+    width: 100%;
+    padding: 5px;
+    margin: 10px 0;
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: capitalize;
+    letter-spacing: 0.6px;
+    border-radius: 6px;
+    background: #40b323;
+    border-color: #40b323;
+}
+
+button.view_route-btn:hover, button.view_route-btn:focus {
+    border-color: #40b323;
+    background: transparent;
+    color: #40b323;
+}
 .dark .assigned-block{background-color: transparent;}
 .dark #accordion .card-body .assigned-block h5{color:#dbe9f9;}
 .dark #accordion .card-body .assigned-block h5 i{color:#dbe9f9;}
@@ -4212,4 +4263,10 @@ div#scrollbar {
     }
    
 }
-
+.card_item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    border-radius: 10px 10px 0 0;
+}

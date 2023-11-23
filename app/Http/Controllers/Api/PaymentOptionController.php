@@ -19,7 +19,7 @@ class PaymentOptionController extends BaseController{
 
     public function getPaymentOptions(Request $request, $page = ''){
         if($page == 'wallet'){
-            $code = array('paypal', 'stripe', 'yoco', 'paylink','razorpay','simplify','square','vnpay','ccavenue', 'khalti','flutterwave','paystack');
+            $code = array('paypal', 'stripe', 'yoco', 'paylink','razorpay','simplify','square','vnpay','ccavenue', 'khalti','flutterwave','paystack','livee');
         }else{
             $code = array('cod', 'paypal', 'payfast', 'stripe', 'mobbex','yoco','paylink','razorpay','gcash','simplify','square','flutterwave','paystack');
         }
@@ -127,4 +127,11 @@ class PaymentOptionController extends BaseController{
     //     $gateway = new SquareGatewayController();
     //     return $gateway->squarePurchase($request);
     // }
+
+    public function postPaymentVia_livee(Request $request)
+    {
+        $gateway = new LiveePaymentController();
+        return $gateway->mobilePay($request);
+    }
+
 }

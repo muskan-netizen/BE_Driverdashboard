@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Api\BaseController;
 use App\Traits\{AgentSlotTrait,CategoryTrait};
-use App\Model\{Agent, AgentSlot,AgentSlotRoster,AgentLog, AllocationRule, Client, ClientPreference, Cms, Order, Task, TaskProof, Timezone, User, DriverGeo, Geo, TagsForAgent,GeneralSlot};
+use App\Model\{Agent, AgentSlot,AgentSlotRoster,AgentLog, AllocationRule, Client, ClientPreference, Cms, Order, Task, TaskProof, Timezone, User, DriverGeo, Geo, TagsForAgent,GeneralSlot,Team};
 
 use App\Http\Controllers\Api\AgentController;
 
@@ -40,7 +40,6 @@ class AgentSlotController extends BaseController
     /**   get agent according to lat long  */
     function getAgentsSlotByTags(Request $request){
        
-        //pr($request->all());
          try {
             $preference =  ClientPreference::first();
             if($preference->is_driver_slot != 1){
@@ -51,14 +50,14 @@ class AgentSlotController extends BaseController
                 return response()->json([
                     'data' => $response,
                     'status' => 200,
-                    'message' => __('success! slot Not active!')
+                    'message' => __('success! slot Not active!!')
                 ], 200);
                
             }
             $validator = Validator::make(request()->all(), [
                 'latitude'  => 'required',
                 'longitude' => 'required',
-                'tags'      => 'required',
+                //'tags'      => 'required',
                 'schedule_date' => 'required',
             ]);
 
@@ -71,7 +70,7 @@ class AgentSlotController extends BaseController
                 return response()->json([
                     'data' => $response,
                     'status' => 200,
-                    'message' => __('success! slot Not active!')
+                    'message' => __('success! slot Not active!!')
                 ], 200);
             }
             $agentController = new AgentController();
@@ -113,28 +112,50 @@ class AgentSlotController extends BaseController
                     $q->whereDate('schedule_date', $myDate);
                 });
             }
-            
 
-            $geoagents = $geoagents->whereIn('id', $geoagents_ids)->where([ "is_approved" => 1])->orderBy('id', 'DESC')->get();
+            //get team ids by vendor Email
+            if($request->has('team_email')) {
+                $clientDetail = Client::where('email',$request->team_email)->first();
+                if($clientDetail) {
+                    $teamDetail = Team::where('manager_id',$clientDetail->id)->get();
+                    $team_ids = [];
+                    if(count($teamDetail) > 0) {
+                        foreach($teamDetail as $key) {
+                            $team_ids[] = $key->id;
+                        }
+                    }
+                }
+                $geoagents = $geoagents->whereIn('team_id',$team_ids)->where([ "is_approved" => 1])->orderBy('id', 'DESC')->get();
+            } else {
+                $geoagents = $geoagents->where([ "is_approved" => 1])->orderBy('id', 'DESC')->get();
+            }
+
+            // echo"<pre>";
+            // print_r($geoagents->toArray()); die;
+
+            //$geoagents = $geoagents->whereIn('id', $geoagents_ids)->where([ "is_approved" => 1])->orderBy('id', 'DESC')->get();
+            //$geoagents = $geoagents->where([ "is_approved" => 1])->orderBy('id', 'DESC')->get();
             $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain/';
             $agents=[];
             $commonSlot=[];
-            foreach( $geoagents as $agent){
+            foreach( $geoagents as $agent) {
                 $agent->image_url =  isset($agent->profile_picture) ? $imgproxyurl.Storage::disk('s3')->url($agent->profile_picture) : Phumbor::url(URL::to('/asset/images/no-image.png'));
               
                 $slotss = [];
                 $mergeArray = [];
                 $Duration  = $request->service_time ?? 60;
-                foreach ($agent->slots as $slott) {
-                
-                        $new_slot = $this->SplitTime($myDate, $slott->start_time, $slott->end_time, $Duration,$timezoneset, $delayMin = 0,$request->slot_start_time);
-                      
-                        if (!in_array($new_slot, $slotss) && (count( $new_slot) > 0) ) {
-                            $slotss[] = $new_slot;
-                            //$mergeArray=  array_merge($slotss,$new_slot);
-                        }
-                    
+                if(isset($agent->slots)) {
+                    foreach ($agent->slots as $slott) {
+                            $new_slot = $this->SplitTime($myDate, $slott->start_time, $slott->end_time, $Duration,$timezoneset, $delayMin = 0,$request->slot_start_time);
+                            if (!in_array($new_slot, $slotss) && (count( $new_slot) > 0) ) {
+                                $slotss[] = $new_slot;
+                                //$mergeArray=  array_merge($slotss,$new_slot);
+                            }
+                        
+                    }
                 }
+                // echo"<pre>";
+                // print_r($slotss); die;
                 $arr = array();
                 $count = count($slotss);
                 for ($i=0;$i<$count;$i++) {
@@ -157,7 +178,7 @@ class AgentSlotController extends BaseController
                 $agent->slotCount = count( $viewSlot);
                 $agent->slotings = $viewSlot;
                
-                if(count( $viewSlot) >0){
+                if(count( $viewSlot) > 0){
                     $agents[] = $agent;
                 }
                 
@@ -207,6 +228,50 @@ class AgentSlotController extends BaseController
         }
 
     }
+    // public function SplitTime($myDate, $StartTime, $EndTime, $Duration="60", $timezoneset,$delayMin = 0,$slot_start_time)
+    // {
+    //     $Duration = (($Duration==0)?'60':$Duration);
+
+    //     $cr = Carbon::now()->addMinutes($delayMin);
+    //     $date = Carbon::parse($cr, 'UTC');
+    //     $now = $date->setTimezone($timezoneset);
+
+       
+    //     $nowT = strtotime($now);
+        
+    //     $nowA = Carbon::createFromFormat('Y-m-d H:i:s', $myDate.' '.$StartTime);
+        
+    //     $nowS = Carbon::createFromFormat('Y-m-d H:i:s', $nowA)->timestamp;
+    //     $nowE = Carbon::createFromFormat('Y-m-d H:i:s', $myDate.' '.$EndTime)->timestamp;
+    //     if ($nowT > $nowE) {
+    //         return [];
+    //     } elseif ($nowT>$nowS) {
+           
+    //         $StartTime = date('H:i', strtotime($now. ' +10 minutes'));
+    //         if( $StartTime >= $slot_start_time){
+    //             $StartTime = $slot_start_time;
+    //         }
+    //     } else {
+    //         $StartTime = date('H:i', strtotime($nowA));
+    //     }
+    //     $ReturnArray = array();
+    //     $StartTime = strtotime($StartTime); //Get Timestamp
+    //     $EndTime = strtotime($EndTime); //Get Timestamp
+    //     $AddMins = $Duration * 60;
+    //     $endtm = 0;
+    
+    //     while ($StartTime <= $EndTime) {
+    //         $endtm = $StartTime + $AddMins;
+    //         if ($endtm>$EndTime) {
+    //             $endtm = $EndTime;
+    //         }
+    //         $ReturnArray[] = date("G:i", $StartTime).' - '.date("G:i", $endtm);
+    //         $StartTime += $AddMins;
+    //         $endtm = 0;
+    //     }
+    //     return $ReturnArray;
+    // }
+
     public function SplitTime($myDate, $StartTime, $EndTime, $Duration="60", $timezoneset,$delayMin = 0,$slot_start_time)
     {
         $Duration = (($Duration==0)?'60':$Duration);
@@ -224,15 +289,18 @@ class AgentSlotController extends BaseController
         $nowE = Carbon::createFromFormat('Y-m-d H:i:s', $myDate.' '.$EndTime)->timestamp;
         if ($nowT > $nowE) {
             return [];
-        } elseif ($nowT>$nowS) {
-           
-            $StartTime = date('H:i', strtotime($now. ' +10 minutes'));
-            if( $StartTime >= $slot_start_time){
-                $StartTime = $slot_start_time;
-            }
         } else {
             $StartTime = date('H:i', strtotime($nowA));
-        }
+        }    
+        // } elseif ($nowT>$nowS) {
+        //     $StartTime = date('H:i', strtotime($now. ' +10 minutes'));
+        //     // if( $StartTime >= $slot_start_time){
+        //     //     $StartTime = $slot_start_time;
+        //     // }
+        // } else {
+        //     $StartTime = date('H:i', strtotime($nowA));
+        // }
+        
         $ReturnArray = array();
         $StartTime = strtotime($StartTime); //Get Timestamp
         $EndTime = strtotime($EndTime); //Get Timestamp
@@ -241,12 +309,15 @@ class AgentSlotController extends BaseController
     
         while ($StartTime <= $EndTime) {
             $endtm = $StartTime + $AddMins;
-            if ($endtm>$EndTime) {
-                $endtm = $EndTime;
+            if($StartTime > $nowT) {
+                if ($endtm>$EndTime) {
+                    $endtm = $EndTime;
+                }
+                $ReturnArray[] = date("G:i", $StartTime).' - '.date("G:i", $endtm);
             }
-            $ReturnArray[] = date("G:i", $StartTime).' - '.date("G:i", $endtm);
             $StartTime += $AddMins;
             $endtm = 0;
+           
         }
         return $ReturnArray;
     }

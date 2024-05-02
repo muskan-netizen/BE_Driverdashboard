@@ -67,6 +67,11 @@ class PaymentOptionController extends BaseController{
         }
     }
 
+    public function postPaymentVia_mastercard(Request $request) {
+        $gateway = new MastercardPaymentController();
+        return $gateway->createSession($request);
+    }
+
     public function postPaymentVia_stripe(Request $request){
         $gateway = new StripeGatewayController();
         return $gateway->stripePurchase($request);

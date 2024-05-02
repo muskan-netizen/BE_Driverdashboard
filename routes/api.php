@@ -1,4 +1,6 @@
 <?php
+
+use App\Http\Controllers\Api\MastercardPaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -159,7 +161,7 @@ Route::group(['middleware' => ['dbCheck', 'AppAuth','apiLocalization']], functio
     Route::post('chat/sendNotification',      'Api\ChatController@sendNotificationToUser');
 
     Route::get('agent/poolingTaskSuggession', 'Api\ActivityController@poolingTasksSuggessions');                    // api for task list suggession for cab pooling
-    
+
     // bid and ride api
     Route::get('bidRide/requests','Api\ActivityController@getBidRideRequests');                  // api to get bid requests placed from order side
     Route::post('accept/decline/bidRide/requests','Api\ActivityController@getAcceptDeclinedBidRideRequests');  // api to decline/accept bid requests placed from order side
@@ -214,7 +216,7 @@ Route::group(['middleware' => ['dbCheck', 'AppAuth','apiLocalization']], functio
     Route::get('task/pending_payment_order','Api\ActivityController@pendingPaymentOrder');            // api for get task history
     Route::post('product_sku/bydb','Api\SalerController@getProductSkeParticulerDB');            // api for get task history
 });
-        
+
 Route::group(['prefix' => 'v1', 'middleware' => ['apiLocalization']], function () {
 
     Route::post('check-order-keys', 'Api\BaseController@checkOrderPanelKeys')->middleware('ConnectDbFromDispatcher');
@@ -227,5 +229,5 @@ Route::group(['middleware' => 'dbCheck','prefix' => 'public'], function() {
     Route::get('task/currentstatus', 'Api\TaskController@currentstatus');
 });
 
-
 });
+Route::get('payment/mastercard/return/{order_id}', [MastercardPaymentController::class, 'afterPayment']);

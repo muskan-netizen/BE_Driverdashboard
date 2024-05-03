@@ -373,9 +373,9 @@ class TaskController extends BaseController
         if ($user->is_superadmin == 0 && $user->all_team_access == 0 && $user->manager_type == 0) {
             $agentIds = DB::table('agents')
                 ->join('teams', 'agents.team_id', '=', 'teams.id')
-                // ->join('permissions', 'teams.id', '=', 'permissions.team_id')
+                ->join('sub_admin_team_permissions','teams.id','=','sub_admin_team_permissions.team_id')
+            ->where('sub_admin_team_permissions.sub_admin_id',$user->id)
                 ->pluck('agents.id');
-
             $orders->where(function ($query) use ($agentIds) {
                 $query->whereIn('orders.driver_id', $agentIds)
                     ->orWhereNull('orders.driver_id');

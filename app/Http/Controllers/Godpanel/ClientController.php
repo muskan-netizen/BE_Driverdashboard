@@ -84,7 +84,7 @@ class ClientController extends Controller
     {
         $validator = $this->validator($request->all())->validate();
         DB::beginTransaction();
-        // try {
+         try {
             $getFileName = null;
 
             // Handle File Upload
@@ -173,10 +173,10 @@ class ClientController extends Controller
        
             return redirect()->route('client.index')->with('success', 'Client Added successfully!');
             // all good
-        // } catch (\Exception $e) {
-        //     DB::rollback();
-        //     return redirect()->route('client.index')->with('error', $e->getMessage());
-        // }
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->route('client.index')->with('error', $e->getMessage());
+        }
     }
 
     private function randomString()

@@ -95,6 +95,7 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 			Route::resource('client', 'Godpanel\ClientController');
 			Route::resource('language', 'Godpanel\LanguageController');
 			Route::resource('currency', 'Godpanel\CurrencyController');
+			
 
 			Route::post('exportDb/{dbname}', 'Godpanel\ClientController@exportDb')->name('client.exportdb');
 
@@ -129,7 +130,12 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 		Route::get('/demo/page', function () {
 			return view('demo');
 		});
-
+        Route::get('/upload', function () {
+			
+			return view('image');
+		});
+		Route::post('/upload', 'ImageController@upload')->name('uploadImage');
+		Route::get('/delete_image', 'ImageController@deleteImage')->name('deleteImage');
 		Route::get('file-download/{filename}', 'DownloadFileController@index')->name('file.download.index');
 		Route::get('file-uploaded-download/{filename}', 'DownloadFileController@downloadUploadedFile')->name('uploadeddownload');
 

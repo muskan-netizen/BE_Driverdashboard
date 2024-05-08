@@ -118,7 +118,12 @@ class SubscriptionPlansDriverController extends BaseController
         $plan->status = ($request->has('status') && $request->status == '1') ? '1' : '0';
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $plan->image = Storage::disk('s3')->put($this->folderName, $file,'public');
+            if(is_azureEnable())
+            {
+                $plan->image = uploadAzureImage($file);
+            }else{
+                $plan->image = Storage::disk('s3')->put($this->folderName, $file,'public');
+            }
         }
         if( ($request->has('description')) && (!empty($request->description)) ){
             $plan->description = $request->description;

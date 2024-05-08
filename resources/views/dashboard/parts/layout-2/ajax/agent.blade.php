@@ -71,8 +71,14 @@
                 <div class="card-header " id="by1">
                     <div class="row p-2">
                         <div class="col-md-3 col-3">
-                            <img class="profile-circle"
-                                src="{{ isset($item->profile_picture) ? $imgproxyurl . Storage::disk('s3')->url($item->profile_picture) : 'https://dummyimage.com/36x36/ccc/fff' }}">
+                        @if(is_azureEnable())
+                           
+                            <img class="profile-circle"src="{{ isset($item->profile_picture) ?  getAzureUrl().$item->profile_picture : 'https://dummyimage.com/36x36/ccc/fff' }}">
+
+                        @else
+                        <img class="profile-circle"src="{{ isset($item->profile_picture) ? $imgproxyurl . Storage::disk('s3')->url($item->profile_picture) : 'https://dummyimage.com/36x36/ccc/fff' }}">
+                            
+                        @endif
                         </div>
                         <div class="col-md-9 col-9">
                             <h6 class=" header-title scnd">

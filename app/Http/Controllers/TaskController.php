@@ -716,9 +716,14 @@ class TaskController extends BaseController
                 $files = $request->file('file');
                 foreach ($files as $key => $value) {
                     $file = $value;
-                    $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
-                    $s3filePath = '/assets/' . $folder . '/' . $file_name;
-                    $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                    if(is_azureEnable())
+                    {
+                        $path = uploadAzureImage($file);
+                    }else{
+                        $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
+                        $s3filePath = '/assets/' . $folder . '/' . $file_name;
+                        $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                    }
                     array_push($images, $path);
                 }
                 $last = implode(",", $images);
@@ -1677,10 +1682,15 @@ class TaskController extends BaseController
             $files = $request->file('file');
             foreach ($files as $key => $value) {
                 $file = $value;
+                if(is_azureEnable())
+                {
+                    $path = uploadAzureImage($file);
+                }else{
                 $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
                 $s3filePath = '/assets/' . $folder . '/' . $file_name;
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
-                array_push($images, $path);
+            }
+            array_push($images, $path);
             }
             $last = implode(",", $images);
         }
@@ -3044,10 +3054,15 @@ class TaskController extends BaseController
                 $files = $request->file('file');
                 foreach ($files as $key => $value) {
                     $file = $value;
+                    if(is_azureEnable())
+                    {
+                        $path = uploadAzureImage($file);
+                    }else{
                     $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
 
                     $s3filePath = '/assets/' . $folder . '/' . $file_name;
                     $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                    }
                     array_push($images, $path);
                 }
                 $file_paths = implode(",", $images);

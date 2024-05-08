@@ -404,9 +404,14 @@ class TaskController extends BaseController
                 $folder = str_pad($client_details->code, 8, '0', STR_PAD_LEFT);
                 $folder = 'client_' . $folder;
                 $file = $request->file('image');
+                if(is_azureEnable())
+                {
+                    $path = uploadAzureImage($file);
+                }else{
                 $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
                 $s3filePath = '/assets/' . $folder . '/orders' . $file_name;
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                }
                 $proof_image = $path;
 
                 $task = Task::where('id', $request->task_id)->update([
@@ -422,9 +427,14 @@ class TaskController extends BaseController
                 $folder = str_pad($client_details->code, 8, '0', STR_PAD_LEFT);
                 $folder = 'client_' . $folder;
                 $file = $request->file('proof_face');
+                if(is_azureEnable())
+                {
+                    $path = uploadAzureImage($file);
+                }else{
                 $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
                 $s3filePath = '/assets/' . $folder . '/orders' . $file_name;
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                }
                 $proof_face = $path;
 
                 $task = Task::where('id', $request->task_id)->update([
@@ -440,9 +450,14 @@ class TaskController extends BaseController
                 $folder = str_pad($client_details->code, 8, '0', STR_PAD_LEFT);
                 $folder = 'client_' . $folder;
                 $file = $request->file('signature');
+                if(is_azureEnable())
+                {
+                    $path = uploadAzureImage($file);
+                }else{
                 $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
                 $s3filePath = '/assets/' . $folder . '/orders' . $file_name;
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                }
                 $proof_signature = $path;
 
                 $task = Task::where('id', $request->task_id)->update([
@@ -969,9 +984,14 @@ class TaskController extends BaseController
                 $folder = str_pad($client_details->code, 8, '0', STR_PAD_LEFT);
                 $folder = 'client_' . $folder;
                 $file = $request->file('proof_face');
+                if(is_azureEnable())
+                {
+                    $path = uploadAzureImage($file);
+                }else{
                 $file_name = uniqid() . '.' .  $file->getClientOriginalExtension();
                 $s3filePath = '/assets/' . $folder . '/orders' . $file_name;
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                }
                 $proof_face = $path;
             }
         }
@@ -1397,10 +1417,15 @@ class TaskController extends BaseController
                 $files = $request->file('file');
                 foreach ($files as $key => $value) {
                     $file = $value;
+                    if(is_azureEnable())
+                    {
+                        $path = uploadAzureImage($file);
+                    }else{
                     $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
 
                     $s3filePath = '/assets/' . $folder . '/' . $file_name;
                     $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                    }
                     array_push($images, $path);
                 }
                 $last = implode(",", $images);
@@ -3419,9 +3444,14 @@ class TaskController extends BaseController
             $folder = str_pad($shortcode, 8, '0', STR_PAD_LEFT);
             $folder = 'client_' . $folder;
             $file = $request->file('upload_photo');
+            if(is_azureEnable())
+            {
+                $path = uploadAzureImage($file);
+            }else{
             $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
             $s3filePath = '/assets/' . $folder;
             $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+            }
             $getFileName = $path;
         }
 
@@ -3724,10 +3754,15 @@ class TaskController extends BaseController
                 $files = $request->file('file');
                 foreach ($files as $key => $value) {
                     $file = $value;
+                    if(is_azureEnable())
+                    {
+                        $path = uploadAzureImage($file);
+                    }else{
                     $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
 
                     $s3filePath = '/assets/' . $folder . '/' . $file_name;
                     $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                    }
                     array_push($images, $path);
                 }
                 $last = implode(",", $images);

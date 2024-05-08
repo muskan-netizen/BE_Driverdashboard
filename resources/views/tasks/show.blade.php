@@ -82,7 +82,13 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
                     <div class="col-xl-12">
                         <div class="row align-items-center mb-3">
                             <div class="col-3 pr-0 pic-left">
-                                <img src="{{ !empty($task->agent->profile_picture) ? $imgproxyurl.Storage::disk('s3')->url($task->agent->profile_picture) : URL::to('/assets/images/user_dummy.jpg') }}" alt="{{__('contact-img')}}" title="{{__('contact-img')}}" class="rounded-circle avatar-sm">
+                            @if(is_azureEnable())
+                              
+                                <img src="{{ !empty($task->agent->profile_picture) ?   getAzureUrl().$task->agent->profile_picture : URL::to('/assets/images/user_dummy.jpg') }}" alt="{{__('contact-img')}}" title="{{__('contact-img')}}" class="rounded-circle avatar-sm">
+                            @else
+                            <img src="{{ !empty($task->agent->profile_picture) ? $imgproxyurl.Storage::disk('s3')->url($task->agent->profile_picture) : URL::to('/assets/images/user_dummy.jpg') }}" alt="{{__('contact-img')}}" title="{{__('contact-img')}}" class="rounded-circle avatar-sm">
+                                
+                            @endif
                             </div>
                             <div class="col-9 pl-1">
                                 <h5 class="m-0 font-weight-normal">{{ (isset($task->agent->name))?$task->agent->name:'' }}</h5>

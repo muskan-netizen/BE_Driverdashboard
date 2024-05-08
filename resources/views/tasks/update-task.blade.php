@@ -599,8 +599,15 @@ display:none;
                                         <div class="row no-gutters align-items-center">
                                             <div class="col-lg-12 padd-left mb-4">
                                                 <div class="left-icon">
-                                                    <img src="{{ 'https://imgproxy.royodispatch.com/insecure/fit/300/100/sm/0/plain/' . Storage::disk('s3')->url($order->profile_picture ?? 'assets/client_00000051/agents605b6deb82d1b.png/XY5GF0B3rXvZlucZMiRQjGBQaWSFhcaIpIM5Jzlv.jpg') }}"
+                                                @if(is_azureEnable())
+                                                    
+                                                    <img src="{{ 'https://imgproxy.royodispatch.com/insecure/fit/300/100/sm/0/plain/' . getAzureUrl().$order->profile_picture ?? 'assets/client_00000051/agents605b6deb82d1b.png/XY5GF0B3rXvZlucZMiRQjGBQaWSFhcaIpIM5Jzlv.jpg' }}"
                                                         alt="" />
+                                                @else
+                                                <img src="{{ 'https://imgproxy.royodispatch.com/insecure/fit/300/100/sm/0/plain/' . Storage::disk('s3')->url($order->profile_picture ?? 'assets/client_00000051/agents605b6deb82d1b.png/XY5GF0B3rXvZlucZMiRQjGBQaWSFhcaIpIM5Jzlv.jpg') }}"
+                                                        alt="" />
+                                                @endif
+                                                   
                                                 </div>
                                                 <h5>{{ isset($task->agent) ? $task->agent->name .' assigned' :__(getAgentNomenclature().' not assigned yet') }}</h5>
                                                 <p>{{ $task->phone_number }}</p>
@@ -717,7 +724,14 @@ display:none;
                     @endphp
                     <div class="row align-items-center mb-2">
                         <div class="col-2 pr-0 pic-left">
-                            <img src="{{ !empty($task_reject->agent->profile_picture) ? $imgproxyurl.Storage::disk('s3')->url($task_reject->agent->profile_picture) : URL::to('/assets/images/user_dummy.jpg') }}" alt="{{__('contact-img')}}" title="{{__('contact-img')}}" class="rounded-circle avatar-sm">
+                        @if(is_azureEnable())
+                            
+                            <img src="{{ !empty($task_reject->agent->profile_picture) ? getAzureUrl().$task_reject->agent->profile_picture : URL::to('/assets/images/user_dummy.jpg') }}" alt="{{__('contact-img')}}" title="{{__('contact-img')}}" class="rounded-circle avatar-sm">
+
+                        @else
+                        <img src="{{ !empty($task_reject->agent->profile_picture) ? $imgproxyurl.Storage::disk('s3')->url($task_reject->agent->profile_picture) : URL::to('/assets/images/user_dummy.jpg') }}" alt="{{__('contact-img')}}" title="{{__('contact-img')}}" class="rounded-circle avatar-sm">
+                            
+                        @endif
                         </div>
                         <div class="col-10 pl-1">
                             <h5 class="mb-1  mt-0 font-weight-normal">{{ (isset($task_reject->agent->name))?$task_reject->agent->name:'' }}</h5>

@@ -73,8 +73,6 @@ class ClientController extends Controller
      */
     public function storePreference(Request $request, $domain = '', $id)
     {
-
-
        
         try {
             $this->updatePreferenceAdditional($request);
@@ -640,7 +638,6 @@ class ClientController extends Controller
      */
     public function ShowConfiguration()
     {
-     
         $preference  = ClientPreference::where('client_id', Auth::user()->code)->first();
         $customMode  = json_decode($preference->custom_mode);
         $warehoseMode  = json_decode($preference->warehouse_mode);
@@ -654,8 +651,7 @@ class ClientController extends Controller
        
         $agents    = Agent::where('is_activated','1')->get();
         $smsTypes = SmsProvider::where('status', '1')->get();
-        $data['preferenceAdditional']  = ClientPreferenceAdditional::where('client_code', Auth::user()->code)->pluck('key_value','key_name');
-       
+        $data['preferenceAdditional']  = ClientPreferenceAdditional::where('client_code', Auth::user()->code)->pluck('key_value','key_name')->toArray();
         return view('configure', $data)->with(['preference' => $preference, 'customMode' => $customMode, 'client' => $client,'subClients'=> $subClients,'smtp_details'=>$smtp, 'agent_docs' => $agent_docs,'smsTypes'=>$smsTypes,'vehicleType'=>$vehicleType, 'warehoseMode' => $warehoseMode, 'dashboardMode' => $dashboardMode,'agents'=>$agents,'driverRatingQuestion'=>$driverRatingQuestion]);
     }
 
@@ -858,9 +854,14 @@ class ClientController extends Controller
         $favicon='';
         if ($request->hasFile('favicon')) {
             $file = $request->file('favicon');
+            if(is_azureEnable())
+            {
+                $favicon = uploadAzureImage($file);
+            }else{
             $s3filePath = '/assets/Clientfavicon';
             $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
             $favicon = $path;
+            }
         }
         $preference = ClientPreference::where('client_id', Auth::user()->code)->first();
         if($favicon){

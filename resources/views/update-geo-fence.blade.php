@@ -188,9 +188,17 @@
                                                             id="{{ $agent->id }}" name="agents[]" value="{{ $agent->id }}"
                                                             {{ $val == 'checked' ? 'checked' : '' }}>
                                                         <label class="custom-control-label new" for="{{ $agent->id }}"></label>
+                                                        @if(is_azureEnable())
+                                                       
+                                                        <img class="imageagent"
+                                                            src="{{ getAzureUrl().$agent->getAttributes()['profile_picture'] }}"
+                                                            alt="" style="border-radius:50%; ">
+                                                        @else
                                                         <img class="imageagent"
                                                             src="{{$imgproxyurl.Storage::disk('s3')->url($agent->profile_picture)}}"
                                                             alt="" style="border-radius:50%; ">
+                                                        @endif
+                                                        
                                                     </div>
                                                     <div class="col-10">
                                                         <span class="spans">{{ $agent->name }}</span><br>

@@ -9,7 +9,17 @@
 
       <td>
        @php
-        $src = (isset($agent->profile_picture) ? $agent->imgproxyurl . Storage::disk('s3')->url($agent->profile_picture) : Phumbor::url(URL::to('/asset/images/no-image.png')));
+       if(is_azureEnable())
+       {
+
+         $src = (isset($agent->profile_picture) ?   getAzureUrl().$agent->profile_picture : Phumbor::url(URL::to('/asset/images/no-image.png')));
+       }
+        else
+        {
+
+          $src = (isset($agent->profile_picture) ? $agent->imgproxyurl . Storage::disk('s3')->url($agent->profile_picture) : Phumbor::url(URL::to('/asset/images/no-image.png')));  
+        }
+       
           @endphp
           <?php
           $isAvailableIcon = ($agent->is_available == 1)

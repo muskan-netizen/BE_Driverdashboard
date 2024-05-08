@@ -597,10 +597,16 @@ class AgentController extends Controller
             $folder = str_pad(Auth::user()->code, 8, '0', STR_PAD_LEFT);
             $folder = 'client_' . $folder;
             $file = $request->file('profile_picture');
-            $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
-            $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
-            $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
-            $getFileName = $path;
+            if(is_azureEnable())
+            {
+               $getFileName = uploadAzureImage($file);
+            }else{
+                $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
+                $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
+                $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                $getFileName = $path;
+            }
+           
         }
 
         $data = [
@@ -638,10 +644,15 @@ class AgentController extends Controller
                     $folder = str_pad(Auth::user()->code, 8, '0', STR_PAD_LEFT);
                     $folder = 'client_' . $folder;
                     $file = $request->file($name);
-                    $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
-                    $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
-                    $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
-                    $getFileName = $path;
+                    if(is_azureEnable())
+                    {
+                       $getFileName = uploadAzureImage($file);
+                    }else{
+                        $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
+                        $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
+                        $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                        $getFileName = $path;
+                    }
                 }
                 $agent_docs->file_name = $getFileName;
             } else {
@@ -873,10 +884,16 @@ class AgentController extends Controller
             $folder = str_pad(Auth::user()->id, 8, '0', STR_PAD_LEFT);
             $folder = 'client_' . $folder;
             $file = $request->file('profile_picture');
-            $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
-            $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
-            $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
-            $getFileName = $path;
+            if(is_azureEnable())
+            {
+               $getFileName = uploadAzureImage($file);
+            }else{
+
+                $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
+                $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
+                $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                $getFileName = $path;
+            }
         }
 
         foreach ($request->only('name', 'type', 'vehicle_type_id', 'make_model', 'plate_number', 'phone_number', 'color', 'uid') as $key => $value) {
@@ -903,10 +920,15 @@ class AgentController extends Controller
                     $folder = str_pad(Auth::user()->code, 8, '0', STR_PAD_LEFT);
                     $folder = 'client_' . $folder;
                     $file = $request->file($name);
+                    if(is_azureEnable())
+                    {
+                       $getFileName = uploadAzureImage($file);
+                    }else{
                     $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
                     $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
                     $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
                     $getFileName = $path;
+                    }
                     $agent_docs = AgentDocs::firstOrNew([
                         'agent_id' => $agent->id,
                         'label_name' => $driver_registration_document->name,

@@ -4,7 +4,11 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
 <div class="row mb-2">
     <div class="col-md-4">
         <div class="form-group" id="profile_pictureInputEdit">
-        <a href="{{Storage::disk('s3')->url($agent->profile_picture)}}" target="_blank"><img src="{{isset($agent->profile_picture) ? $imgproxyurl.Storage::disk('s3')->url($agent->profile_picture) : Phumbor::url(URL::to('/asset/images/no-image.png')) }}" style="width:240px;height:120px;"></a>
+        @if(is_azureEnable())
+            <a href="{{ getAzureUrl().$agent->profile_picture}}" target="_blank"><img src="{{isset($agent->profile_picture) ? getAzureUrl().$agent->profile_picture : Phumbor::url(URL::to('/asset/images/no-image.png')) }}" style="width:240px;height:120px;"></a>
+        @else
+            <a href="{{Storage::disk('s3')->url($agent->profile_picture)}}" target="_blank"><img src="{{isset($agent->profile_picture) ? $imgproxyurl.Storage::disk('s3')->url($agent->profile_picture) : Phumbor::url(URL::to('/asset/images/no-image.png')) }}" style="width:240px;height:120px;"></a>   
+        @endif
             <span class="invalid-feedback" role="alert">
                 <strong></strong>
             </span>
@@ -180,7 +184,13 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
             <div class="file file--upload">
                 <label for="">
                     <span class="update_pic pdf-icon">
-                        <a href="{{Storage::disk('s3')->url($agent_doc->file_name)}}" target="_blank"><img src="{{URL::asset('/assets/images/pdf.png')}}"></a>
+                    @if(is_azureEnable())
+                        
+                    <a href="{{getAzureUrl().$agent_doc->file_name}}" target="_blank"><img src="{{URL::asset('/assets/images/pdf.png')}}"></a>
+
+                    @else
+                    <a href="{{Storage::disk('s3')->url($agent_doc->file_name)}}" target="_blank"><img src="{{URL::asset('/assets/images/pdf.png')}}"></a>
+                    @endif
                     </span>
                 </label>
                 <div class="invalid-feedback" id=""><strong></strong></div>
@@ -191,8 +201,11 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
 
             <label for="" class="control-label">{{$agent_doc->label_name}}</label>
             <div class="file file--upload">
-
+            @if(is_azureEnable())
+                <a href="{{getAzureUrl().$agent_doc->file_name}}" target="_blank"><img src="{{isset($agent_doc->file_name) ? getAzureUrl().$agent_doc->file_name) : Phumbor::url(URL::to('/asset/images/no-image.png')) }}" style="width:240px;height:120px;"></a>
+            @else
                 <a href="{{Storage::disk('s3')->url($agent_doc->file_name)}}" target="_blank"><img src="{{isset($agent_doc->file_name) ? $imgproxyurl.Storage::disk('s3')->url($agent_doc->file_name) : Phumbor::url(URL::to('/asset/images/no-image.png')) }}" style="width:240px;height:120px;"></a>
+            @endif
                 <!-- @if(strtolower($agent_doc->file_type) == 'image')
             <input id="" type="file" name="file" v accept="image/*" data-rel="">
             @elseif(strtolower($agent_doc->file_type) == 'pdf')

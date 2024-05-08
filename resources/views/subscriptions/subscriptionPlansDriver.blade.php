@@ -197,7 +197,14 @@
                                             ?>
                                             <tr data-row-id="{{$plan->slug}}">
                                                 <td>
-                                                    <img src="{{ !empty($plan->image) ? $plan->image : '' }}" class="rounded-circle" alt="{{$plan->slug}}" width="40px" height="40px">
+                                                @if(is_azureEnable())
+                                                
+                                                    <img src="{{ !empty($plan->image) ?  getAzureUrl().$plan->getAttributes()['image'] : '' }}" class="rounded-circle" alt="{{$plan->slug}}" width="40px" height="40px">
+
+                                                @else
+                                                <img src="{{ !empty($plan->image) ? $plan->image : '' }}" class="rounded-circle" alt="{{$plan->slug}}" width="40px" height="40px">
+                                                    
+                                                @endif
                                                 </td>
                                                 <td><a href="javascript:void(0)" class="editSubscriptionPlanBtn" data-id="{{$plan->slug}}">{{$plan->title}}</a></td>
                                                 <td>{{$plan->description}}</td>

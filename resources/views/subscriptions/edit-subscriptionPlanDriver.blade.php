@@ -10,7 +10,14 @@
                 <div class="row mb-2">
                     <div class="col-md-12">
                         <label>{{ __('Upload Image') }}</label>
+                        @if(is_azureEnable())
+                           
+                        <input type="file" accept="image/*" data-plugins="dropify" name="image" class="dropify" data-default-file="{{ !empty($plan->image) ?  getAzureUrl().$plan->getAttributes()['image'] : '' }}" />
+
+                        @else
                         <input type="file" accept="image/*" data-plugins="dropify" name="image" class="dropify" data-default-file="{{ !empty($plan->image) ? \Storage::disk('s3')->url($plan->image) : '' }}" />
+                            
+                        @endif
                     </div> 
                 </div>
 

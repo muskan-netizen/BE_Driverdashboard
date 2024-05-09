@@ -982,7 +982,7 @@ class TaskController extends BaseController
                 $call_web_hook = $this->updateStatusDataToOrder($orderdata, 2,1);  # task accepted
             }
             //Send SMS in case of friend's booking
-      
+
             if(isset($orderdata->type) && $orderdata->type == 1 && strlen($orderdata->friend_phone_number) > 8)
             {
                 $keyData = [
@@ -1024,10 +1024,10 @@ class TaskController extends BaseController
                     $task_id = Order::where('id', $batch->order_id)->first();
                     $pricingRule = PricingRule::where('id', 1)->first();
                     // $agent_id =  $request->driver_id  ? $request->driver_id : null;
-                    $agent_commission_fixed = $pricingRule->agent_commission_fixed;
-                    $agent_commission_percentage = $pricingRule->agent_commission_percentage;
-                    $freelancer_commission_fixed = $pricingRule->freelancer_commission_fixed;
-                    $freelancer_commission_percentage = $pricingRule->freelancer_commission_percentage;
+                    $agent_commission_fixed = $task_id->agent_commission_fixed??$pricingRule->agent_commission_fixed;
+                    $agent_commission_percentage = $task_id->agent_commission_percentage??$pricingRule->agent_commission_percentage;
+                    $freelancer_commission_fixed = $task_id->freelancer_commission_fixed??$pricingRule->freelancer_commission_fixed;
+                    $freelancer_commission_percentage = $task_id->freelancer_commission_percentage??$pricingRule->freelancer_commission_percentage;
 
                     if ($task_id->driver_cost <= 0.00) {
                         $agent_details = Agent::where('id', $agent_id)->first();
@@ -1097,10 +1097,10 @@ class TaskController extends BaseController
                 $this->dispatchNow(new RosterDelete($request->order_id,$type));
                 $task_id = Order::where('id', $request->order_id)->first();
                 $pricingRule = PricingRule::where('id', 1)->first();
-                $agent_commission_fixed = $pricingRule->agent_commission_fixed;
-                $agent_commission_percentage = $pricingRule->agent_commission_percentage;
-                $freelancer_commission_fixed = $pricingRule->freelancer_commission_fixed;
-                $freelancer_commission_percentage = $pricingRule->freelancer_commission_percentage;
+                $agent_commission_fixed = $task_id->agent_commission_fixed??$pricingRule->agent_commission_fixed;
+                $agent_commission_percentage = $task_id->agent_commission_percentage??$pricingRule->agent_commission_percentage;
+                $freelancer_commission_fixed = $task_id->freelancer_commission_fixed??$pricingRule->freelancer_commission_fixed;
+                $freelancer_commission_percentage = $task_id->freelancer_commission_percentage??$pricingRule->freelancer_commission_percentage;
                 // $agent_id =  isset($request->allocation_type) && $request->allocation_type == 'm' ? $request->driver_id : null;
 
                 if ($task_id->driver_cost <= 0.00) {
@@ -1513,7 +1513,7 @@ class TaskController extends BaseController
                 'is_cab_pooling' => isset($request->is_cab_pooling) ? $request->is_cab_pooling : 0,
                 'tip_amount' => isset($request->tip_amount) ? $request->tip_amount : 0,
             ];
-        
+
 
             if (checkColumnExists('orders', 'rejectable_order')) {
                 $order['rejectable_order'] = isset($request->rejectable_order) ? $request->rejectable_order : 0;
@@ -1893,7 +1893,7 @@ class TaskController extends BaseController
             }
             //Commit Transaction befor send notification
             DB::commit();
- 
+
 
             if(@$client->is_lumen_enabled)
             {
@@ -1922,7 +1922,7 @@ class TaskController extends BaseController
                         $this->batchWise($geo, $notification_time, $agent_id, $orders->id, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, $is_one_push_booking);
                 }
             }
-          
+
             $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $orders->unique_id;
             return response()->json([
                 'message' => __('Task Added Successfully'),
@@ -3172,15 +3172,15 @@ class TaskController extends BaseController
 
         $timezone = $tz->timezone_name($client_timezone);
 
-        
+
         // get geoid based on customer location
 
-       
+
         $agent_tags = (isset($request->agent_tag) && !empty($request->agent_tag)) ? $request->agent_tag : '';
 
 
         $pricingRule = PricingRule::where('is_default', 1)->first();
-        
+
 
         $paid_duration = $pricingRule->base_duration;
         $paid_distance = $pricingRule->base_distance;
@@ -3189,7 +3189,7 @@ class TaskController extends BaseController
 
 
          $total         = $pricingRule->base_price + ($paid_distance * $pricingRule->distance_fee) + ($paid_duration * $pricingRule->duration_price);
-        
+
 
 
 

@@ -81,6 +81,10 @@ class ClientController extends Controller
             // return redirect()->back()->with('success', 'Client settings updated successfully!');
             unset($request['pickup_type']);
             unset($request['drop_type']);
+            unset($request['hold_to_start']);
+            unset($request['hold_to_arrive']);
+            unset($request['hold_to_pick']);
+            unset($request['hold_to_complete']);
         } catch (\Throwable $th) {
             return redirect()->back()->with('error', 'Something went wrong!!');
         }

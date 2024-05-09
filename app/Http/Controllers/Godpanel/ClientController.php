@@ -84,7 +84,7 @@ class ClientController extends Controller
     {
         $validator = $this->validator($request->all())->validate();
         DB::beginTransaction();
-        try {
+         try {
             $getFileName = null;
 
             // Handle File Upload

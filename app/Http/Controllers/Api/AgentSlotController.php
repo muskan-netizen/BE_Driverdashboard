@@ -114,11 +114,12 @@ class AgentSlotController extends BaseController
             }
 
             //get team ids by vendor Email
-            if($request->has('team_email')) {
+            if($request->has('team_email') && !empty($request->team_email)) {
+                $team_ids = [];
+
                 $clientDetail = Client::where('email',$request->team_email)->first();
                 if($clientDetail) {
                     $teamDetail = Team::where('manager_id',$clientDetail->id)->get();
-                    $team_ids = [];
                     if(count($teamDetail) > 0) {
                         foreach($teamDetail as $key) {
                             $team_ids[] = $key->id;

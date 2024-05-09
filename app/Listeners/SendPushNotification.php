@@ -74,8 +74,8 @@ class SendPushNotification
                                     ->leftJoin('roster_details', 'rosters.detail_id', '=', 'roster_details.unique_id')
                                     ->select('rosters.*', 'roster_details.customer_name', 'roster_details.customer_phone_number',
         'roster_details.short_name','roster_details.address','roster_details.lat','roster_details.long','roster_details.task_count');
-        $getids           = $get->pluck('id')->toArray();
         $get              = $get->get();
+        $getids           = $get->pluck('id')->toArray();
         DB::connection($schemaName)->table('rosters')->where('status',10)->delete();
                         
         if(count($getids) > 0){ 

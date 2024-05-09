@@ -9,7 +9,7 @@ class Customer implements Model
     public function __construct(string $customer_name)
     {
         $firstName = explode(' ', $customer_name, 1)[0];
-        $lastName  = explode(' ', $customer_name, 2)[1];
+        $lastName  = explode(' ', $customer_name, 2)[1] ?? '';
 
         $this->object = (object)compact('firstName', 'lastName');
     }

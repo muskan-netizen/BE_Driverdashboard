@@ -100,7 +100,7 @@ class MastercardPaymentController extends Controller
             ->to(url('/payment/gateway/returnResponse?status=500&gateway=mastercard?transaction_id=' . $order_id));
 
         if ($action != 'wallet') return redirect()
-            ->to(url('/payment/gateway/returnResponse?status=500&gateway=mastercard?transaction_id=' . $order_id));
+            ->to(url('/payment/gateway/returnResponse?status=200&gateway=mastercard?transaction_id=' . $order_id));
 
         try {
             $agentPayment     = AgentPayment::find($order_id);

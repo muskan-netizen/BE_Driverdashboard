@@ -157,7 +157,7 @@
                                     </label>
 
                                     <input type="text" name="mastercard_gateway" id="mastercard_gateway" class="form-control"
-                                        value="{{ $mastercard_gateway }}" <?php if ($opt->test_mode != 1) echo 'required' ?>>
+                                        value="{{ $mastercard_gateway }}" <?php if ($opt->status == 1 && $opt->test_mode != 1) echo 'required' ?>>
                                 </div>
 							</div>
 						</div>

@@ -576,10 +576,8 @@
                                                                 </div>
                                                             </div>
                                                             @php $warehouse_mode = checkWarehouseMode(); @endphp
-                                                            @if($warehouse_mode['show_inventory_module'] == 1)
                                                             <h6 class="or-text text-center">OR</h6>
                                                             <h6 class="choose_warehouse text-center text-primary" style="text-decoration: underline; cursor: pointer;" data-id="1">Choose Warehouse</h6>
-                                                            @endif
                                                         </div>
 
                                                         <div class="alContactOther col-6">

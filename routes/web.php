@@ -80,7 +80,6 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 
 	Route::group(['prefix' => '/godpanel', 'middleware' => 'CheckGodPanel'], function () {
 		Route::get('/', function () {
-			dd('werewr');
 			return view('godpanel/login');
 		});
 		Route::get('/login', function () {

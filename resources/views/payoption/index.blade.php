@@ -88,6 +88,8 @@
                 $livee_merchant_key=(isset($creds->livee_merchant_key))?$creds->livee_merchant_key: '';
                 $livee_resource_key=(isset($creds->livee_resource_key))?$creds->livee_resource_key: '';
 
+                $company_token = (isset($creds->company_token)) ? $creds->company_token : '';
+                $service_type = (isset($creds->service_type)) ? $creds->service_type : '';
                 ?>
 
                 <div class="card-box h-100">
@@ -499,6 +501,31 @@
                             </div>
                         </div>
                     </div>
+                    @endif
+
+                    @if ( (strtolower($opt->code) == 'dpo') )
+                    <div class="mt-2" id="dpo_fields_wrapper" @if($opt->
+						status != 1) style="display:none" @endif>
+						<div class="row">
+							<div class="col-12">
+								<div class="form-group mb-2">
+									<label for="company_token" class="mr-3">{{ __("Company Token")
+										}}</label> <input type="text" name="company_token"
+										id="company_token" class="form-control"
+										value="{{$company_token}}" @if($opt->status == 1) required
+									@endif>
+								</div>
+							</div>
+							<div class="col-12">
+								<div class="form-group mb-2">
+									<label for="service_type" class="mr-3">{{ __("Service Type") }}</label>
+									<input type="text" name="service_type" id="service_type"
+										class="form-control" value="{{$service_type}}" @if($opt->status
+									== 1) required @endif>
+								</div>
+							</div>
+						</div>
+					</div>
                     @endif
 
                 </div>

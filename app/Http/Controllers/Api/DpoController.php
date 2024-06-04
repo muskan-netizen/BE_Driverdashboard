@@ -42,11 +42,11 @@ class DpoController extends Controller
 
     public function createAppTocken(Request $request)
     {
-        $request->from = $request->action;
+        $request->from = $request->payment_from;
         $order_number =  $this->orderNumber($request);
         $user = Auth::user();
         $redirectUrl = $request->serverUrl.'payment/dpo/redirect/?order_no='.$order_number.'&payment_via=app&status=200&auth_token='.$user->auth_token;
-        $total_amount = round($request->amount);
+        $total_amount = round($request->amt);
         $name = explode(' ',$user->name);
         $customerFirstName = $name[0];
         $customerLastName = !empty($name[1])? $name[1] : '';

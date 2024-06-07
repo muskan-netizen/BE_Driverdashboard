@@ -4,10 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Model\ClientPreference;
-use App\Model\Currency;
-use App\Model\Payment;
 use App\Model\PaymentOption;
-use App\Model\Users;
 use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -42,11 +39,11 @@ class DpoController extends Controller
 
     public function createAppTocken(Request $request)
     {
-        $request->from = $request->payment_from;
+        $request->action = $request->payment_from;
         $order_number =  $this->orderNumber($request);
         $user = Auth::user();
-        $redirectUrl = $request->serverUrl.'payment/dpo/redirect/?order_no='.$order_number.'&payment_via=app&status=200&auth_token='.$user->auth_token;
-        $total_amount = round($request->amt);
+        $total_amount = round($request->amount);
+        $redirectUrl = $request->serverUrl.'payment/dpo/redirect/?order_no='.$order_number.'&payment_via=app&status=200&user_id='.$user->id.'&wallet_amount='.$total_amount;
         $name = explode(' ',$user->name);
         $customerFirstName = $name[0];
         $customerLastName = !empty($name[1])? $name[1] : '';
@@ -58,7 +55,7 @@ class DpoController extends Controller
                         <PaymentCurrency>".$this->currency."</PaymentCurrency>
                         <CompanyRef>tr1ss1212bnbv</CompanyRef>
                         <RedirectURL>".$redirectUrl."</RedirectURL>
-                        <BackURL>".back()."</BackURL>
+                        <BackURL> ".$request->returnUrl." </BackURL>
                         <CompanyRefUnique>0</CompanyRefUnique>
                         <PTL>100000</PTL>
                         <CompanyAccRef>www</CompanyAccRef>
@@ -84,7 +81,9 @@ class DpoController extends Controller
         $result = $this->postCurl($xml);
         $paymentTocken = $this->xml2array($result);
         if(!empty($paymentTocken['TransToken'])){
-            return $this->successResponse($this->appUrl.'payv2.php?ID='.$paymentTocken['TransToken']);
+            return $this->success($this->appUrl.'payv2.php?ID='.$paymentTocken['TransToken']);
+        }else{
+            return $this->error($paymentTocken['ResultExplanation'], 403);
         }
     }
 

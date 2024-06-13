@@ -51,7 +51,7 @@ $agentslocations[] = $defaultmaplocation;
                             <?php
                             if(isset($distance_matrix[0]))
                             {
-                                if($teams[0]->task_order == 0){
+                                if(isset($teams[0]) && $teams[0]->task_order == 0){
                                     $opti0 = "yes";
                                 }else{
                                     $opti0 = "";

@@ -604,7 +604,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
             </div>
 
             <div class="col-md-4 mb-3">
-                <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
+                <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}" enctype="multipart/form-data">
                     @csrf
                     <div class="card-box h-100">
                         <div class="d-flex align-items-center justify-content-between mb-2">
@@ -627,6 +627,31 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                     @if ($errors->has('fcm_server_key'))
                                         <span class="text-danger" role="alert">
                                             <strong>{{ $errors->first('fcm_server_key') }}</strong>
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-2">
+                                    <label for="fcm_project_id">{{ __('Project ID') }}</label>
+                                    <input type="text" name="fcm_project_id" id="fcm_project_id" placeholder=""
+                                        class="form-control"
+                                        value="{{ old('fcm_project_id', $preference->fcm_project_id ?? '') }}" required>
+                                    @if ($errors->has('fcm_project_id'))
+                                        <span class="text-danger" role="alert">
+                                            <strong>{{ $errors->first('fcm_project_id') }}</strong>
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-2">
+                                    <label for="firebase_account_json_file">{{ __('Firebase Service Account Json File') }}</label>
+                                    <input type="file" accept="json"  name="firebase_account_json_file" data-plugins="dropify"/>
+    
+                                    @if ($errors->has('firebase_account_json_file'))
+                                        <span class="text-danger" role="alert">
+                                            <strong>{{ $errors->first('firebase_account_json_file') }}</strong>
                                         </span>
                                     @endif
                                 </div>

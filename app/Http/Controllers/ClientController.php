@@ -73,8 +73,6 @@ class ClientController extends Controller
      */
     public function storePreference(Request $request, $domain = '', $id)
     {
-
-
        
         try {
             $this->updatePreferenceAdditional($request);
@@ -93,7 +91,15 @@ class ClientController extends Controller
 
             return redirect()->back()->with('success', 'Preference updated successfully!');
         }
-
+        $client = Client::where('code', $id)->firstOrFail();
+        if($request->has('firebase_account_json_file'))
+        {
+            $file = Storage::disk('s3')->put('prods', $request->firebase_account_json_file, 'public');
+            ClientPreferenceAdditional::updateOrCreate(
+                ['key_name' => 'firebase_account_json_file', 'client_code' => $client->code],
+                ['key_name' => 'firebase_account_json_file', 'key_value' => $file ?? "" ,'client_code' => $client->code,'client_id'=> $client->id]);
+        }
+        
         if($request->has('custom_mode')){
             $customMode['is_hide_customer_notification'] = (!empty($request->custom_mode['is_hide_customer_notification']) && $request->custom_mode['is_hide_customer_notification'] == 'on')? 1 : 0;
 

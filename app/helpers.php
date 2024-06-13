@@ -13,6 +13,8 @@ use App\Model\ClientPreferenceAdditional;
 use App\Model\Order;
 use GuzzleHttp\Client;
 use Kawankoding\Fcm\Fcm;
+use App\Services\FirebaseService;
+
 
 if (!function_exists('setUserCode')) {
     function setUserCode()
@@ -470,6 +472,102 @@ if (!function_exists('sendnotification')) {
                     'body' => $data['notification']['body'],
                 ])
                 ->send();
+        }
+    }
+    if (!function_exists('sendFcmCurlRequest2')) {
+        function sendFcmCurlRequest2($data)
+        { 
+            
+            \Log::info('come sin notification');
+            $response = FirebaseService::sendNotification($data);
+            \Log::info($response);
+            return $response;
+    
+    
+    
+            // Fetch FCM project ID from database
+            $preference = ClientPreference::select('fcm_project_id')->first();
+            if (!$preference) {
+                \Log::error('FCM Send Error: FCM project ID not found in database.');
+                return false;
+            }
+    
+            $project_id = $preference->fcm_project_id;
+    
+            // Get OAuth Token
+            $accessToken = getFcmOauthToken();
+             \Log::info('curl fcm data');
+            \Log::info($data);
+             \Log::info('accessToken data');
+            \Log::info($accessToken);
+            if ($accessToken) {
+                $headers = [
+                    'Authorization: Bearer ' . $accessToken,
+                    'Content-Type: application/json',
+                ];
+                $deviceTokens = $data['registration_ids'] ?? [];
+    
+    
+                \Log::info('deviceTokens data');
+                \Log::info($deviceTokens);
+                // try{
+     
+                if(!empty($deviceTokens)){
+                    \Log::info('in data');
+    
+                    foreach($deviceTokens as $token)
+                    {
+    
+                        $ch = curl_init();
+                        curl_setopt($ch, CURLOPT_URL, "https://fcm.googleapis.com/v1/projects/{$project_id}/messages:send");
+                        curl_setopt($ch, CURLOPT_POST, true);
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+             
+            
+                    
+                        // Transform data to FCM v1 format
+                        $transformedData = transformToFcmV1Format($data,$token);
+                        
+            
+                        
+                        if (!$transformedData) {
+                            \Log::error('FCM Send Error: Failed to transform data to FCM v1 format.');
+                            return false;
+                        }
+            
+                        $payload = ['message' => $transformedData];
+            
+                        \Log::info('payload data');
+                        \Log::info($payload);
+                        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+                        $result = curl_exec($ch);
+             
+    
+                        \Log::info('result');
+                        \Log::info($result);
+                        if ($result === FALSE) {
+                            \Log::error('FCM Send Error: ' . curl_error($ch));
+                        }
+            
+                        curl_close($ch);
+                        return $result;
+                    }
+    
+                }
+            // }
+    
+            // catch(\Exception $e)
+            // {
+            //     \Log::info('error',$e->getMessage());
+            //     return false;
+            // }
+               
+            } else {
+                \Log::error('FCM Send Error: Unable to fetch OAuth token.');
+                return false;
+            }
         }
     }
 }

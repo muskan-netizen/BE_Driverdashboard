@@ -95,6 +95,8 @@ class AgentController extends Controller
             "priority" => "high"
         ];
         $response = FirebaseService::sendNotification($data);
+
+        pr($response);
     }
 
     public function index(Request $request)

@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use App\Model\Agent;
 use Illuminate\Support\Facades\Log;
 use App\Model\Client;
+use App\Services\FirebaseService;
 use Exception;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;

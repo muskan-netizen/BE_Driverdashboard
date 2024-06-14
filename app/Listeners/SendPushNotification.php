@@ -9,6 +9,7 @@ use Log;
 use Carbon\Carbon;
 use App\Model\Roster;
 use App\Model\Client;
+use App\Services\FirebaseService;
 use Config;
 use Illuminate\Support\Facades\DB;
 use Exception;

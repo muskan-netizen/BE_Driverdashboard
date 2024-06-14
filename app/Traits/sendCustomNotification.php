@@ -3,6 +3,7 @@ namespace App\Traits;
 use DB, Log;
 use Illuminate\Support\Collection;
 use App\Model\{Client, ClientPreference, User, Agent, Order, PaymentOption, PayoutOption, AgentPayout};
+use App\Services\FirebaseService;
 use Kawankoding\Fcm\Fcm;
 
 trait sendCustomNotification{

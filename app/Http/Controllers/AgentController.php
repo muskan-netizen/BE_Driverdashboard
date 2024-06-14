@@ -37,6 +37,7 @@ use App\Model\ {
     AgentSmsTemplate,
     Warehouse
 };
+use App\Services\FirebaseService;
 use Kawankoding\Fcm\Fcm;
 use App\Traits\agentEarningManager;
 use App\Traits\smsManager;

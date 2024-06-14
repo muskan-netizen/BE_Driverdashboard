@@ -14,7 +14,7 @@ use App\Model\Order;
 use GuzzleHttp\Client;
 use Kawankoding\Fcm\Fcm;
 use App\Services\FirebaseService;
-
+use Illuminate\Support\Facades\Storage;
 
 if (!function_exists('setUserCode')) {
     function setUserCode()
@@ -26,6 +26,53 @@ if (!function_exists('setUserCode')) {
         }
     }
 }
+
+
+
+    if (!function_exists('getFcmOauthToken')) {
+        function getFcmOauthToken($url = null) {
+            try {
+                $preference = ClientPreferenceAdditional::where('key_name', 'firebase_account_json_file')->first();
+                $fileName = $preference->key_value ?? null;
+                $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+                if ($fileName) {
+                    // Generate a temporary URL with the Content-Disposition header set to attachment
+                    $url = Storage::disk('s3')->url($fileName);
+                }
+
+                // If the URL is null, use the local file path
+                $serviceAccountPath = $url ?? "voltaic-e59be-c73103aa2b73.json";
+        
+            
+                // Determine if the file is local or on S3 based on the URL scheme
+                if (filter_var($serviceAccountPath, FILTER_VALIDATE_URL)) {
+                    // Fetch the content from the URL and save it temporarily
+                    $serviceAccountContent = file_get_contents($serviceAccountPath);
+                    if ($serviceAccountContent === false) {
+                        throw new \Exception('Failed to fetch the service account JSON file from S3.');
+                    }
+
+                    // Save the content to a temporary file
+                    $tempFilePath = tempnam(sys_get_temp_dir(), 'service_account');
+                    file_put_contents($tempFilePath, $serviceAccountContent);
+                    // Use the temporary file path for credentials
+                    $credentials = new ServiceAccountCredentials($scopes, $tempFilePath);
+                } else {
+                    // Use the local file path for credentials
+                    $credentials = new ServiceAccountCredentials($scopes, $serviceAccountPath);
+                }
+
+                $accessToken = $credentials->fetchAuthToken();
+                
+
+                return $accessToken['access_token'] ?? "N/A";
+            } catch (\Exception $e) {
+                Log::error('Error fetching FCM OAuth token: ' . $e->getMessage());
+                return null;
+            }
+        }
+    }
+
 
 // Returns the values of the additional preferences.
 if (!function_exists('checkColumnExists')) {

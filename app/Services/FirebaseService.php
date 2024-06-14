@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Model\ClientPreference as ModelClientPreference;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use App\Models\{ClientPreference, Order};
@@ -64,7 +65,7 @@ class FirebaseService
     {
         $client = new Client();
 
-        $preference = ClientPreference::select('fcm_project_id')->first();
+        $preference = ModelClientPreference::select('fcm_project_id')->first();
         if (!$preference) {
             \Log::error('FCM Send Error: FCM project ID not found in database.');
             return false;

@@ -61,7 +61,7 @@ class FirebaseService
         }
     }
 
-    public function sendNotification($data) //$token, $title, $body
+    public static function sendNotification($data) //$token, $title, $body
     {
         $client = new Client();
 

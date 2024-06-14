@@ -54,7 +54,7 @@ class AgentController extends Controller
      */
     public function test_notification(Request $request)
     {
-        $item['device_token'] = $request->tokon ?? 'elatojS0SVuKg_qljDzRFb:APA91bEMxlpN2VPkrGaPw7MMOIaRweblEJP9Ff1K1Yd82VBeCSVHCpqmzffWj9C-_1ouvlYvPYTXCj3sKg9iUXl2XZNXcOnx1xrNXRsqgMMqdubH5yoKRETDuqo5qDc6_vt-4X1YgZjT';
+        $item['device_token'] = $request->tokon ?? 'cf0nUd_GQaKSP1hsvElYJ1:APA91bEExs0HycqrGN-GjPb4uHXO9qUbkedQEjjYOj0655fBkRK0t6zVnuunXPNF_kuJ0vNFvxYz-uDcOBzzWLD5AcdzbVrablc0U7SuBXsBsLSS72gEHG7v3ZhyvuJdPJDoU0FP5VZY';
         // $client_preferences = getClientPreferenceDetail();
         // $fcm_server_key = ! empty($client_preferences->fcm_server_key) ? $client_preferences->fcm_server_key : config('laravel-fcm.server_key');
         // $item['title'] = 'Pickup Request';

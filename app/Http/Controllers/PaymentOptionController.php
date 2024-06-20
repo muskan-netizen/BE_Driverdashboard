@@ -283,6 +283,16 @@ class PaymentOptionController extends BaseController
                         'livee_resource_key' => $request->livee_resource_key,
                     ));
                 }
+                else if ((isset($method_name_arr[$key])) && (strtolower($method_name_arr[$key]) == 'dpo')) {
+                    $request->validate([
+                        'company_token' => 'required',
+                        'service_type' => 'required',
+                    ]);
+                    $json_creds = json_encode(array(
+                        'company_token' => $request->company_token,
+                        'service_type' => $request->service_type,
+                    ));
+                }
             }
             PaymentOption::where('id', $id)->update(['status' => $status, 'credentials' => $json_creds, 'test_mode' => $test_mode]);
         }

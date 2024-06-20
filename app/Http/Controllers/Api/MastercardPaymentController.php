@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Helpers\Mastercard\Mastercard;
+use App\Helpers\Mastercard\Models\Customer;
 use App\Helpers\Mastercard\Models\Order;
 use App\Helpers\Mastercard\Models\Purchase;
 use App\Helpers\Mastercard\Operation;
@@ -12,6 +13,7 @@ use App\Model\AgentPayment;
 use App\Model\Client;
 use App\Model\PaymentOption;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -68,6 +70,7 @@ class MastercardPaymentController extends Controller
 
         $order    = new Order($order_id, 'USD', (int)ceil($request->amount));
         $purchase = (new Purchase($this->credentials->mastercard_merchant_id))
+            ->setCustomer(new Customer(Auth::user()->name))
             ->setOrder($order);
 
         $purchase->getInteraction()

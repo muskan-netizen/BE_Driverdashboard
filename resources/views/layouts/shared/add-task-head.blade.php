@@ -248,11 +248,9 @@ button.close.imagepri_close {
 	background: #555;
 }
 </style>
-<div id="task-modal-header" class="modal fade" tabindex="-1"
-	role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"
-	style="display: none; font-size: 14px;">
+<div id="task-modal-header" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;font-size: 14px;">
 	<div class="modal-dialog modal-dialog-top modal-xl">
-		<div class="modal-content" style="">
+		<div class="modal-content"  style="max-height: 90vh; overflow-y: auto;">
 			<div class="modal-header align-items-center border-0 mb-md-0">
 				<h4 class="page-title m-1">{{__("Add Route")}}</h4>
 				<button type="button" class="close" data-dismiss="modal"

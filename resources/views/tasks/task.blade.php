@@ -148,7 +148,7 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
                             <div class="col-sm-12">
                                 <div class="text-sm-left">
                                     @if (\Session::has('success'))
-                                        <div class="alert alert-success">
+                                        <div id="success-alert" class="alert alert-success">
                                             <span>{!! \Session::get('success') !!}</span>
                                             @php
                                                 \Session::forget('success')

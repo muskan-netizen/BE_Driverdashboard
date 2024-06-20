@@ -364,10 +364,12 @@ class TaskController extends BaseController
 
 
 
-        if (!empty($warehouseManagerId)) {
-            $orders->leftJoin('warehouses', 'tasks.warehouse_id', '=', 'warehouses.id')
+        if(checkColumnExists('warehouses', 'manager_id')){
+            if (!empty($warehouseManagerId)) {
+                $orders->leftJoin('warehouses', 'tasks.warehouse_id', '=', 'warehouses.id')
                 ->leftJoin('clients', 'warehouses.manager_id', '=', 'clients.id')
                 ->where('clients.id', $warehouseManagerId);
+            }
         }
 
         if ($user->is_superadmin == 0 && $user->all_team_access == 0 && $user->manager_type == 0) {
@@ -382,12 +384,14 @@ class TaskController extends BaseController
             });
             $orders = $orders->whereIn('task_team_tags.tag_id', $teamTags);
         } elseif ($user->is_superadmin == 0 && $user->manager_type == 1) {
-            $managerWarehouseIds = DB::table('clients')
+            if(checkColumnExists('warehouses', 'manager_id')){
+                $managerWarehouseIds = DB::table('clients')
                 ->join('warehouses', 'clients.id', '=', 'warehouses.manager_id')
                 ->where('clients.id', $user->id)
                 ->pluck('warehouses.id');
 
-            $orders->whereIn('tasks.warehouse_id', $managerWarehouseIds);
+                $orders->whereIn('tasks.warehouse_id', $managerWarehouseIds);
+            }
         }
 
         if (!empty($searchWarehouseId)) {
@@ -694,6 +698,7 @@ class TaskController extends BaseController
             $latitude = [];
             $longitude = [];
             $percentage = 0;
+            $agent_tag = [];
 
             $pool = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 

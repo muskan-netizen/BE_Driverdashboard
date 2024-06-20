@@ -613,14 +613,27 @@ session('preferences.map_key_1'):'kdsjhfkjsdhfsf'; $theme =
                         vehicle_type: vehicle_type
                     },
                     success: function(data) {
-                        response(data);
+                        if (data.length === 0) {
+                            response([{ label: "No driver found", value: "No driver found" }]);
+                        } else {
+                            response(data);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error: ", status, error);
                     }
                 });
             },
             select: function(event, ui) {
-                // Set selection
-                $('#task-modal-header #searchDriver').val(ui.item.label); // display the selected text
-                $('#task-modal-header #agentid').val(ui.item.value); // save selected id to input
+                if (ui.item.value === "No driver found") {
+                    $('#task-modal-header #searchDriver').val(""); // clear the input text
+                    $('#task-modal-header #agentid').val(""); // clear the hidden input
+                    return false;
+                } else {
+                    // Set selection
+                    $('#task-modal-header #searchDriver').val(ui.item.label); // display the selected text
+                    $('#task-modal-header #agentid').val(ui.item.value); // save selected id to input
+                }
                 return false;
             }
         });

@@ -91,15 +91,21 @@ class SendPushNotification
 
     public function sendnotification($recipients)
     { 
+
+        \Log::info('recipients');
+        \Log::info($recipients);
+        
         try {        
             $array = json_decode(json_encode($recipients), true);
+            \Log::info('array r');
+            \Log::info($array);
             foreach($array as $item){            
                 if(isset($item['device_token']) && !empty($item['device_token'])){
                     $item['title']     = 'Pickup Request';
                     $item['body']      = 'Check All Details For This Request In App';
                     $new = [];
                    $item['notificationType'] = $item['type'];
-                   unset($item['type']); // done by Preet due to notification title is displaying like AR in iOS 
+                   unset($item['type']);
     
                     array_push($new,$item['device_token']);
                     $clientRecord = Client::where('code', $item['client_code'])->first();

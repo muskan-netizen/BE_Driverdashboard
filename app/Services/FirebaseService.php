@@ -230,7 +230,7 @@ class FirebaseService
                     //}
                 // }
 
-                //$messages[] = $message;
+                $messages['data'] = $data['data'];
 
                 \Log::info('message 111');
                 \Log::info($message);

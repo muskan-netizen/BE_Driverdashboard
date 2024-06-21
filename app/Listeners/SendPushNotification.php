@@ -134,7 +134,7 @@ class SendPushNotification
                                     //     'soundPlay' => true,
                                     //     'show_in_foreground' => true,
                                     // ],
-                                    "data" => json_encode($item),
+                                    "data" =>[ json_encode($item)],
                                     "priority" => "high"
                                 ];
                                 $response = FirebaseService::sendNotification($data);

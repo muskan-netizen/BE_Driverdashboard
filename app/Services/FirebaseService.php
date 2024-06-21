@@ -216,16 +216,19 @@ class FirebaseService
                     ],
                 ];
         
+
+                \Log::info('data');
+                \Log::info($data);
                 // Process the data section, converting specific fields to strings
                 //$newData['data'] = [];
-                foreach ($data['data'] as $key => $value) {
+                // foreach ($data['data'] as $key => $value) {
                     //if (in_array($key, ['order_id', 'order_status', 'redirect_type'])) {
-                        $message['data'][$key] = (string)$value;
+                        // $message['data'][$key] = (string)$value;
                         // $message[$key] = $value;
                     //} else {
                         //$newData['data'][$key] = $value;
                     //}
-                }
+                // }
 
                 //$messages[] = $message;
 

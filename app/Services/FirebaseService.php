@@ -77,7 +77,7 @@ class FirebaseService
         \Log::info('projectId');
         \Log::info($projectId);
         \Log::info('data dd');
-        \Log::info($data);
+        \Log::info('projectId');
         //$url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
         $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
         //$accessToken = $this->getAccessToken();
@@ -114,15 +114,14 @@ class FirebaseService
         
                 // Process the data section, converting specific fields to strings
                 //$newData['data'] = [];
-                // foreach ($data['data'] as $key => $value) {
-                //     //if (in_array($key, ['order_id', 'order_status', 'redirect_type'])) {
-                //         $message['data'][$key] = (string)$value;
-                //         // $message[$key] = $value;
-                //     //} else {
-                //         //$newData['data'][$key] = $value;
-                //     //}
-                // }
-                $message['data'] = $data['data'];
+                foreach ($data['data'] as $key => $value) {
+                    //if (in_array($key, ['order_id', 'order_status', 'redirect_type'])) {
+                        $message['data'][$key] = (string)$value;
+                        // $message[$key] = $value;
+                    //} else {
+                        //$newData['data'][$key] = $value;
+                    //}
+                }
 
                 //$messages[] = $message;
 

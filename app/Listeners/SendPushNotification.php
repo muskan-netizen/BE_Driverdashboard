@@ -127,14 +127,13 @@ class SendPushNotification
                                         // 'soundPlay' => true,
                                         // 'show_in_foreground' => true,
                                     ],
-                                    // "data" => [
-                                    //     'title' => 'Pickup Request',
-                                    //     'body' => 'Check All Details For This Request In App',
-                                    //     'data' => json_encode($item),
-                                    //     'soundPlay' => true,
-                                    //     'show_in_foreground' => true,
-                                    // ],
-                                    "data" =>[ json_encode($item)],
+                                    "data" => [
+                                        'title' => 'Pickup Request',
+                                        'body' => 'Check All Details For This Request In App',
+                                        'data' => json_encode($item),
+                                        'soundPlay' => true,
+                                        'show_in_foreground' => true,
+                                    ],
                                     "priority" => "high"
                                 ];
                                 $response = FirebaseService::sendNotification($data);

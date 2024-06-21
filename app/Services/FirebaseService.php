@@ -203,8 +203,8 @@ class FirebaseService
                 //$newData['data'] = [];
                 foreach ($data['data'] as $key => $value) {
                     //if (in_array($key, ['order_id', 'order_status', 'redirect_type'])) {
-                        // $message['data'][$key] = (string)$value;
-                        $message[$key] = $value;
+                        $message['data'][$key] = (string)$value;
+                        // $message[$key] = $value;
                     //} else {
                         //$newData['data'][$key] = $value;
                     //}
@@ -212,6 +212,10 @@ class FirebaseService
 
                 //$messages[] = $message;
 
+                \Log::info('message');
+                \Log::info($message);
+
+          
                 try {
                     $response = $client->post($url, [
                         'headers' => [

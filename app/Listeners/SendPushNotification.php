@@ -119,13 +119,13 @@ class SendPushNotification
                                         'body' => 'Check All Details For This Request In App',
                                         'sound' => 'notification.mp3',
                                         "android_channel_id" => "Royo-Delivery",
-                                    // ],
-                                    // "data" => [
-                                    //     'title' => 'Pickup Request',
-                                    //     'body' => 'Check All Details For This Request In App',
-                                    'data' => $item,
-                                    //     'soundPlay' => true,
-                                    //     'show_in_foreground' => true,
+                                    ],
+                                    "data" => [
+                                        'title' => 'Pickup Request',
+                                        'body' => 'Check All Details For This Request In App',
+                                        'data' => json_encode($item),
+                                        'soundPlay' => true,
+                                        'show_in_foreground' => true,
                                     ],
                                     "priority" => "high"
                                 ];

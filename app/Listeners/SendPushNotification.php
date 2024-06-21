@@ -9,7 +9,6 @@ use Log;
 use Carbon\Carbon;
 use App\Model\Roster;
 use App\Model\Client;
-use App\Model\ClientPreference;
 use App\Services\FirebaseService;
 use Config;
 use Illuminate\Support\Facades\DB;
@@ -83,140 +82,24 @@ class SendPushNotification
         if(count($getids) > 0){ 
             // DB::connection($schemaName)->table('rosters')->whereIn('id',$getids)->update(['status'=>1]);
             DB::connection($schemaName)->table('rosters')->whereIn('id',$getids)->delete();
-            $this->sendnotificationNew($get);
+            $this->sendnotification($get);
         }else{
             // $this->extraTime($schemaName);
         }
         return;
     }
 
-    public function sendnotificationNew($recipients)
-{
-    \Log::info('recipients');
-    \Log::info($recipients);
-
-    try {
-        $array = json_decode(json_encode($recipients), true);
-        \Log::info('array r');
-        \Log::info($array);
-        foreach ($array as $item) {
-            if (isset($item['device_token']) && !empty($item['device_token'])) {
-                $item['title'] = 'Pickup Request';
-                $item['body'] = 'Check All Details For This Request In App';
-                $new = [];
-                $item['notificationType'] = $item['type'];
-                unset($item['type']);
-
-                array_push($new, $item['device_token']);
-                $clientRecord = Client::where('code', $item['client_code'])->first();
-                $this->seperate_connection('db_' . $clientRecord->database_name);
-                $client_preferences = DB::connection('db_' . $clientRecord->database_name)->table('client_preferences')->where('client_id', $item['client_code'])->first();
-
-                if (isset($new)) {
-                    try {
-                        if ($item['is_particular_driver'] != 2) {
-                            $data = [
-                                "message" => [
-                                    "token" => $item['device_token'],
-                                    "notification" => [
-                                        'title' => 'Pickup Request',
-                                        'body' => 'Check All Details For This Request In App',
-                                        'sound' => 'notification.mp3',
-                                        "android_channel_id" => "Royo-Delivery",
-                                    ],
-                                    "data" => [
-                                        'title' => 'Pickup Request',
-                                        'body' => 'Check All Details For This Request In App',
-                                        'data' => json_encode($item),
-                                        'soundPlay' => true,
-                                        'show_in_foreground' => true,
-                                    ],
-                                    "priority" => "high"
-                                ]
-                            ];
-                            $response = $this->sendFCMNotification($data, $client_preferences->fcm_server_key);
-                        } else {
-                            $data = [
-                                "message" => [
-                                    "token" => $item['device_token'],
-                                    "notification" => [
-                                        'title' => 'Reminder Order',
-                                        'body' => 'Pickup your order #' . $item['order_id'],
-                                    ],
-                                    "data" => [
-                                        'title' => 'Reminder Order',
-                                        'body' => 'Pickup your order #' . $item['order_id'],
-                                    ],
-                                    "priority" => "high"
-                                ]
-                            ];
-                            $response = $this->sendFCMNotification($data, $client_preferences->fcm_server_key);
-                        }
-                    } catch (Exception $e) {
-                        \Log::info($e->getMessage());
-                    }
-                }
-            }
-        }
-        sleep(5);
-    } catch (Exception $ex) {
-        \Log::info($ex->getMessage());
-    }
-}
-    private function sendFCMNotification($data, $serverKey)
-    {
- 
-        try{
-        $preference = ClientPreference::select('fcm_project_id')->first();
-        if (!$preference) {
-            \Log::error('FCM Send Error: FCM project ID not found in database.');
-            return false;
-        }
-
-        $projectId = $preference->fcm_project_id;
-        $url = "https://fcm.googleapis.com/v1/projects/$projectId/messages:send";
-        $headers = [
-            'Authorization: Bearer ' . getFcmOauthToken(),
-            'Content-Type: application/json'
-        ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-
-        $response = curl_exec($ch);
-        curl_close($ch);
-
-        return $response;
-    }
-
-    Catch(\Exception $e)
-    {
-        \Log::info('error');
-        \Log::info($e->getMessage());
-    }
-    }
-
     public function sendnotification($recipients)
     { 
-
-        \Log::info('recipients');
-        \Log::info($recipients);
-
         try {        
             $array = json_decode(json_encode($recipients), true);
-            \Log::info('array r');
-            \Log::info($array);
             foreach($array as $item){            
                 if(isset($item['device_token']) && !empty($item['device_token'])){
                     $item['title']     = 'Pickup Request';
                     $item['body']      = 'Check All Details For This Request In App';
                     $new = [];
                    $item['notificationType'] = $item['type'];
-                   unset($item['type']);
+                   unset($item['type']); // done by Preet due to notification title is displaying like AR in iOS 
     
                     array_push($new,$item['device_token']);
                     $clientRecord = Client::where('code', $item['client_code'])->first();
@@ -235,8 +118,6 @@ class SendPushNotification
                                         'body' => 'Check All Details For This Request In App',
                                         'sound' => 'notification.mp3',
                                         "android_channel_id" => "Royo-Delivery",
-                                        // 'soundPlay' => true,
-                                        // 'show_in_foreground' => true,
                                     ],
                                     "data" => [
                                         'title' => 'Pickup Request',

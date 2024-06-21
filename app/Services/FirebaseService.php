@@ -230,7 +230,7 @@ class FirebaseService
                     //}
                 // }
 
-                $message['data']= $data['data'];
+                $message['data']= (array)$data['data'];
                
 
                 foreach ($message['data'] as $key => $value) {

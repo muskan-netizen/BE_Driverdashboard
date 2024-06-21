@@ -123,7 +123,7 @@ class SendPushNotification
                                     // "data" => [
                                     //     'title' => 'Pickup Request',
                                     //     'body' => 'Check All Details For This Request In App',
-                                    'data' => json_encode($item),
+                                    'data' => $item,
                                     //     'soundPlay' => true,
                                     //     'show_in_foreground' => true,
                                     ],

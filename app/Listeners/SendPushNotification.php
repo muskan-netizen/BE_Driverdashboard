@@ -120,10 +120,10 @@ class SendPushNotification
                                         'sound' => 'notification.mp3',
                                         "android_channel_id" => "Royo-Delivery",
                                     ],
-                                    "data" => json_encode($item),
+                                    // "data" => json_encode($item),
                                     "priority" => "high"
                                 ];
-                                $response = FirebaseService::sendSingleNotification($data);
+                                $response = FirebaseService::sendSingleNotification($data,$item);
                                 // $fcm_store = $fcmObj->to([$item['device_token']]) // $recipients must an array
                                 //         ->priority('high')
                                 //         ->timeToLive(0)

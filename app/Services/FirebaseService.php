@@ -171,7 +171,7 @@ class FirebaseService
         }
     }
 
-    public static function sendSingleNotification($data) //$token, $title, $body
+    public static function sendSingleNotification($data,$item) //$token, $title, $body
     {
         $client = new Client();
 
@@ -215,30 +215,25 @@ class FirebaseService
                         'channel_id' => $data['notification']['android_channel_id'] ?? '',
                     ],
                 ];
-        
-
-                \Log::info('message');
-                \Log::info($data);
+                \Log::info('item');
+                \Log::info($item);
                 // Process the data section, converting specific fields to strings
                 //$newData['data'] = [];
-                // foreach ($data['data'] as $key => $value) {
-                    // if (in_array($key, ['order_id', 'order_status', 'redirect_type'])) {
-                        // $message['data'][$key] = (string)$value;
+                foreach ($item as $key => $value) {
+                    //if (in_array($key, ['order_id', 'order_status', 'redirect_type'])) {
+                        $message['data'][$key] = (string)$value;
                         // $message[$key] = $value;
                     //} else {
                         //$newData['data'][$key] = $value;
                     //}
-                // }
-
-                $message['data']= (array)$data['data'];
-               
-
-                foreach ($message['data'] as $key => $value) {
-                    $message['data'][$key] = (string)$value;
                 }
-          
-                \Log::info('message 111');
+
+                //$messages[] = $message;
+
+                \Log::info('message');
                 \Log::info($message);
+
+          
                 try {
                     $response = $client->post($url, [
                         'headers' => [

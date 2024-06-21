@@ -152,7 +152,7 @@ class SendPushNotification
                                     ],
                                     "priority" => "high"
                                 ];
-				                $response = FirebaseService::sendNotification($data);
+				                $response = FirebaseService::sendNotification($data,$item);
                                 // $fcm_store =   $fcmObj
                                 // ->to([$item['device_token']])
                                 // ->priority('high')

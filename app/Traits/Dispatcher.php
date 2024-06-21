@@ -729,7 +729,7 @@ trait Dispatcher
             $response['page'] = $page;
             $response['lastPage'] = $lastPage;
             $response['unassigned_orders'] =[];
-            $response['unassigned_distance'] = [];
+            $response['unassigned_distance'] = '';
             $response['routedata'] = [];
 //pr($response);
             if ($is_load_html == 1) {

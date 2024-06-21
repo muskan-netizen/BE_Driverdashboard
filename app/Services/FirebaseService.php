@@ -122,6 +122,7 @@ class FirebaseService
                 //         //$newData['data'][$key] = $value;
                 //     //}
                 // }
+                $message['data'] = $data['data'];
 
                 //$messages[] = $message;
 

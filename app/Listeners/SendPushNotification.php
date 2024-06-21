@@ -112,23 +112,24 @@ class SendPushNotification
                             // $fcmObj = new Fcm($fcm_server_key);
                             if($item['is_particular_driver'] != 2 ){
                                 $data = [
-                                    "registration_ids" => is_array($item['device_token']) ? $item['device_token'] : array($item['device_token']),//$item['device_token'],
+                                    // "registration_ids" => is_array($item['device_token']) ? $item['device_token'] : array($item['device_token']),//$item['device_token'],
+                                    "token" => $item['device_token'],
                                     "notification" => [
                                         'title' => 'Pickup Request',
                                         'body' => 'Check All Details For This Request In App',
                                         'sound' => 'notification.mp3',
                                         "android_channel_id" => "Royo-Delivery",
-                                    ],
-                                    "data" => [
-                                        'title' => 'Pickup Request',
-                                        'body' => 'Check All Details For This Request In App',
-                                        'data' => json_encode($item),
-                                        'soundPlay' => true,
-                                        'show_in_foreground' => true,
+                                    // ],
+                                    // "data" => [
+                                    //     'title' => 'Pickup Request',
+                                    //     'body' => 'Check All Details For This Request In App',
+                                    'data' => json_encode($item),
+                                    //     'soundPlay' => true,
+                                    //     'show_in_foreground' => true,
                                     ],
                                     "priority" => "high"
                                 ];
-                                $response = FirebaseService::sendNotification($data);
+                                $response = FirebaseService::sendSingleNotification($data);
                                 // $fcm_store = $fcmObj->to([$item['device_token']]) // $recipients must an array
                                 //         ->priority('high')
                                 //         ->timeToLive(0)

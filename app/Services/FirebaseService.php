@@ -159,32 +159,109 @@ class FirebaseService
 
             return $results;
 
-            // $promises = function() use ($client, $messages, $url) {
-            //     foreach ($messages as $message) {
-            //         yield $client->requestAsync('POST', $url, [
-            //             'json' => [
-            //                 'validate_only' => false,
-            //                 'message' => $message
-            //             ],
-            //         ]);
-            //     }
-            // };
+       
+            \Log::info('response');
+            \Log::info($data);
+            \Log::info($messages);
+            \Log::info('response');
 
-            // $handleResponses = function (array $responses) {
-            //     foreach ($responses as $response) {
-            //         if ($response['state'] === Promise\PromiseInterface::FULFILLED) {
-            //             // $response['value'] is an instance of \Psr\Http\Message\RequestInterface
-            //             echo $response['value']->getBody();
-            //         } elseif ($response['state'] === Promise\PromiseInterface::REJECTED) {
-            //             // $response['reason'] is an exception
-            //             echo $response['reason']->getMessage();
-            //         }
-            //     }
-            // };
+        } catch (RequestException $e) {
+            // Handle the error appropriately
+            return ['error' => $e->getMessage()];
+        }
+    }
 
-            // Promise\Utils::settle($promises())
-            // ->then($handleResponses)
-            // ->wait();
+    public static function sendSingleNotification($data) //$token, $title, $body
+    {
+        $client = new Client();
+
+        $preference = ModelClientPreference::select('fcm_project_id')->first();
+        if (!$preference) {
+            \Log::error('FCM Send Error: FCM project ID not found in database.');
+            return false;
+        }
+
+        $projectId = $preference->fcm_project_id;
+
+
+        \Log::info('projectId');
+        \Log::info($projectId);
+        $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
+        // $accessToken = Self::getAccessToken();
+        $accessToken = getFcmOauthToken();
+
+
+        if (!$accessToken) {
+            return ['error' => 'Unable to fetch access token'];
+        }
+
+        try {
+
+            $messages = [];            
+                $message['token'] = $data['token'];
+
+                foreach ($data['notification'] as $key => $value) {
+                    if (!in_array($key, ['sound', 'icon', 'click_action', 'android_channel_id', 'redirect_type'])) {
+                        $message['notification'][$key] = $value;
+                    }
+                }
+
+                $message['android'] = [
+                    'priority' => $data['priority'] ?? 'HIGH',
+                    'notification' => [
+                        'icon' => $data['notification']['icon'] ?? '',
+                        'sound' => $data['notification']['sound'] ?? '',
+                        'click_action' => $data['click_action'] ?? '',
+                        'channel_id' => $data['notification']['android_channel_id'] ?? '',
+                    ],
+                ];
+        
+                // Process the data section, converting specific fields to strings
+                //$newData['data'] = [];
+                foreach ($data['data'] as $key => $value) {
+                    //if (in_array($key, ['order_id', 'order_status', 'redirect_type'])) {
+                        $message['data'][$key] = (string)$value;
+                        // $message[$key] = $value;
+                    //} else {
+                        //$newData['data'][$key] = $value;
+                    //}
+                }
+
+                //$messages[] = $message;
+
+                \Log::info('message');
+                \Log::info($message);
+
+          
+                try {
+                    $response = $client->post($url, [
+                        'headers' => [
+                            'Authorization' => 'Bearer ' . $accessToken,
+                            'Content-Type' => 'application/json',
+                        ],
+                        'json' => [
+                            'validate_only' => false,
+                            'message' => $message,
+                        ],
+                    ]);
+    
+                    $results[] = [
+                        'status' => 'fulfilled',
+                        'body' => (string) $response->getBody()
+                    ];
+                } catch (RequestException $e) {
+
+                    
+                    $results[] = [
+                        'status' => 'rejected',
+                        'reason' => $e->getMessage()
+                    ];
+                    \Log::info('firebase error');
+                    \Log::info($results);
+                }
+            
+
+            return $results;
 
        
             \Log::info('response');
@@ -192,18 +269,6 @@ class FirebaseService
             \Log::info($messages);
             \Log::info('response');
 
-            // $response = $client->post($url, [
-            //     'headers' => [
-            //         'Authorization' => 'Bearer ' . $accessToken,
-            //         'Content-Type' => 'application/json',
-            //     ],
-            //     'json' => [
-            //         'validate_only' => false,
-            //         'message' => $messages,
-            //     ],
-            // ]);
-            
-            // return json_decode($response->getBody(), true);
         } catch (RequestException $e) {
             // Handle the error appropriately
             return ['error' => $e->getMessage()];

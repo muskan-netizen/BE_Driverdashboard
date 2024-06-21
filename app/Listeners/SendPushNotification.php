@@ -125,7 +125,7 @@ class SendPushNotification
                                         'sound' => 'notification.mp3',
                                         "android_channel_id" => "Royo-Delivery",
                                         // 'soundPlay' => true,
-                                        'show_in_foreground' => true,
+                                        // 'show_in_foreground' => true,
                                     ],
                                     // "data" => [
                                     //     'title' => 'Pickup Request',

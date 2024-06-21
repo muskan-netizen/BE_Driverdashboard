@@ -165,7 +165,8 @@ class SendPushNotification
 }
     private function sendFCMNotification($data, $serverKey)
     {
-
+ 
+        try{
         $preference = ClientPreference::select('fcm_project_id')->first();
         if (!$preference) {
             \Log::error('FCM Send Error: FCM project ID not found in database.');
@@ -190,6 +191,13 @@ class SendPushNotification
         curl_close($ch);
 
         return $response;
+    }
+
+    Catch(\Exception $e)
+    {
+        \Log::info('error');
+        \Log::info($e->getMessage());
+    }
     }
 
     public function sendnotification($recipients)

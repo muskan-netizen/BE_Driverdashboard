@@ -233,10 +233,12 @@ class FirebaseService
                 $message['data']= $data['data'];
                
 
+                foreach ($message['data'] as $key => $value) {
+                    $message['data'][$key] = (string)$value;
+                }
+          
                 \Log::info('message 111');
                 \Log::info($message);
-
-          
                 try {
                     $response = $client->post($url, [
                         'headers' => [

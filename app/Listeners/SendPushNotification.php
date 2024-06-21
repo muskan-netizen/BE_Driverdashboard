@@ -124,7 +124,7 @@ class SendPushNotification
                                         'body' => 'Check All Details For This Request In App',
                                         'sound' => 'notification.mp3',
                                         "android_channel_id" => "Royo-Delivery",
-                                        'soundPlay' => true,
+                                        // 'soundPlay' => true,
                                         'show_in_foreground' => true,
                                     ],
                                     // "data" => [

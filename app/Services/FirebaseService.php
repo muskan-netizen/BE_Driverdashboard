@@ -218,7 +218,7 @@ class FirebaseService
         
 
                 \Log::info('message');
-                \Log::info($message);
+                \Log::info($data);
                 // Process the data section, converting specific fields to strings
                 //$newData['data'] = [];
                 // foreach ($data['data'] as $key => $value) {

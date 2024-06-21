@@ -88,99 +88,11 @@ class FirebaseService
             return ['error' => 'Unable to fetch access token'];
         }
 
-        // $data = [
-        //     'token' => $devices[0],
-        //     'notification' => [
-        //         'title' => $notification_content->subject,
-        //         'body'  => $body_content,
-        //         // 'sound' => "default",
-        //         // "icon" => (!empty($client_preferences->favicon)) ? $client_preferences->favicon['proxy_url'] . '200/200' . $client_preferences->favicon['image_path'] : '',
-        //         //'click_action' => '',
-        //         //"android_channel_id" => "default-channel-id",
-        //         //"redirect_type" => $redirect_URL['type']
-        //     ],
-        //     'android' => [
-        //         "priority" => 'HIGH',
-        //         'notification' => [
-        //             //'title' => $title,
-        //             'icon' => 'myicon',
-        //             'sound' => "notification.wav",
-        //             'click_action' => '',
-        //             'color' => '#ff0000',
-        //             'channel_id' => "default-channel-id",
-        //         ],
-        //     ],
-        //     'data' => [
-        //         'title' => $notification_content->subject,
-        //         'body'  => $body_content,
-        //         "type" => "order_status_change",
-        //         "order_id" =>"{$orderData->id}",
-        //         "vendor_id" =>$orderData->ordervendor->vendor_id ?? '',
-        //         "order_status" =>"{$order_status_id}",
-        //         "redirect_type" => "{$redirect_URL['type']}"
-        //     ],
-        //     //"priority" => "high"
-        // ];
-        // \Log::info( $data );
-
-
-
-
-
-        // $newData = [];
-
-        // if (is_array($data['registration_ids']) && count($data['registration_ids']) > 1) {
-        //     $newData['token'] = $data['registration_ids']; // Handle multiple tokens
-        // } else {
-        //     $newData['token'] = is_array($data['registration_ids']) ? $data['registration_ids'][0] : $data['registration_ids']; // Handle single token
-        // }
-
-        // $newData['notification'] = [];
-        // foreach ($data['notification'] as $key => $value) {
-        //     if (!in_array($key, ['sound', 'icon', 'click_action', 'android_channel_id', 'redirect_type'])) {
-        //         $newData['notification'][$key] = $value;
-        //     }
-        // }
-
-        // // Add the android section with nested notification settings
-        // $newData['android'] = [
-        //     'priority' => $data['priority'] ?? 'HIGH',
-        //     'notification' => [
-        //         'icon' => $data['icon'] ?? '',
-        //         'sound' => $data['sound'] ?? '',
-        //         'click_action' => $data['click_action'] ?? '',
-        //         'channel_id' => $data['android_channel_id'] ?? '',
-        //     ],
-        // ];
-
-        // // Process the data section, converting specific fields to strings
-        // $newData['data'] = [];
-        // foreach ($data['data'] as $key => $value) {
-        //     //if (in_array($key, ['order_id', 'order_status', 'redirect_type'])) {
-        //         $newData['data'][$key] = (string)$value;
-        //     //} else {
-        //         //$newData['data'][$key] = $value;
-        //     //}
-        // }
-
-        // Output the new data array
-        //print_r($newData);
-
-
         try {
 
             $messages = [];
             foreach ($data['registration_ids'] as $token) {
-                // $message = [
-                //     'token' => $token,
-                //     'notification' => [
-                //         'title' => $title,
-                //         'body' => $body,
-                //         'sound' => $sound,
-                //         'icon' => $icon,
-                //     ],
-                //     'data' => $data,
-                // ];
+            
                 $message['token'] = $token;
 
                 foreach ($data['notification'] as $key => $value) {

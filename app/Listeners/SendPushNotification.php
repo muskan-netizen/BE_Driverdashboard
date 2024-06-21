@@ -91,9 +91,15 @@ class SendPushNotification
 
     public function sendnotification($recipients)
     { 
+        \Log::info('reciepients');
+        \Log::info($recipients);
         try {        
             $array = json_decode(json_encode($recipients), true);
-            foreach($array as $item){            
+            $counter = 1;
+            foreach($array as $item){     
+                \Log::info('loop');
+                \Log::info($counter); 
+                     
                 if(isset($item['device_token']) && !empty($item['device_token'])){
                     $item['title']     = 'Pickup Request';
                     $item['body']      = 'Check All Details For This Request In App';
@@ -124,6 +130,7 @@ class SendPushNotification
                                     "priority" => "high"
                                 ];
                                 $response = FirebaseService::sendSingleNotification($data,$item);
+                                $counter++;
                                 // $fcm_store = $fcmObj->to([$item['device_token']]) // $recipients must an array
                                 //         ->priority('high')
                                 //         ->timeToLive(0)

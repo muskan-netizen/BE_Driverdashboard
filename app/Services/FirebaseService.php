@@ -229,10 +229,14 @@ class FirebaseService
                         'body' => (string) $response->getBody()
                     ];
                 } catch (RequestException $e) {
+
+                    
                     $results[] = [
                         'status' => 'rejected',
                         'reason' => $e->getMessage()
                     ];
+                    \Log::info('firebase error');
+                    \Log::info($results);
                 }
             }
 

@@ -230,7 +230,12 @@ class FirebaseService
                     //}
                 // }
 
-                $message['data']= (object) $data['data'];
+                // $message['data']= (object) $data['data'];
+                if (isset($data['data']->scalar)) {
+                    $message['data'] = json_decode($data['data']->scalar, true); // convert JSON string to array
+                } else {
+                    $message['data'] = [];
+                }
 
                 \Log::info('message 111');
                 \Log::info($message);

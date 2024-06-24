@@ -144,6 +144,18 @@ class ClientController extends Controller
 
             return redirect()->back()->with('success', 'Preference updated successfully!');
         }
+        if($request->has('fcm_project_id')){
+
+
+            $data = [];
+            if(checkColumnExists('client_preferences', 'fcm_project_id')){
+                $data = ['fcm_project_id'=>$request->fcm_project_id];
+            }
+
+            ClientPreference::where('client_id', $id)->update($data);
+
+            return redirect()->back()->with('success', 'Preference updated successfully!');
+        }
       
        // Dispatcher Auto Allocation Route Code
 
@@ -172,7 +184,7 @@ class ClientController extends Controller
                 return redirect()->back()->with('success', 'Preference updated successfully!');
         }
 
-    }
+     }
         
            // Enable Route Optimization
             if($request->has('route_optimize')){

@@ -608,60 +608,8 @@ trait Dispatcher
         $startdate = $request->start_date ?? '';
         $enddate = $request->end_date ?? '';
         $user = $response['user'];
-        $client = $response['clientPreference'] ?? $response['preference'];
-        $dashboardMode = isset($client->dashboard_mode) ? json_decode($client->dashboard_mode) : '';
-        $dashboard_theme = isset($client->dashboard_theme) ? $client->dashboard_theme : 2;
         // Get client information based on user's code
         $limit = 10;
-        $show_dashboard_by_agent_wise = 0;
-        if (!empty($dashboardMode->show_dashboard_by_agent_wise) && $dashboardMode->show_dashboard_by_agent_wise == 1) {
-            $show_dashboard_by_agent_wise = 1;
-        }
-        if ($show_dashboard_by_agent_wise == 0 && $dashboard_theme == 1) {
-            $agentsData = \DB::select("
-                SELECT 
-                agents.id,
-                agents.name,
-                agents.team_id,
-                agents.is_available,
-                latest_log.lat, 
-                latest_log.long, 
-                latest_log.device_type, 
-                latest_log.battery_level, 
-                latest_log.created_at
-                FROM 
-                agents
-                LEFT JOIN (
-                SELECT 
-                agent_id, 
-                MAX(id) AS max_id
-                FROM 
-                agent_logs
-                GROUP BY 
-                agent_id
-                ) AS latest_ids ON agents.id = latest_ids.agent_id
-                LEFT JOIN agent_logs AS latest_log ON latest_ids.max_id = latest_log.id
-                WHERE 
-                agents.is_approved = 1
-            ");
-            
-            // Transforming the result into a Laravel collection
-            $agents = collect($agentsData)->map(function ($agent) {
-                return [
-                    'id' => $agent->id,
-                    'name' => $agent->name,
-                    'team_id'=>$agent->team_id,
-                    'is_available'=>$agent->is_available,
-                    'agentlog' => [
-                        'lat' => $agent->lat ?? 0,
-                        'long' => $agent->long ?? 0,
-                        'device_type' => $agent->device_type ?? '',
-                        'battery_level' => $agent->battery_level ?? '',
-                        'created_at' => $agent->created_at ?? ''
-                    ]
-                ];
-            });
-        }
 
         $sql = "SELECT teams.*,
                 COUNT(DISTINCT ag.id) AS total_agents,

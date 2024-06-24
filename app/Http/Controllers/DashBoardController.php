@@ -221,7 +221,6 @@ class DashBoardController extends Controller
         $request->merge(['start_date'=>@$data_com['startdate'],'end_date'=>@$data_com['enddate']]);
         $data['agentMarkerData']=  $this->GetAgentLogs(-1,$request->userstatus);
         $data= $this->teamDataEN($request,$data_com);
-        
         return $data;
     }
     public function dashboardOrderData(Request $request)

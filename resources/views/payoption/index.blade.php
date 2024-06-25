@@ -88,6 +88,12 @@
                 $livee_merchant_key=(isset($creds->livee_merchant_key))?$creds->livee_merchant_key: '';
                 $livee_resource_key=(isset($creds->livee_resource_key))?$creds->livee_resource_key: '';
 
+                //mastercard payment gateway
+                $mastercard_merchant_id = (isset($creds->mastercard_merchant_id)) ? $creds->mastercard_merchant_id : '';
+                $mastercard_merchant_key = (isset($creds->mastercard_merchant_key)) ? $creds->mastercard_merchant_key : '';
+                $mastercard_operator_id = (isset($creds->mastercard_operator_id)) ? $creds->mastercard_operator_id : '';
+                $mastercard_gateway = (isset($creds->mastercard_gateway)) ? $creds->mastercard_gateway : '';
+
                 $company_token = (isset($creds->company_token)) ? $creds->company_token : '';
                 $service_type = (isset($creds->service_type)) ? $creds->service_type : '';
                 ?>
@@ -117,6 +123,48 @@
                         </div>
                         @endif
                     </div>
+
+                    @if(strtolower($opt->code) == 'mastercard')
+                     <div class="mt-2" id="mastercard_fields_wrapper" @if($opt->status != 1) style="display:none" @endif>
+						<div class="row">
+							<div class="col-12">
+                                <div class="form-group mb-2">
+                                    <label for="mastercard_merchant_id" class="mr-3">
+                                        {{ __('Merchant ID') }}
+                                    </label>
+                                    <input type="text" name="mastercard_merchant_id" id="mastercard_merchant_id" class="form-control"
+                                        value="{{ $mastercard_merchant_id }}" <?php if ($opt->status == 1) echo 'required' ?>>
+                                </div>
+
+                                <div class="form-group mb-2">
+                                    <label for="mastercard_merchant_key" class="mr-3">
+                                        {{ __('Merchant Key') }}
+                                    </label>
+                                    <input type="password" name="mastercard_merchant_key" id="mastercard_merchant_key" class="form-control"
+                                        value="{{ $mastercard_merchant_key }}" <?php if ($opt->status == 1) echo 'required' ?>>
+                                </div>
+
+                                <div class="form-group mb-2">
+                                    <label for="mastercard_operator_id" class="mr-3">
+                                        {{ __('Operator ID') }}
+                                    </label>
+
+                                    <input type="text" name="mastercard_operator_id" id="mastercard_operator_id" class="form-control"
+                                        value="{{ $mastercard_operator_id }}" <?php if ($opt->status == 1) echo 'required' ?>>
+                                </div>
+
+                                <div class="form-group mb-2">
+                                    <label for="mastercard_gateway" class="mr-3">
+                                        {{ __('Mastercard Gateway') }}
+                                    </label>
+
+                                    <input type="text" name="mastercard_gateway" id="mastercard_gateway" class="form-control"
+                                        value="{{ $mastercard_gateway }}" <?php if ($opt->status == 1 && $opt->test_mode != 1) echo 'required' ?>>
+                                </div>
+							</div>
+						</div>
+                    </div>
+                    @endif
 
                     @if ( (strtolower($opt->code) == 'stripe') )
                     <div id="stripe_fields_wrapper" @if($opt->status != 1) style="display:none" @endif>

@@ -1,5 +1,5 @@
 {
-	"authHost": "http://192.168.96.84:9091",
+	"authHost": "https://aceuat-dispatch.netsolutionindia.com",
 	"authEndpoint": "/broadcasting/auth",
 	"clients": [
 		{
@@ -20,8 +20,8 @@
 	"protocol": "http",
 	"socketio": {},
 	"secureOptions": 67108864,
-	"sslCertPath": "",
-	"sslKeyPath": "",
+	"sslCertPath": "/etc/letsencrypt/live/aceuat-dispatch.netsolutionindia.com/fullchain.pem",
+	"sslKeyPath": "/etc/letsencrypt/live/aceuat-dispatch.netsolutionindia.com/privkey.pem",
 	"sslCertChainPath": "",
 	"sslPassphrase": "",
 	"subscribers": {
@@ -30,7 +30,7 @@
 	},
 	"apiOriginAllow": {
 		"allowCors": true,
-		"allowOrigin": "http://192.168.96.84:9091",
+		"allowOrigin": "https://aceuat-dispatch.netsolutionindia.com",
 		"allowMethods": "GET,POST",
 		"allowHeaders": "*"
 	}

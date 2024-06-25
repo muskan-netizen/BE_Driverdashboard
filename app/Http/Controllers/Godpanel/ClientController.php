@@ -82,9 +82,11 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
+
+      
         $validator = $this->validator($request->all())->validate();
         DB::beginTransaction();
-        try {
+        //  try {
             $getFileName = null;
 
             // Handle File Upload
@@ -173,10 +175,10 @@ class ClientController extends Controller
        
             return redirect()->route('client.index')->with('success', 'Client Added successfully!');
             // all good
-        } catch (\Exception $e) {
-            DB::rollback();
-            return redirect()->route('client.index')->with('error', $e->getMessage());
-        }
+        // } catch (\Exception $e) {
+        //     DB::rollback();
+        //     return redirect()->route('client.index')->with('error', $e->getMessage());
+        // }
     }
 
     private function randomString()
@@ -360,12 +362,19 @@ class ClientController extends Controller
 
     public function exportDb(Request $request,$databaseName){
 
-        try {
+        // try {
 
+
+            \Log::info('request data');
+            \Log::info($request->all());
         $client = Client::where('database_name', $databaseName)->first(['name', 'email', 'password', 'phone_number', 'password', 'database_path', 'database_name', 'database_username', 'database_password', 'logo', 'dark_logo', 'company_name', 'company_address', 'custom_domain', 'status', 'code','sub_domain','database_host'])->toarray();
         $check_if_already = 0;
         $stage = $request->dump_into??'PROD';
         $data = $request->all();
+
+
+        \Log::info('client data');
+        \Log::info([$client]);
         if($client){
             
             $check_if_already = Client::on($stage)->where(['database_name' => $client['database_name']])->where(['sub_domain' => $client['sub_domain']])->count();
@@ -385,10 +394,10 @@ class ClientController extends Controller
                     }
 
                     
-
+                    \Log::info('clientData');
+                    \Log::info([$clientData]);
                     
                 }
-
                 try {
                     
                     DB::connection($stage)->table('clients')->insert($clientData);
@@ -405,10 +414,10 @@ class ClientController extends Controller
             return redirect()->route('client.index')->with('error', 'This client not exist!!');
         }
 
-    } catch (Exception $ex) {
-        return redirect()->route('client.index')->with('error', $ex->getMessage());
+    // } catch (Exception $ex) {
+    //     return redirect()->route('client.index')->with('error', $ex->getMessage());
       
-    }
+    // }
 
     }
 

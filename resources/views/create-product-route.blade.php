@@ -77,7 +77,7 @@
 					<div class="prod-search">
 						<div class="row">
 							<div class="col-sm-8 px-1">
-								<div class="search-bar">
+								<div class="search-bar mw-100">
 									<input class="form-control search" type="search" id="warehouse-search"
 										placeholder="Search" aria-label="Search">
 									<button class="btn" type="button">

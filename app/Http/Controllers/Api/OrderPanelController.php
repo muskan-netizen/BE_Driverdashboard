@@ -51,7 +51,7 @@ class OrderPanelController extends BaseController
                             $q->where('product_variant_sku',$request->product_variant_sku);
                         }])->whereHas('ProductPrices',function ($q) use ($request){
                             $q->where('product_variant_sku',$request->product_variant_sku);
-                        } )->withCount('completeOrder')->with('agentRating')
+                        } )->withCount('completeOrder')->with(['agentRating','agentlog'])
                         ->get();
             // dd(\DB::getQueryLog());
         $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain/';

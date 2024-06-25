@@ -69,6 +69,12 @@ class Agent extends Authenticatable implements  Wallet, WalletFloat
     return $this->hasOne('App\Model\AgentFleet','agent_id');
     }
 
+    public function agentdocs()
+    {
+    return $this->hasMany('App\Model\AgentDocs','agent_id','id')->whereNotIn('file_type', ['Image', 'Pdf'])->where('document_id','>',0)->orderBy('document_id', 'asc');
+    }
+
+
     public function getDriver()
     {
         return $this->belongsToMany('App\Model\Fleet', 'agent_fleets', 'agent_id', 'fleet_id')->select('registration_name','id','name');

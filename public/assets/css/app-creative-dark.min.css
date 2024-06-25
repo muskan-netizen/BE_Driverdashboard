@@ -1019,7 +1019,7 @@ body[data-layout-mode=horizontal] .logo-box {
   position: absolute;
   right: 0;
   color: #8c98a5;
-  left: 240px;
+  left: 0;
   background-color: #2b323a;
 }
 .footer .footer-links a {

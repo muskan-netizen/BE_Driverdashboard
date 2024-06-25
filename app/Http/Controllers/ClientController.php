@@ -79,6 +79,10 @@ class ClientController extends Controller
             // return redirect()->back()->with('success', 'Client settings updated successfully!');
             unset($request['pickup_type']);
             unset($request['drop_type']);
+            unset($request['hold_to_start']);
+            unset($request['hold_to_arrive']);
+            unset($request['hold_to_pick']);
+            unset($request['hold_to_complete']);
         } catch (\Throwable $th) {
             return redirect()->back()->with('error', 'Something went wrong!!');
         }
@@ -132,12 +136,19 @@ class ClientController extends Controller
         }
 
         if($request->has('dashboard_mode')){
-
+            
             $dashboardMode['show_dashboard_by_agent_wise'] = $request->dashboard_mode['show_dashboard_by_agent_wise'];
-
             $data = [];
+            if($request->dashboard_mode['show_dashboard_by_agent_wise'] == 1){
+                $dashboardTheme = 2;
+            }
+
+            if($request->dashboard_mode['show_dashboard_by_agent_wise'] == 0){
+                $dashboardTheme = 1;
+            }
+            $data['dashboard_theme'] = $dashboardTheme;
             if(checkColumnExists('client_preferences', 'dashboard_mode')){
-                $data = ['dashboard_mode'=>json_encode($dashboardMode)];
+                $data['dashboard_mode'] = json_encode($dashboardMode);
             }
 
             ClientPreference::where('client_id', $id)->update($data);
@@ -514,10 +525,13 @@ class ClientController extends Controller
         if($request->has('address_limit_order_config')){
             $request->request->add(['show_limited_address' => ($request->has('show_limited_address') && $request->show_limited_address == 'on') ? 1 : 0]);
         }
-
+       
         $request->request->add(['toll_fee' => ($request->has('toll_fee') && $request->toll_fee == 'on') ? 1 : 0]);
+        $request->request->add(['distance_in_meter' => ($request->has('distance_in_meter') && $request->distance_in_meter > 0) ? $request->distance_in_meter : 0]);
         $request->request->add(['is_road_side_pickup' => ($request->has('is_road_side_pickup') && $request->is_road_side_pickup == 'on') ? 1 : 0]);
         $request->request->add(['unique_id_show' => ($request->has('unique_id_show') && $request->unique_id_show == 'on') ? 1 : 0]);
+        $request->request->add(['refer_earn_driver_to_driver_toggle' => ($request->has('refer_earn_driver_to_driver_toggle') && $request->refer_earn_driver_to_driver_toggle == 'on') ? 1 : 0]);
+
         $updatePreference = ClientPreference::updateOrCreate([
             'client_id' => $id
         ], $request->all());

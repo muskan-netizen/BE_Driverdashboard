@@ -74,7 +74,7 @@ $clientData = \App\Model\Client::select('id', 'logo','custom_domain','code')->wi
                 </form>
             </li> --}}
 
-            <li class="dropdown d-inline-block d-lg-none">
+            <li class="dropdown d-none">
                 <a class="nav-link dropdown-toggle arrow-none waves-effect waves-light" data-toggle="dropdown" href="#"
                     role="button" aria-haspopup="false" aria-expanded="false">
                     <i class="fe-search noti-icon"></i>

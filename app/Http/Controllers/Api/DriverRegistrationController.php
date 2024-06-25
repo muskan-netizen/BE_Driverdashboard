@@ -241,6 +241,7 @@ class DriverRegistrationController extends BaseController
                             'file_type' => $o->file_type,
                             'agent_id' => $agent->id,
                             'file_name' => $path,
+                            'document_id' => $o->id,
                             'label_name' => $o->filename1
                         ];
                     }
@@ -254,6 +255,7 @@ class DriverRegistrationController extends BaseController
                     'file_type' => $f->file_type,
                     'agent_id' => $agent->id,
                     'file_name' => json_encode($f->contents),
+                    'document_id' => $f->id,
                     'label_name' => $f->label_name
                 ];
                 $agent_docs = AgentDocs::create($files[$key]);
@@ -274,7 +276,7 @@ class DriverRegistrationController extends BaseController
         }
     }
 
-    public function sendDocuments()
+    public function sendDocuments(Request $request)
     {
         try {
             $show_vehicle_type_icon = [];
@@ -286,6 +288,7 @@ class DriverRegistrationController extends BaseController
             $show_vehicle_type_icon = explode(',',$types->show_vehicle_type_icon);
             $p = 0;
             $documents = DriverRegistrationDocument::with('driver_option')->orderBy('file_type', 'DESC')->select('name','file_type','id','is_required')->get()->toArray();
+            
             if((isset($documents) && count($documents)>0) && $manage_fleet)
             {
              $p = sizeof($documents) - 1;
@@ -297,11 +300,12 @@ class DriverRegistrationController extends BaseController
             }else{
                 $data['documents'] = $documents;
             }
-        
 
             $data['all_teams'] = Team::OrderBy('id','desc')->get();
             $data['agent_tags'] = TagsForAgent::OrderBy('id','desc')->get();
             $data['vehicle_types'] = ((count($show_vehicle_type_icon)>0)?json_encode($show_vehicle_type_icon):json_encode(['1','2','3','4','5']));
+            $data['is_refferal_code_enable'] = ClientPreference::value('refer_earn_driver_to_driver_toggle');
+
             return response()->json([
                 'status' => 200,
                 'message' => 'Success!',

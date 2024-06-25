@@ -107,6 +107,7 @@
     "select2": "^4.0.12",
     "selectize": "^0.12.6",
     "simplebar": "^5.2.0",
+    "socket.io-client": "^4.7.2",
     "sortablejs": "^1.10.2",
     "summernote": "0.8.16",
     "sweetalert2": "^9.10.13",

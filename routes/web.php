@@ -21,7 +21,15 @@ Route::get('hitevent', function (Request $request) {
 	event(new \App\Events\agentLogFetch());
 	dd("Event successfull");
 });
+Route::get('/t', function () {
+	//$data =[];
+	$data = ['event_type'=>'agent_status_update','lat' => 25.2138, 'lng'=> 75.8648,'name'=>'Gurvinder','agent_id'=>720956,'is_available'=>1,'is_busy'=>0,'id'=>47];
+	//$data['event_type'] = 'agent_log';
 
+
+	event(new \App\Events\SendMessage($data));
+	dd('Event Run Successfully.');
+});
 Route::get('/switch/language', function (Request $request) {
 	if ($request->lang) {
 		session()->put("applocale", $request->lang);
@@ -72,7 +80,6 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 
 	Route::group(['prefix' => '/godpanel', 'middleware' => 'CheckGodPanel'], function () {
 		Route::get('/', function () {
-			dd('werewr');
 			return view('godpanel/login');
 		});
 		Route::get('/login', function () {
@@ -132,7 +139,7 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 			Route::get('/order-details/tracking/{clientcode}/{order_id}', 'TrackingController@OrderTrackingDetail')->name('order.tracking.detail');
 			Route::get('/order-cancel/tracking/{clientcode}/{order_id}', 'TrackingController@orderCancelFromOrder')->name('order.cancel.from_order');
 			Route::get('/order/driver-rating/{clientcode}/{order_id}', 'TrackingController@DriverRating')->name('order.driver.rating');
-			Route::get('/order/form-attribute/{clientcode}/{order_id}', 'TrackingController@OrderFormAttribute')->name('order.tracking');
+			Route::get('/order/form-attribute/{clientcode}/{order_id}', 'TrackingController@OrderFormAttribute');
 			Route::get('/order/driver_additional_rating/{clientcode}/{order_id}', 'TrackingController@OrderRatingform')->name('order.driverAdditional.rating');
 			Route::post('/order/submit_driver_additional_rating/{clientcode}/{order_id}', 'TrackingController@OrderRatingSubmit')->name('submit.driverAdditional.rating');
 			// Create agent connected account stripe
@@ -149,6 +156,8 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 			Route::get('payment/paystack/cancelPurchase/app', 'PaystackGatewayController@paystackCancelPurchaseApp')->name('payment.paystackCancelPurchaseApp');
 			Route::any('payment/livees/api', 'LiveePaymentController@payFormWeb')->name('livees.webview');
 			Route::any('livee/success','LiveePaymentController@afterPayment')->name('livee.payment');
+            //DPO payment gatway routes
+            Route::get('payment/dpo/redirect', 'DpoController@successPage')->name('dpo.redirect');
 
 		});
 		Route::any('payment/ccavenue/success', 'CcavenueController@successForm')->name('ccavenue.success');
@@ -158,6 +167,7 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 		Route::any('payment/vnpay/api',    'VnpayController@vnpay_respontAPP')->name('vnpay_webview');
 		Route::get('driver/wallet/refreshBalance/{id?}', 'AgentController@refreshWalletbalance')->name('driver.wallet.refreshBalance');
 		Route::get('api_documentation', 'DashBoardController@api_documentation');
+		Route::get('getlogs', 'DashBoardController@GetAgentLogs');
 		Route::group(['middleware' => ['auth:client'], 'prefix' => '/'], function () {
 
 			Route::post('rating_type/create', 'Rating\RatingTypeController@store')->name('rating_type.create');
@@ -267,29 +277,29 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 			Route::get('dispatcher-index', 'TaskController@dispatcherIndex')->name('dispatcher-index');
 			Route::get('dispatcher-autoallocation', 'TaskController@dispatcherAutoAllocation')->name('dispatcher-autoallocation');
 			Route::get('get-inventory-products', 'TaskController@getInventoryProducts')->name('getInventoryProducts');
-			
+
 			Route::get('get-product-detail', 'TaskController@getProductDetail')->name('get-product-detail');
 			Route::post('get-route-detail', 'TaskController@getRouteDetail')->name('get-route-detail');
-			
-			
+
+
 
 			Route::get('create-product-route', 'TaskController@createProductRoute')->name('create-product-route');
-			
+
 			Route::get('dispatcher-add-route', 'TaskController@dispatcherAddRoute')->name('dispatcher-add-route');
-			
+
 			Route::get('get-category-list', 'CategoryController@getCategoryList')->name('get-category-list');
-			
+
 			Route::get('inventory-update', 'TaskController@inventoryUpdate')->name('inventory-update');
 			Route::get('get-warehouse-data', 'TaskController@getWarehouseData')->name('get-warehouse-data');
 			Route::post('get-warehouse/{id}', 'TaskController@getWarehouse')->name('get-warehouse');
 			Route::post('sort-products', 'TaskController@sortProducts')->name('sort-products');
-			
-			
+
+
 		 	Route::get('get-product-name', 'TaskController@getProductName')->name('getProductName');
 			Route::post('get-selected-warehouses', 'TaskController@getSelectedWarehouses')->name('getSelectedWarehouses');
 
 			Route::post('create-subtask', 'TaskController@createSubtask')->name('createSubtask');
-			
+
 			Route::post('optimize-route', 'DashBoardController@optimizeRoute');
 			Route::post('arrange-route', 'DashBoardController@arrangeRoute');
 			Route::post('optimize-arrange-route', 'DashBoardController@optimizeArrangeRoute');
@@ -335,7 +345,7 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 			// Route::get('cat-product/{$id}', 'ProductController@showProduct')->name('showProduct');
 
 			Route::post('/import-order-side-category', 'CategoryController@getOrderSideData')->name('category.importOrderSideCategory');
-			
+
 			Route::post('/import-dispatch-side-category', 'CategoryController@getDispatchSideData')->name('category.importDispatchSideCategory');
 
 			Route::get('/order/feedback/{clientcode}/{order_id}', 'TrackingController@OrderFeedback')->name('order.feedback');
@@ -383,6 +393,10 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 			Route::post('general/slot/save', 'AgentSlotController@saveGeneralSlot')->name('general.slot.save');
 			Route::get('general/slot/destroy/{id}', 'AgentSlotController@destroyGeneralSlot')->name('vendor_city.destroy');
 
+			///
+			Route::post('dashboard/teamsData', 'DashBoardController@dashboardTeamData')->name('dashboard.teamsdata');
+			Route::post('dashboard/ordersData', 'DashBoardController@dashboardOrderData')->name('dashboard.orderdata');
+
 			Route::prefix('attribute')->group(function () {
                 Route::name('attribute.')->group(function () {
                     Route::get('create', 'FormAttributeController@create')->name('create');
@@ -418,7 +432,7 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 
 
 
-	
+
 
 });
 

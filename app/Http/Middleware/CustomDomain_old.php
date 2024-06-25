@@ -23,7 +23,7 @@ class CustomDomain
      */
     public function handle($request, Closure $next)
     {
-   
+    
       $domain = $request->getHost();
       // $domain    = str_replace(array('http://', '.dispatcher.test/login'), '', $domain);
       $domain    = str_replace(array('http://', config('domainsetting.domain_set')), '', $domain);

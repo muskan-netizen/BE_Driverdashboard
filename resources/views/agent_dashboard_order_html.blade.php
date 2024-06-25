@@ -26,7 +26,7 @@
 @if($page == 1)
 <div id="accordion" class="overflow-hidden">
     <!-- dragable_tasks -->
-    <div id="handle-dragula-left0" class=" " agentid="0"  params="{{ $params0 }}" date="{{ $date }}">
+    <div id="handle-dragula-left0" class="dragable_tasks" agentid="{{ $agent['id'] }}"  params="{{ $params0 }}" date="{{ $date }}">
 @endif
         @foreach($unassigned_orders as $orders)
            
@@ -59,14 +59,16 @@
                                 <div class="col-12 ">
                                     <i class="fas fa-bars"></i>
                                     @php
-                                    if($task['assigned_time']=="")
+                                     
+                                    if(empty($task['assigned_time']))
                                     {
-                                        $tasks['assigned_time'] = date('Y-m-d H:i:s');
-                                    }
+                                        $dateString = date('Y-m-d H:i:s');
+                                    }else{
                                         $timeformat = $preference->time_format == '24' ? 'H:i:s':'g:i a';
 
                                         $dateString = $task['assigned_time'];
-                                        
+                                    }
+                                
                                        
                                         // Format the date as needed
                                         //$order = date('Y-m-d H:i:s');//@$order->format('Y-m-d H:i:s');

@@ -22,6 +22,7 @@ class DbChooserApi
 
     public function handle($request, Closure $next)
     {
+      
         config(['auth.guards.api.provider' => 'agents']);
 
         $database_name = $database = 'royodelivery_db';
@@ -33,7 +34,7 @@ class DbChooserApi
             $database_name =  'db_'.$header['client'][0];
         }
 
-       
+ 
      
 
         if (isset($database_name)) {

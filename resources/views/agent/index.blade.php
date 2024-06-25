@@ -43,7 +43,7 @@
         float: right;
         margin: 5px 0 10px 15px;
         position: relative;
-    z-index: 9999;
+    z-index: 9;
     }
 
     div#agent-listing_filter {
@@ -91,7 +91,10 @@
         overflow-y: hidden!important;
     }
 
-
+.table_top_bar {
+    display: flex;
+    justify-content: space-between;
+}
 /* agent page css here */
 .edit-icon-div {
     position: relative;
@@ -168,7 +171,7 @@ width: 160px !important;
 overflow: hidden;
 }
 
-/* 
+/*
 .custom-radio-design [type="radio"]:checked,
 .custom-radio-design [type="radio"]:not(:checked) {
     position: absolute;
@@ -366,7 +369,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <div class="alFilterLocation">
+                    <div class="alFilterLocation table_top_bar">
                         <ul class="p-0 d-flex justify-content-start">
                                 <li class="first_child">
                                     <div class="text-sm-left">
@@ -402,9 +405,23 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                     <button type="button" class="btn btn-blue waves-effect waves-light openModal mr-1" data-toggle="modal" data-target="" data-backdrop="static" data-keyboard="false"><i class="mdi mdi-plus-circle mr-1"></i> {{__("Add")}} {{ getAgentNomenclature() }}</button>
                                     <button type="button" class="btn btn-success waves-effect waves-light saveaccounting mr-1" data-toggle="modal" data-target="#pay-receive-modal" data-backdrop="static" data-keyboard="false">{{__("Pay")}} / {{__("Receive")}}</button>
                                     @if($is_driver_slot == 1)
-                                        <button type="button" class="btn btn-success waves-effect waves-light " id="gerenal_slot" >{{__("Gerenal Slot")}}</button>
-                                    @endif                                    
+                                        <button type="button" class="btn btn-success waves-effect waves-light " id="gerenal_slot" >{{__("General Slot")}}</button>
+                                    @endif
                                 </li>
+                                <li class="d-flex">
+                                 <div class="toolbar">
+                                            <a href="{{ route('agents.export') }}" class="btn btn-success waves-effect waves-light">
+                                                <span class="btn-label">
+                                                    <i class="mdi mdi-export-variant"></i>
+                                                </span>
+                                                {{ __("Export CSV") }}
+                                            </a>
+                                        </div>
+
+                                </li>
+                            </ul>
+                            <ul>
+                                <li><input type="search" class="form-control search-btn" placeholder="Search"></li>
                             </ul>
                     </div>
                     <ul class="nav nav-tabs nav-material alNavTopMinus" id="top-tab" role="tablist">
@@ -432,7 +449,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                         <div class="tab-pane fade past-order show active" id="active_vendor" role="tabpanel" aria-labelledby="active-vendor">
 
                             <div class="table-responsive nagtive-margin">
-                                <table class="table table-striped dt-responsive nowrap w-100 all agent-listing" id="agent-listing">
+                                <table class="table table-striped dt-responsive nowrap w-100 all agent-listing mt-5" id="agent-listing">
                                     <thead>
                                         <tr>
                                             <th class="sort-icon">{{__(getAgentNomenclature()." ID")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
@@ -457,8 +474,8 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                             <th>{{__("Action")}}</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-
+                                    <tbody class="agent-listing-data">
+                                       <?= $agentData['html'] ?? ""  ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -466,7 +483,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                         <div class="tab-pane fade" id="awaiting_vendor" role="tabpanel" aria-labelledby="awaiting-vendor">
                             <div class="row">
                             </div>
-                            <div class="table-responsive">
+                            <div class="table-responsive mt-5 ">
                                 <table class="table table-striped dt-responsive nowrap w-100 all agent-listing" id="awaiting_approval_agent_datatable">
                                     <thead>
                                         <tr>
@@ -493,7 +510,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                             <th>{{__("Action")}}</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody class="awaiting_approval_agent_datatable-data">
 
                                     </tbody>
                                 </table>
@@ -502,7 +519,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                         <div class="tab-pane fade past-order" id="block_vendor" role="tabpanel" aria-labelledby="block-vendor">
                             <div class="row">
                             </div>
-                            <div class="table-responsive">
+                            <div class="table-responsive mt-5">
                                 <table class="table table-striped dt-responsive nowrap w-100 all agent-listing" id="blocked_agent_datatable">
                                     <thead>
                                         <tr>
@@ -529,13 +546,19 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                             <th>{{__("Action")}}</th>
                                         </tr>
                                     </thead>
-                                    <tbody>.</tbody>
+                                    <tbody class="blocked_agent_datatable-data">.</tbody>
                                 </table>
                             </div>
                         </div>
+                        <div class="row mt-4">
+                            <div class="col-md-12 pagination">
+                                <?=  $agentData['pagination'] ?? ""  ?>
+                            </div>
+                        </div>
+
                     </div> <!-- end card-body-->
                 </div> <!-- end card-->
-                
+
             </div> <!-- end col -->
         </div>
     </div>
@@ -558,7 +581,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                         <input id="blocktime" class="form-control" autofocus>
                                     </div>
                                 </div>
-                                
+
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6">
@@ -574,7 +597,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                             <input class="form-control" placeholder="End Time" type="time" name="end_time" id="end_time" required />
                                         </div>
                                     </div>
-                                    
+
                                     <div class="row forDate" style="display: none;">
                                 <input type="hidden" class="custom-control-input methods" value="agents">
                                 </div>
@@ -590,7 +613,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                     <div class="col-md-6 slotForDiv">
                                         {!! Form::label('title', 'Recurring',['class' => 'control-label']) !!}
                                     <div class="form-group">
-                                      
+
                                         <ul class="list-inline">
                                             <li class="d-block pl-1 ml-3 mb-1 custom-radio-design">
                                                 <input type="checkbox" class="custom-control-input check recurring" id="recurring" name="recurring">
@@ -609,7 +632,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                          </div>
                                     </div>
                                 </div>
-                             
+
                             <div class="row mb-2 weekDays" style="display:none">
                                 <div class="col-md-12">
                                     <div class="">
@@ -645,7 +668,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                     </div>
                                 </div>
                             </div>
-                        
+
                             <div class="row forDate" style="display: none;">
                                 <div class="col-md-12" >
                                     <div class="form-group">
@@ -653,9 +676,9 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                         <input class="form-control date-datepicker" placeholder={{ __("Select Date") }} type="text" name="slot_date" id="slot_date" required />
                                     </div>
                                 </div>
-                        
+
                             </div>
-                        
+
                         </form>`;
 
                     var EditSlotHtml = `<form class="needs-validation" name="slot-form" id="update-event" action="" method="post">
@@ -675,7 +698,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                         <input id="blocktime" class="form-control"  autofocus>
                                     </div>
                                 </div>
-                                
+
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6">
@@ -691,8 +714,8 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                             <input class="form-control" placeholder="End Time" type="time" name="end_time" id="edit_end_time" required />
                                         </div>
                                     </div>
-                                
-                            
+
+
                                 </div>
                                 <div class="row memo view_booking">
                                     <div class="col-md-6 slot_type">
@@ -708,7 +731,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                     <div class="col-md-6 slotForDiv">
                                         {!! Form::label('title', 'Recurring',['class' => 'control-label']) !!}
                                     <div class="form-group">
-                                      
+
                                         <ul class="list-inline">
                                             <li class="d-block pl-1 ml-3 mb-1 custom-radio-design">
                                                 <input type="checkbox" class="custom-control-input check edit_recurring recurring" id="recurring" name="recurring">
@@ -727,7 +750,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                          </div>
                                     </div>
                                 </div>
-                             
+
                             <div class="row mb-2 weekDays view_booking" style="display:none">
                                 <div class="col-md-12">
                                     <div class="">
@@ -763,7 +786,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                     </div>
                                 </div>
                             </div>
-                        
+
                             <div class="row forDate" style="display: none;">
                                 <div class="col-md-12" >
                                     <div class="form-group">
@@ -771,7 +794,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                         <input class="form-control date-datepicker" placeholder={{ __("Select Date") }} type="text" name="slot_date" id="edit_slot_date" required />
                                     </div>
                                 </div>
-                        
+
                             </div>
                             <input  name="edit_type" type="hidden" id="edit_type" value="">
                             <input  name="edit_day" type="hidden" id="edit_day" value="">
@@ -786,7 +809,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                     <a  class="btn btn-info w-100" target="_blank" id="viewOrder">{{ __("View Order") }}</a>
                                 </div>
                             </div>
-                        
+
                         </form>`;
 </script>
 @endif
@@ -878,16 +901,16 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
         });
         stay.preventDefault();
     });
-    
+
      $(document).on("click","input[name='payment_type']",function() {
         var test = $(this).val();
 		if(test == 2){
 			  $("#receive_from").removeClass("d-none");
 		}else{
-			  $("#receive_from").addClass("d-none");    		
-		}         
+			  $("#receive_from").addClass("d-none");
+		}
     });
-    
+
 </script>
 @include('agent.pagescript')
 @endsection

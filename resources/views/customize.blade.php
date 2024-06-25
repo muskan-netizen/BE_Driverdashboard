@@ -1,7 +1,7 @@
 @extends('layouts.vertical', ['title' => 'Customize']) @section('css')
 @endsection @php $getAdditionalPreference =
 getAdditionalPreference(['pickup_type',
-'drop_type','is_attendence','idle_time']); @endphp @section('content')
+'drop_type','is_attendence','idle_time','hold_to_start','hold_to_arrive','hold_to_pick','hold_to_complete']); @endphp @section('content')
 @include('modals.tandc') @include('modals.privacyandpolicy')
 
 <!-- Start Content-->
@@ -99,6 +99,55 @@ getAdditionalPreference(['pickup_type',
 									</div>
 								</div>
 							</div>
+							<div class="row mb-2">
+								<div class="col-md-6">
+									<div class="form-group mb-3">
+										<label for="pickup_type">{{__("Hold to Start")}}</label> <input
+											type="text" name="hold_to_start" id="hold_to_start"
+											placeholder="e.g {{ __('Hold to Start')}}" class="form-control"
+											value="{{ old('hold_to_start', $getAdditionalPreference['hold_to_start'] ?? '')}}">
+										@if($errors->has('hold_to_start')) <span class="text-danger"
+											role="alert"> <strong>{{ $errors->first('hold_to_start') }}</strong>
+										</span> @endif
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="form-group mb-3">
+										<label for="drop_type">{{__("Hold to Arrive")}}</label> <input
+											type="text" name="hold_to_arrive" id="hold_to_arrive"
+											placeholder="e.g {{ __('Hold to Arrive')}}" class="form-control"
+											value="{{ old('hold_to_arrive', $getAdditionalPreference['hold_to_arrive'] ?? '')}}">
+										@if($errors->has('hold_to_arrive')) <span class="text-danger"
+											role="alert"> <strong>{{ $errors->first('hold_to_arrive') }}</strong>
+										</span> @endif
+									</div>
+								</div>
+							</div>
+							<div class="row mb-2">
+								<div class="col-md-6">
+									<div class="form-group mb-3">
+										<label for="pickup_type">{{__("Hold to Pick")}}</label> <input
+											type="text" name="hold_to_pick" id="hold_to_pick"
+											placeholder="e.g {{ __('Hold to Pick')}}" class="form-control"
+											value="{{ old('hold_to_pick', $getAdditionalPreference['hold_to_pick'] ?? '')}}">
+										@if($errors->has('hold_to_pick')) <span class="text-danger"
+											role="alert"> <strong>{{ $errors->first('hold_to_pick') }}</strong>
+										</span> @endif
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="form-group mb-3">
+										<label for="hold_to_complete">{{__("Hold to Complete")}}</label> <input
+											type="text" name="hold_to_complete" id="hold_to_complete"
+											placeholder="e.g {{ __('Hold to Complete')}}" class="form-control"
+											value="{{ old('hold_to_complete', $getAdditionalPreference['hold_to_complete'] ?? '')}}">
+										@if($errors->has('hold_to_complete')) <span class="text-danger"
+											role="alert"> <strong>{{ $errors->first('hold_to_complete') }}</strong>
+										</span> @endif
+									</div>
+								</div>
+							</div>
+
 							<div class="row mb-2">
 								<div class="col-md-12">
 									<label>{{__('Unit')}}</label>

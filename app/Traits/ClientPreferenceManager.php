@@ -18,10 +18,16 @@ trait ClientPreferenceManager
     public $client_preference_fillable_key = [
         'pickup_type',
         'drop_type',
+        'hold_to_start',
+        'hold_to_arrive',
+        'hold_to_pick',
+        'hold_to_complete',
         'is_attendence',
         'idle_time',
         'reffered_to_amount',
-        'reffered_by_amount'
+        'reffered_by_amount',
+        'refferel_to_agent_amount',
+        'refferel_by_agent_amount',
     ];
 
     /**

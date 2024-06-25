@@ -14,12 +14,12 @@
 
         <!-- App favicon -->
         {{-- <link rel="shortcut icon" href="{{asset('assets/images/favicon.ico')}}"> --}}
-
+        <link href="{{asset('assets/css/icons.min.css')}}" rel="stylesheet" type="text/css" />
         <!-- Bootstrap core CSS -->
         <link href="{{asset('assets/css/bootstrap.min.css')}}" rel="stylesheet" type="text/css" id="bs-default-stylesheet" />
 
         <!--Material Icon -->
-        <link href="{{asset('assets/css/icons.min.css')}}" rel="stylesheet" type="text/css" />
+        
 
         <!-- Custom  sCss -->
         <link href="{{asset('assets/css/landing.min.css')}}" rel="stylesheet" type="text/css" />

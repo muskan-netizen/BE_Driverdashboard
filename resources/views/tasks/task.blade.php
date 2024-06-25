@@ -256,7 +256,7 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
                                         <th class="routes-head">{{__("Routes")}}</th>
                                         <!-- <th>{{__("Tracking URL")}}</th>
                                          <th>{{__("Route Proofs")}}</th> -->
-                                        <th>{{__("Pricing")}}</th>
+                                     
                                         <th>{{__("Created At")}}</th>
                                         {{-- <th>{{__("Updated At")}}</th> --}}
                                         <th style="width: 85px;">{{__("Action")}}</th>

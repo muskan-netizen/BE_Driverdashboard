@@ -285,6 +285,24 @@ class AgentController extends BaseController
      }
 
 
+     function getAllAgentDetails(Request $request)
+     {
+       
+         try {
+            $agent = Agent::with(['agentlog','agentRating'])->get();
+            return response()->json([
+                'data' => $agent,
+                'status' => 200,
+                'message' => __('success')
+            ], 200);
+         } catch (Exception $e) {
+             return response()->json([
+                 'message' => $e->getMessage()
+             ], 400);
+         }
+     }
+
+
      
     /**   get agent enable/disbale go to home address option  */
     // function getAgentgotoHomeAddress(Request $request){

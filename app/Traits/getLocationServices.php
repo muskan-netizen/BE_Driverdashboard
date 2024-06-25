@@ -4,6 +4,9 @@ use DB;
 use Illuminate\Support\Collection;
 use App\Model\{Client, ClientPreference, User, Agent, Order};
 use GuzzleHttp\Client as GClient;
+use Geocoder\Provider\Nominatim\Nominatim;
+use Geocoder\Query\GeocodeQuery;
+use Geocoder\HttpAdapter\CurlHttpAdapter;
 
 trait getLocationServices{
 
@@ -20,6 +23,29 @@ trait getLocationServices{
     }
     //-------------------------------------------------------------------------------------------//
 
+
+    public static function geocodeAddress($address)
+    {
+       
+       
+        $address = "1600 Amphitheatre Parkway, Mountain View, CA";
+        $endpointUrl = 'https://nominatim.openstreetmap.org';
+        $userAgent = 'YourApp/1.0';
+        $httpAdapter = new CurlHttpAdapter();
+        $geocoder = new Nominatim($endpointUrl, $userAgent,'');
+        $result = $geocoder->geocodeQuery(GeocodeQuery::create($address));
+     
+        if ($result->count() > 0) {
+            $location = $result->first()->getCoordinates();
+            pr($location);
+            return [
+                'latitude' => $location->getLatitude(),
+                'longitude' => $location->getLongitude(),
+            ];
+        } else {
+            return null; // Return null if geocoding fails
+        }
+    }
 
     function GoogleDistanceMatrix($latitude, $longitude)
     {

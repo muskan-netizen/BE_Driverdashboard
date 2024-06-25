@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_DRIVER', 'null'),
+    'default' => env('BROADCAST_DRIVER', 'redis'),
 
     /*
     |--------------------------------------------------------------------------
@@ -30,6 +30,11 @@ return [
 
     'connections' => [
 
+        // 'socketio' => [
+        //     'driver' => 'socket.io',
+        //     'host' => 'https://dev-rochat.netsolutionindia.com',
+        //     'port' => 6001,
+        // ],
         'pusher' => [
             'driver' => 'pusher',
             'key' => env('PUSHER_APP_KEY'),

@@ -347,7 +347,7 @@ header .navbar-light .navbar-nav .nav-link {
   right: -5px;
 }
 .map-wrapper {
-  height: cal(100vh - 70px);
+  height: calc(100vh - 70px);
   overflow: hidden;
 }
 body.menuitem-active .task-block h6 {

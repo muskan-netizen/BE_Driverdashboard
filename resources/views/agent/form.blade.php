@@ -232,6 +232,12 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
             <input type="file" data-plugins="dropify" name="{{$driver_registration_document->name}}" accept="image/*" data-default-file="{{ (!empty($field_value)) ? $imgproxyurl.Storage::disk('s3')->url($field_value) : '' }}" class="dropify" />
             @elseif(strtolower($driver_registration_document->file_type) == 'pdf')
             <input type="file" data-plugins="dropify" name="{{$driver_registration_document->name}}" accept=".pdf" class="dropify" data-default-file="{{ $field_value ?? '' }}"/>
+            @elseif(strtolower($driver_registration_document->file_type) == 'selector')
+            <select class="form-control" data-style="btn-light" name="{{$driver_registration_document->name}}">
+              @foreach($driver_registration_document->driver_option as $options)
+                <option value="{{$options->driver_registartion_option_name}}" {{$options->driver_registartion_option_name == $field_value ? 'selected':''}}>{{$options->driver_registartion_option_name}}</option>
+                @endforeach
+            </select>
             @endif
             <span class="invalid-feedback" role="alert">
                 <strong></strong>

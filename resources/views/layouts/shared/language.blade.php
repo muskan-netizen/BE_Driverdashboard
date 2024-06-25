@@ -13,6 +13,7 @@ if (file_exists($langFile)) {
 } 
 
 @endphp
+@section('variables')
 @section('headerJs')
 
 <script src="{{ asset('js/lang/langTranslation.js') }}"></script>

@@ -666,14 +666,14 @@ class TaskController extends BaseController
         $otpCreate      = ''; //substr(str_shuffle("0123456789abcdefghijklmnopqrstvwxyz"), 0, 5);
         $taskProof      = TaskProof::all();
 
-        if (!empty($orderId->tasktype->name) && $orderId->tasktype->name == 'Pickup' &&  $taskProof[0]->otp == 1) {
+        if(!empty($orderId->tasktype->name) &&   $orderId->tasktype->name == 'Pickup' && isset($taskProof[0]) && $taskProof[0]->otp == 1) {
             $otpCreate = rand(10000, 99999);
             Order::where('id', $orderId->order_id)->update(['completion_otp' => $otpCreate]);
             $otpEnabled = 1;
             if ($taskProof[0]->otp_requried == 1) {
                 $otpRequired = 1;
             }
-        } else if (!empty($orderId->tasktype->name) && $orderId->tasktype->name == 'Drop' && $taskProof[1]->otp == 1) {
+        } else if (!empty($orderId->tasktype->name) && $orderId->tasktype->name == 'Drop' && isset($taskProof[1]) && $taskProof[1]->otp == 1) {
             $otpCreate = rand(10000, 99999);
             Order::where('id', $orderId->order_id)->update([
                 'completion_otp' => $otpCreate
@@ -682,7 +682,7 @@ class TaskController extends BaseController
             if ($taskProof[1]->otp_requried == 1) {
                 $otpRequired = 1;
             }
-        } else if (!empty($orderId->tasktype->name) && $orderId->tasktype->name == 'Appointment' && $taskProof[2]->otp == 1) {
+        } else if (!empty($orderId->tasktype->name) && $orderId->tasktype->name == 'Appointment' && isset($taskProof[2]) && $taskProof[2]->otp == 1) {
             $otpCreate = rand(10000, 99999);
             Order::where('id', $orderId->order_id)->update([
                 'completion_otp' => $otpCreate
@@ -979,11 +979,12 @@ class TaskController extends BaseController
         }
 
 
-        if (isset($orderdata) && $orderdata->driver_id != null) {
+        if (isset($orderdata) && $orderdata->driver_id != null && $request->status != 2) {
             if ($orderdata && $orderdata->call_back_url) {
                 $call_web_hook = $this->updateStatusDataToOrder($orderdata, 2,1);  # task accepted
             }
             //Send SMS in case of friend's booking
+
             if(isset($orderdata->type) && $orderdata->type == 1 && strlen($orderdata->friend_phone_number) > 8)
             {
                 $keyData = [
@@ -1025,10 +1026,10 @@ class TaskController extends BaseController
                     $task_id = Order::where('id', $batch->order_id)->first();
                     $pricingRule = PricingRule::where('id', 1)->first();
                     // $agent_id =  $request->driver_id  ? $request->driver_id : null;
-                    $agent_commission_fixed = $pricingRule->agent_commission_fixed;
-                    $agent_commission_percentage = $pricingRule->agent_commission_percentage;
-                    $freelancer_commission_fixed = $pricingRule->freelancer_commission_fixed;
-                    $freelancer_commission_percentage = $pricingRule->freelancer_commission_percentage;
+                    $agent_commission_fixed = $task_id->agent_commission_fixed??$pricingRule->agent_commission_fixed;
+                    $agent_commission_percentage = $task_id->agent_commission_percentage??$pricingRule->agent_commission_percentage;
+                    $freelancer_commission_fixed = $task_id->freelancer_commission_fixed??$pricingRule->freelancer_commission_fixed;
+                    $freelancer_commission_percentage = $task_id->freelancer_commission_percentage??$pricingRule->freelancer_commission_percentage;
 
                     if ($task_id->driver_cost <= 0.00) {
                         $agent_details = Agent::where('id', $agent_id)->first();
@@ -1098,10 +1099,10 @@ class TaskController extends BaseController
                 $this->dispatchNow(new RosterDelete($request->order_id,$type));
                 $task_id = Order::where('id', $request->order_id)->first();
                 $pricingRule = PricingRule::where('id', 1)->first();
-                $agent_commission_fixed = $pricingRule->agent_commission_fixed;
-                $agent_commission_percentage = $pricingRule->agent_commission_percentage;
-                $freelancer_commission_fixed = $pricingRule->freelancer_commission_fixed;
-                $freelancer_commission_percentage = $pricingRule->freelancer_commission_percentage;
+                $agent_commission_fixed = $task_id->agent_commission_fixed??$pricingRule->agent_commission_fixed;
+                $agent_commission_percentage = $task_id->agent_commission_percentage??$pricingRule->agent_commission_percentage;
+                $freelancer_commission_fixed = $task_id->freelancer_commission_fixed??$pricingRule->freelancer_commission_fixed;
+                $freelancer_commission_percentage = $task_id->freelancer_commission_percentage??$pricingRule->freelancer_commission_percentage;
                 // $agent_id =  isset($request->allocation_type) && $request->allocation_type == 'm' ? $request->driver_id : null;
 
                 if ($task_id->driver_cost <= 0.00) {
@@ -1146,7 +1147,7 @@ class TaskController extends BaseController
                     'freelancer_commission_percentage' => $freelancer_commission_percentage
                 ]);
                 if($order->auto_alloction == 'notify'){
-                    $this->newNotifiedDriverSave($order->id,$agent_id);
+                    $this->newNotifiedDriverSave($order->id,$agent_id,$driver->device_token);
                 }
                 if (checkColumnExists('orders', 'rejectable_order')) {
 
@@ -1234,7 +1235,9 @@ class TaskController extends BaseController
                 TaskReject::create($data);
             }
             Order::where('id', $orderdata->id)->update(['driver_id'=>null ,'status'=>'unassigned']);
-            if($unassignedorder_data->notify_all){
+            $unassignedorder_data = Order::where('id', $request->order_id)->where('status', 'unassigned')->first();
+
+            if(isset($unassignedorder_data) && $unassignedorder_data->notify_all ){
                 //For order api
                 Order::where('id', $orderdata->id)->update(['notify_all'=>0]);
                 $this->dispatchNow(new RosterDelete($request->order_id,'O'));
@@ -1510,10 +1513,11 @@ class TaskController extends BaseController
                 'available_seats' => isset($request->available_seats) ? $request->available_seats : 0,
                 'no_seats_for_pooling' => isset($request->no_seats_for_pooling) ? $request->no_seats_for_pooling : 0,
                 'is_cab_pooling' => isset($request->is_cab_pooling) ? $request->is_cab_pooling : 0,
+                'tip_amount' => isset($request->tip_amount) ? $request->tip_amount : 0,
+                'flight_number'=>isset($request->flight_number) ? $request->flight_number : null,
+                'name_sign_board'=> isset($request->name_sign_board) ? $request->name_sign_board : null,
             ];
-            \Log::info('data');
-             \Log::info($order);
-        
+
 
             if (checkColumnExists('orders', 'rejectable_order')) {
                 $order['rejectable_order'] = isset($request->rejectable_order) ? $request->rejectable_order : 0;
@@ -1893,7 +1897,7 @@ class TaskController extends BaseController
             }
             //Commit Transaction befor send notification
             DB::commit();
- 
+
 
             if(@$client->is_lumen_enabled)
             {
@@ -1922,7 +1926,7 @@ class TaskController extends BaseController
                         $this->batchWise($geo, $notification_time, $agent_id, $orders->id, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, $is_one_push_booking);
                 }
             }
-          
+
             $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $orders->unique_id;
             return response()->json([
                 'message' => __('Task Added Successfully'),
@@ -2588,7 +2592,6 @@ class TaskController extends BaseController
 
     public function SendToAll($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $header, $allocation, $is_cab_pooling, $agent_tag = '', $is_order_updated, $is_one_push_booking = 0,$particular_driver_id = 0)
     {
-        \Log::info($geo);
         $allcation_type    = 'AR';
         $date              = \Carbon\Carbon::today();
         $auth              = Client::where('database_name', $header['client'][0])->with(['getAllocation', 'getPreference'])->first();
@@ -2600,7 +2603,7 @@ class TaskController extends BaseController
         $try               = $auth->getAllocation->number_of_retries;
         $cash_at_hand      = $auth->getAllocation->maximum_cash_at_hand_per_person ?? 0;
         $max_redius        = $auth->getAllocation->maximum_radius;
-        $max_task          = $auth->getAllocation->maximum_batch_size;
+        $max_task          = $auth->getAllocation->maximum_task_per_person;
         $time              = $this->checkTimeDiffrence($notification_time, $beforetime);
         $randem            = rand(11111111, 99999999);
         $data = [];
@@ -2706,7 +2709,7 @@ class TaskController extends BaseController
         $try = $auth->getAllocation->number_of_retries;
         $cash_at_hand = $auth->getAllocation->maximum_cash_at_hand_per_person ?? 0;
         $max_redius = $auth->getAllocation->maximum_radius;
-        $max_task = $auth->getAllocation->maximum_batch_size;
+        $max_task = $auth->getAllocation->maximum_task_per_person;
         $time = $this->checkTimeDiffrence($notification_time, $beforetime);
         $randem = rand(11111111, 99999999);
         $data = [];
@@ -2810,7 +2813,7 @@ class TaskController extends BaseController
         $try = $auth->getAllocation->number_of_retries;
         $cash_at_hand = $auth->getAllocation->maximum_cash_at_hand_per_person ?? 0;
         $max_redius = $auth->getAllocation->maximum_radius;
-        $max_task = $auth->getAllocation->maximum_batch_size;
+        $max_task = $auth->getAllocation->maximum_task_per_person;
         $time = $this->checkTimeDiffrence($notification_time, $beforetime);
         $randem = rand(11111111, 99999999);
         $data = [];
@@ -3173,15 +3176,15 @@ class TaskController extends BaseController
 
         $timezone = $tz->timezone_name($client_timezone);
 
-        
+
         // get geoid based on customer location
 
-       
+
         $agent_tags = (isset($request->agent_tag) && !empty($request->agent_tag)) ? $request->agent_tag : '';
 
 
         $pricingRule = PricingRule::where('is_default', 1)->first();
-        
+
 
         $paid_duration = $pricingRule->base_duration;
         $paid_distance = $pricingRule->base_distance;
@@ -3190,7 +3193,7 @@ class TaskController extends BaseController
 
 
          $total         = $pricingRule->base_price + ($paid_distance * $pricingRule->distance_fee) + ($paid_duration * $pricingRule->duration_price);
-        
+
 
 
 
@@ -3813,7 +3816,7 @@ class TaskController extends BaseController
 
             //get pricing rule  for save with every order
             $agent_tags = (isset($request->order_agent_tag) && !empty($request->order_agent_tag)) ? $request->order_agent_tag : '';
-            $pricingRule = $this->getPricingRuleData($geoid, $agent_tags, $this->getConvertUTCToLocalTime($notification_time, $auth->timezone));
+            $pricingRule = $this->getPricingRuleData($geoid??'', $agent_tags, $this->getConvertUTCToLocalTime($notification_time, $auth->timezone));
 
 
 
@@ -5101,7 +5104,7 @@ class TaskController extends BaseController
         $try               = $auth->getAllocation->number_of_retries;
         $cash_at_hand      = $auth->getAllocation->maximum_cash_at_hand_per_person??0;
         $max_redius        = $auth->getAllocation->maximum_radius;
-        $max_task          = $auth->getAllocation->maximum_batch_size;
+        $max_task          = $auth->getAllocation->maximum_task_per_person;
         $time              = $this->checkTimeDiffrence($notification_time, $beforetime);
         $randem            = rand(11111111, 99999999);
         $data = [];
@@ -5200,7 +5203,7 @@ class TaskController extends BaseController
         $try               = $auth->getAllocation->number_of_retries;
         $cash_at_hand      = $auth->getAllocation->maximum_cash_at_hand_per_person??0;
         $max_redius        = $auth->getAllocation->maximum_radius;
-        $max_task          = $auth->getAllocation->maximum_batch_size;
+        $max_task          = $auth->getAllocation->maximum_task_per_person;
         $time              = $this->checkTimeDiffrence($notification_time, $beforetime);
         $randem            = rand(11111111, 99999999);
         $data = [];
@@ -5312,11 +5315,11 @@ class TaskController extends BaseController
         Config::set("database.connections.$schemaName", $default);
     }
 
-    public function newNotifiedDriverSave($order_id,$agent_id){
+    public function newNotifiedDriverSave($order_id,$agent_id,$device_token){
             $schemaName = 'royodelivery_db';
             $this->seperate_connection($schemaName);
             config(["database.connections.mysql.database" =>$schemaName]);
-            \DB::connection($schemaName)->table('rosters')->where('order_id',$order_id)->whereIn('is_particular_driver',[1,2])->update(['driver_id' => $agent_id]);
+            \DB::connection($schemaName)->table('rosters')->where('order_id',$order_id)->whereIn('is_particular_driver',[1,2])->update(['driver_id' => $agent_id,'device_token'=>$device_token]);
             \DB::disconnect($schemaName);
     }
 

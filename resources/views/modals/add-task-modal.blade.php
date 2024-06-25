@@ -95,7 +95,7 @@
                     </div>
 
                     <h4 class="header-title mb-2">
-                        {{__("Meta Data")}} <a href="javascript:void(0)" class="edit-icon-float-right"> <i class="mdi mdi-chevron-down"></i></a>
+                        {{__("Meta Data")}} <a href="javascript:void(0)" class="edit-icon-float-right"> </a>
                     </h4>
                     <div class="meta_data_task_div" style="display: none;">
                         <div class="row mb-2">
@@ -576,10 +576,8 @@
                                                                 </div>
                                                             </div>
                                                             @php $warehouse_mode = checkWarehouseMode(); @endphp
-                                                            @if($warehouse_mode['show_inventory_module'] == 1)
                                                             <h6 class="or-text text-center">OR</h6>
                                                             <h6 class="choose_warehouse text-center text-primary" style="text-decoration: underline; cursor: pointer;" data-id="1">Choose Warehouse</h6>
-                                                            @endif
                                                         </div>
 
                                                         <div class="alContactOther col-6">

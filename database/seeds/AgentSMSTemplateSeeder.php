@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\DB;
 use App\Model\AgentSmsTemplate;
 use Illuminate\Support\Str;
 
-class AgentSMSTemplateSeeder extends Seeder
+  class AgentSMSTemplateSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -47,6 +47,12 @@ class AgentSMSTemplateSeeder extends Seeder
               'tags' => '{user-name},{customer-name},{agent-name},{car-model},{plate-no},{track-url}',
               'label' => 'Friend-sms',
               'content' => 'Hi {user-name}, {customer-name} have booked a ride for you. {agent-name} in our {car-model} with license plate {plate-no} has been assgined',
+            ],
+            [
+              'slug' => 'sign-in-success',
+              'tags' => '{OTP}',
+              'label' => 'Sign In Success',
+              'content' => 'You are login successfully.',
             ]
         );
         if($option_count == 0)

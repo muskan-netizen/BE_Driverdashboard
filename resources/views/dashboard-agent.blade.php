@@ -59,7 +59,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group mb-0 ml-1">
-                                <input type="text" class="form-control" name="search_by_name" id="search_by_name" value="" placeholder="Search By Name" />
+                                <input type="text" class="form-control" name="search_by_name" id="search_by_name" value="" placeholder="Search Name" />
                             </div>
                         </div>
                    </div>

@@ -5,32 +5,32 @@
             // console.log(rel);
             let status = $(this).data('status');
             initDataTable(rel, status);
-            setTimeout(function() {
-                $('#' + rel).DataTable().ajax.reload();
-            }, 500);
+            // setTimeout(function() {
+            //     $('#' + rel).DataTable().ajax.reload();
+            // }, 500);
         });
 
         // initDataTable();
-        setTimeout(function() {
-            $('#active-vendor').trigger('click');
-        }, 200);
+    //     setTimeout(function() {
+    //         // $('#active-vendor').trigger('click');
+    // }, 200);
 
         $(document).on("change", "#geo_filter", function() {
             let rel = $('.nav-link.active').data('rel');
             let status = $('.nav-link.active').data('status');
             initDataTable(rel, status);
-            setTimeout(function() {
-                $('#' + rel).DataTable().ajax.reload();
-            }, 500);
+            // setTimeout(function() {
+            //     $('#' + rel).DataTable().ajax.reload();
+            // }, 500);
         });
 
         $(document).on("change", "#tag_filter", function() {
             let rel = $('.nav-link.active').data('rel');
             let status = $('.nav-link.active').data('status');
             initDataTable(rel, status);
-            setTimeout(function() {
-                $('#' + rel).DataTable().ajax.reload();
-            }, 500);
+            // setTimeout(function() {
+            //     $('#' + rel).DataTable().ajax.reload();
+            // }, 500);
         });
 
         function padDigits(number, digits) {
@@ -41,222 +41,28 @@
             var edit_agent_route = "{{ route('agent.edit', ':id') }}";
             var geo_filter = $("#geo_filter").val();
             var tag_filter = $("#tag_filter").val();
-            var columnsDynamic =   [{
-                    data: 'id',
-                    name: 'id',
-                    orderable: true,
-                    searchable: true,
-                    "mRender": function(data, type, full) {
-                        return padDigits(full.id, 4);
-                    }
-                },
-                // {
-                //     data: 'uid',
-                //     name: 'uid',
-                //     orderable: true,
-                //     searchable: true
-                // },
-                {
-                    data: 'profile_picture',
-                    name: 'profile_picture',
-                    orderable: true,
-                    searchable: false,
-                    "mRender": function(data, type, full) {
-                        var is_available_icon = (full.is_available == 1) ? '<i class="fa fa-circle agent-status" aria-hidden="true" style="color:green"></i>' : '<i class="fa fa-circle agent-status" aria-hidden="true" style="color:red"></i>'
-                        return is_available_icon + '<img alt="' + full.id + '" src="' + full.profile_picture + '" width="40">';
-                    }
-                },
-                {
-                    data: 'name',
-                    name: 'name',
-                    orderable: true,
-                    searchable: false,
-                    "mRender": function(data, type, full) {
-                        return '<div class="edit-icon-div"><a href="'+edit_agent_route.replace(":id", full.id)+'" class="child-name editIcon" agentId="'+full.id+'">'+full.name+'</a><a href="'+edit_agent_route.replace(":id", full.id)+'" class="child-icon editIcon d-none"  agentId="'+full.id+'"> <i class="mdi mdi-square-edit-outline"></i></a></div>';
-                    }
-                },
-                {
-                    data: 'phone_number',
-                    name: 'phone_number',
-                    orderable: true,
-                    searchable: false
-                },
-                {
-                    data: 'type',
-                    name: 'type',
-                    orderable: true,
-                    searchable: false
-                },
-                {
-                    data: 'team',
-                    name: 'team',
-                    orderable: true,
-                    searchable: false
-                },
-                {
-                    data: 'warehouse',
-                    name: 'warehouse',
-                    orderable: true,
-                    searchable: false
-                },
-                // {
-                //     data: 'vehicle_type_id',
-                //     name: 'vehicle_type_id',
-                //     orderable: true,
-                //     searchable: false,
-                //     "mRender": function(data, type, full) {
-                //         return '<img alt="" style="width: 80px;" src="' + full.vehicle_type_id + '">';
-                //     }
-                // },
-                {
-                    data: 'cash_to_be_collected',
-                    name: 'cash_to_be_collected',
-                    orderable: true,
-                    searchable: false
-                },
-                {
-                    data: 'driver_cost',
-                    name: 'driver_cost',
-                    orderable: true,
-                    searchable: false
-                },
-                {
-                    data: 'cr',
-                    name: 'cr',
-                    orderable: true,
-                    searchable: false
-                },
-                {
-                    data: 'dr',
-                    name: 'dr',
-                    orderable: true,
-                    searchable: false
-                },
-                {
-                    data: 'pay_to_driver',
-                    name: 'pay_to_driver',
-                    orderable: true,
-                    searchable: false
-                },
-                {
-                    data: 'subscription_plan',
-                    name: 'subscription_plan',
-                    orderable: true,
-                    searchable: false
-                },
-                {
-                    data: 'subscription_expiry',
-                    name: 'subscription_expiry',
-                    orderable: true,
-                    searchable: false
-                },
-                {
-                    data: 'state',
-                    name: 'state',
-                    orderable: false,
-                    searchable: false,
-                    "mRender": function(data, type, full) {
-                        var val = '<span class="badge badge-pill badge-success pill-state">Active</span>';
-                           if(data == 1){
-                            val = '<span class="badge badge-pill badge-success pill-state">Active</span>';
-                           } else if(data == 2){
-                            val = '<span class="badge badge-pill badge-secondary pill-state">Blocked</span>';
-                           }else{
-                            val = '<span class="badge badge-pill badge-danger pill-state">Deleted</span>';
-                           }
+            $.ajax({
+            url: "{{ url('agent/filter') }}",
+            method: "GET",
+            data: {
+                search: $('input[type="search"]').val(),
+                imgproxyurl: '{{$imgproxyurl}}',
+                geo_filter: geo_filter,
+                tag_filter: tag_filter,
+                status: status
+            },
+            success: function(data) {
+                let name = table + "-data";
+                $('.' + name).empty();
+                 $('.' + name).append(data.html);
+                $('.pagination').html(data.pagination);
 
-                         return val;
-                    }
-                },
-                {
-                    data: 'agent_rating',
-                    name: 'agent_rating',
-                    orderable: false,
-                    searchable: false
-                },
-                {
-                    data: 'created_at',
-                    name: 'created_at',
-                    orderable: true,
-                    searchable: true
-                },
-                {
-                    data: 'updated_at',
-                    name: 'updated_at',
-                    orderable: true,
-                    searchable: true
-                },
-                // {
-                //     data: 'is_approved',
-                //     name: 'is_approved',
-                //     orderable: false,
-                //     searchable: false,
-                //     "mRender": function(data, type, full) {
-                //         var check = (full.is_approved == 1) ? 'checked' : '';
-                //         return '<div class="custom-control custom-switch"><input type="checkbox" class="custom-control-input agent_approval_switch" ' + check + ' id="customSwitch_' + full.id + '" data-id="' + full.id + '"><label class="custom-control-label" for="customSwitch_' + full.id + '"></label></div>';
-                //     }
-                // },
-                {
-                    data: 'action',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false
-                },
-            ];
-            if (status == 1) {
-                var domRef = '<"toolbar">Bfrtip';
-                var btnObj = [{
-                    className: 'btn btn-success waves-effect waves-light',
-                    text: '<span class="btn-label"><i class="mdi mdi-export-variant"></i></span>{{__("Export CSV")}}',
-                    action: function(e, dt, node, config) {
-                        window.location.href = "{{ route('agents.export') }}";
-                    }
-                }];
-            } else if (status == 0 || status == 2) {
-                var domRef = '<"toolbar">Brtip';
-                var btnObj = [];
+            },
+            error: function(xhr, error, thrown) {
+                console.log('AJAX error:', error);
+                console.log('AJAX error details:', thrown);
             }
-            var table_dy = $('#' + table).DataTable({
-                "dom": domRef,
-                "scrollX": true,
-                "destroy": true,
-                "serverSide": true,
-                "responsive": true,
-                "processing": true,
-                "iDisplayLength": 20,
-                language: {
-                    search: "",
-                    paginate: {
-                        previous: "<i class='mdi mdi-chevron-left'>",
-                        next: "<i class='mdi mdi-chevron-right'>"
-                    },
-                    searchPlaceholder: "{{__('Search '.getAgentNomenclature())}}",
-                    'loadingRecords': '&nbsp;',
-                    //'processing': '<div class="spinner"></div>'
-                    'processing':function(){
-                        spinnerJS.showSpinner();
-                        spinnerJS.hideSpinner();
-                    }
-                },
-                drawCallback: function() {
-                    $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
-                },
-                buttons: btnObj,
-                ajax: {
-                    url: "{{url('agent/filter')}}",
-                    data: function(d) {
-                        d.search = $('input[type="search"]').val();
-                        d.imgproxyurl = '{{$imgproxyurl}}';
-                        d.geo_filter = geo_filter;
-                        d.tag_filter = tag_filter;
-                        d.status = status;
-                    }
-                },
-                columns:columnsDynamic
-            });
-            if(status ==2 || status ==0){
-                table_dy.column(-2).visible(false);
-            }
+        });
 
 
         }
@@ -295,7 +101,7 @@
                 backdrop: 'static',
                 keyboard: false
             });
-            
+
             makeTag();
 
             phoneInput();
@@ -304,7 +110,7 @@
             var instance = $("[name=phone_number]");
             instance.intlTelInput();
             $("#countryCode").val(instance.intlTelInput('getSelectedCountryData').dialCode);
-            
+
         });
 
         jQuery('#onfoot').click();
@@ -335,13 +141,13 @@
             break;
             case "5":
             truck = "{{ asset('assets/icons/truck_blue.png') }}";
-            break;          
+            break;
             case "6":
             auto = "{{ asset('assets/icons/auto_blue.png') }}";
-            break;          
+            break;
             }
             setIcon (act ,walk,cycle,bike,car,truck,auto);
-    
+
             });
             function setIcon (act ,walk,cycle,bike,car,truck,auto){
 
@@ -436,7 +242,7 @@
         });
 
         /* add Team using ajax*/
-        
+
         $(document).on("submit", "#submitAgent", function(e) {
             e.preventDefault();
             // $(document).on('click', '.submitAgentForm', function() {
@@ -462,7 +268,7 @@
         });
 
         function saveTeam(urls, formData, inp = '', modal = '') {
-            
+
             $.ajax({
                 method: 'post',
                 headers: {
@@ -562,7 +368,9 @@
                 var agent_id = $(this).data('agent_id');
                 var status = $(this).data('status');
                 var activeTabDetail = $("#top-tab li a.active").data('rel');
-                $.ajax({
+                let table = $('.nav-link.active').data('rel');
+                let data_status = $('.nav-link.active').data('status');
+                    $.ajax({
                     type: "Post",
                     dataType: "json",
                     url: "{{ route('agent/change_approval_status')}}",
@@ -577,10 +385,8 @@
                             $('#awaiting_vendor_count').text('('+data.agentNotApproved+')');
                             $('#blocked_vendor_count').text('('+data.agentRejected+')');
                             $.NotificationApp.send("", data.message, "top-right", "#5ba035", "success");
-                            setTimeout(function() {
-                                $('#' + activeTabDetail).DataTable().ajax.reload();
-                            }, 100);
-                            
+                            initDataTable(table,data_status);
+
                         }
                     }
                 });
@@ -599,4 +405,48 @@
             var agentid = $(this).attr('agentid');
             $('form#agentdelete'+agentid).submit();
     });
+
+    function updateData(page = 1) {
+        let table = $('.nav-link.active').data('rel');
+        let status = $('.nav-link.active').data('status');
+        var edit_agent_route = "{{ route('agent.edit', ':id') }}";
+            var geo_filter = $("#geo_filter").val();
+            var tag_filter = $("#tag_filter").val();
+            $.ajax({
+            url: "{{ url('agent/filter') }}",
+            method: "GET",
+            data: {
+                search: $('input[type="search"]').val(),
+                imgproxyurl: '{{$imgproxyurl}}',
+                geo_filter: geo_filter,
+                tag_filter: tag_filter,
+                status: status,
+                page:page
+            },
+            success: function(data) {
+                let name = table + "-data";
+
+                $('.' + name).empty();
+                $('.' + name).append(data.html);
+                $('.pagination').html(data.pagination);
+        },
+        error: function(xhr, error, thrown) {
+            console.log('AJAX error:', error);
+            console.log('AJAX error details:', thrown);
+        }
+    });
+}
+
+$(document).on('click', '.pagination a', function(e) {
+    e.preventDefault();
+    let page = $(this).attr('href').split('page=')[1];
+
+    updateData(page);
+});
+$(document).on('keyup', '.search-btn', function() {
+
+
+    updateData();
+});
+
 </script>

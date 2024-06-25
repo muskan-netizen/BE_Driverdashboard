@@ -84,6 +84,19 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="map_key_1">{{ __('Distance Movement') }}</label>
+                                    <input type="number" name="distance_in_meter" id="distance_in_meter" placeholder="Distance In meter"
+                                        class="form-control"
+                                        value="{{ old('sms_key', $preference->distance_in_meter ?? '') }}" min="0">
+                                    @if ($errors->has('distance_in_meter'))
+                                        <span class="text-danger" role="alert">
+                                            <strong>{{ $errors->first('distance_in_meter') }}</strong>
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -863,6 +876,22 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                 </div>
                             </div>
                         </div> 
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center justify-content-between mt-3 mb-2">
+                                    <h5 class="font-weight-normal m-0">{{ __('Refer to Earn (Driver to Driver)') }}</h5>
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input"
+                                            id="refer_earn_driver_to_driver_toggle"
+                                            name="refer_earn_driver_to_driver_toggle"
+                                            {{ $preference->refer_earn_driver_to_driver_toggle == 1 ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="refer_earn_driver_to_driver_toggle"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> 
+
                     </form>
                 </div>
             </div>
@@ -1396,26 +1425,29 @@ $sms_crendential = json_decode($preference->sms_credentials);
                 </form>
             </div> 
 
-            <div class="col-md-4 mb-3 d-none">
-                <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
-                    @csrf
-                    <input type="hidden" name="send_to" id="send_to" value="customize">
-                    <div class="card-box mb-0 pb-1 h-100">
-                        <div class="d-flex align-items-center justify-content-between">
-                        <h4 class="header-title">{{ __("Refer and Earn(Driver To Driver)") }}</h4>
-                        <button class="btn btn-outline-info d-block" type="submit"> {{ __("Save") }} </button>
+            @if ($preference->refer_earn_driver_to_driver_toggle == 1)
+                <div class="col-md-4 mb-3">
+                    <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
+                        @csrf
+                        <input type="hidden" name="send_to" id="send_to" value="customize">
+                        <div class="card-box mb-0 pb-1 h-100">
+                            <div class="d-flex align-items-center justify-content-between">
+                            <h4 class="header-title">{{ __("Refer and Earn(Driver To Driver)") }}</h4>
+                            <button class="btn btn-outline-info d-block" type="submit"> {{ __("Save") }} </button>
+                            </div>
+                            <div class="col-xl-12 my-2" id="addCur-160">
+                            <label class="primaryCurText">{{ __("Referred To Amount") }} </label>
+                            <input class="form-control" type="number" id="refferel_to_agent_amount" name="refferel_to_agent_amount" value="{{ $preferenceAdditional['refferel_to_agent_amount'] ?? '' }}" min="0" step="any">
+                            </div>
+                            <div class="col-xl-12 mb-2 mt-3" id="addCur-160">
+                            <label class="primaryCurText">{{ __("Referred By Amount") }} </label>
+                            <input class="form-control" type="number" name="refferel_by_agent_amount" id="refferel_by_agent_amount" value="{{ $preferenceAdditional['refferel_by_agent_amount'] ?? '' }}" min="0" step="any">
+                            </div>
                         </div>
-                        <div class="col-xl-12 my-2" id="addCur-160">
-                        <label class="primaryCurText">{{ __("Referred To Amount") }} </label>
-                        <input class="form-control" type="number" id="reffered_to_amount" name="reffered_to_amount" value="{{ $preferenceAdditional['reffered_to_amount'] ?? '' }}" min="0" step="any">
-                        </div>
-                        <div class="col-xl-12 mb-2 mt-3" id="addCur-160">
-                        <label class="primaryCurText">{{ __("Referred By Amount") }} </label>
-                        <input class="form-control" type="number" name="reffered_by_amount" id="reffered_by_amount" value="{{ $preferenceAdditional['reffered_by_amount'] ?? '' }}" min="0" step="any">
-                        </div>
-                    </div>
-                </form>
-            </div>
+                    </form>
+                </div>
+            @endif
+            
             <div class="col-md-4 mb-3 d-none">
                 <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
                 @csrf

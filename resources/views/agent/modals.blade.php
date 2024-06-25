@@ -202,13 +202,21 @@
                         <div class="col-md-6">
                             <div class="form-group" id="{{$driver_registration_document->name}}Input">
                                 <label for="" class="control-label">{{$driver_registration_document->name ? ucwords($driver_registration_document->name) : ''}}</label>
-                                @if(strtolower($driver_registration_document->file_type) == 'text' || strtolower($driver_registration_document->file_type) == 'date')
+                                @if(strtolower($driver_registration_document->file_type) == 'text')
                                 <input type="text" class="form-control" id="input_file_logo_{{$driver_registration_document->id}}" name="{{$driver_registration_document->name}}" placeholder="Enter Text" value="" {{ (!empty($driver_registration_document->is_required))?'required':''}}>
+                                @elseif( strtolower($driver_registration_document->file_type) == 'date')
+                                <input type="date" class="form-control" id="input_file_logo_{{$driver_registration_document->id}}" name="{{$driver_registration_document->name}}" placeholder="Enter Date" value="" {{ (!empty($driver_registration_document->is_required))?'required':''}}>
                                 @else
                                 @if(strtolower($driver_registration_document->file_type) == 'image')
                                 <input type="file" data-plugins="dropify" name="{{$driver_registration_document->name}}" accept="image/*" {{ (!empty($driver_registration_document->is_required))?'required':''}} />
                                 @elseif(strtolower($driver_registration_document->file_type) == 'pdf')
                                 <input type="file" data-plugins="dropify" name="{{$driver_registration_document->name}}" accept=".pdf" {{ (!empty($driver_registration_document->is_required))?'required':''}} />
+                                @elseif(strtolower($driver_registration_document->file_type) == 'selector')
+                                <select class="form-control" data-style="btn-light" name="{{$driver_registration_document->name}}">
+                                  @foreach($driver_registration_document->driver_option as $options)
+                                    <option value="{{$options->driver_registartion_option_name}}">{{$options->driver_registartion_option_name}}</option>
+                                    @endforeach
+                                </select>
                                 @endif
                                 <span class="invalid-feedback" role="alert">
                                     <strong></strong>

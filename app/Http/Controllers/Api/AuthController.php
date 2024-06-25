@@ -252,6 +252,12 @@ class AuthController extends BaseController
         DB::connection($schemaName)->table('rosters')->where('created_at', '<', date('Y-m-d H:i:s'))->where(['driver_id' => Auth::user()->id, 'device_type' => Auth::user()->device_type])->delete();
         DB::disconnect($schemaName);
 
+        // Send success sms
+        // $sms_template = AgentSmsTemplate::where('slug', 'sign-in-success')->first();
+        // $keyData = ['{OTP}'=>''];
+        // $sms_body = sendSmsTemplate('sign-in-success',$keyData);
+        // $send = $this->sendSmsNew($request->phone_number, $sms_body)->getData();
+        $agent['is_refferal_code_enable'] = ClientPreference::value('refer_earn_driver_to_driver_toggle');
 
         return response()->json([
             'data' => $agent,
@@ -611,6 +617,10 @@ class AuthController extends BaseController
             }
         }
 
+        if (ClientPreference::value('refer_earn_driver_to_driver_toggle') == 1 && $request->refferal_code) {
+            $this->refferalToDriver($request,$agent->id);
+        }
+        
         if ($agent->wasRecentlyCreated ) {
             return response()->json([   'status' => 200, 
                                         'message' => 'Your account created successfully. Please login',
@@ -671,4 +681,28 @@ class AuthController extends BaseController
             ]);
         }
     }
+
+    public function refferalToDriver($request,$agent_id)
+    {
+        $DriverRefferal = DriverRefferal::where('refferal_code', $request->refferal_code)->first();
+        if($DriverRefferal){
+            $agent = Agent::where('id',$DriverRefferal->driver_id)->first();
+            $client_preference_additional = ClientPreferenceAdditional::pluck('key_value','key_name');
+            if ($client_preference_additional['refferel_by_agent_amount']) {
+                $agent_wallet = $agent->wallet;
+                $agent_wallet->deposit((float)($client_preference_additional['refferel_by_agent_amount']) * 100, ['Referral code used by <b>' . $request->user_name . '</b>']);
+                $agent_wallet->balance;
+            }
+            if($client_preference_additional['refferel_to_agent_amount']){
+                $authAgent = Agent::where('id',$agent_id)->first();
+                $authAgent_wallet = $authAgent->wallet;
+                $authAgent_wallet->deposit((float)($client_preference_additional['refferel_to_agent_amount']) * 100, ['Referral code used of <b>' . $agent->name . '</b>']);
+                $authAgent_wallet->balance;
+            }
+
+        }else{
+            return response()->json(['message' => 'referal code not exist','status' => 'error']);
+        }
+    }
+
 }

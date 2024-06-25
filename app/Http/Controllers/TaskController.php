@@ -52,6 +52,7 @@ use App\Http\Controllers\Api\BaseController;
 use App\Traits\{ApiResponser, DispatcherRouteAllocation, GlobalFunction};
 use App\Traits\TollFee;
 use App\Imports\OrderImport;
+use App\Jobs\ImportTaskCsv;
 use App\Model\Product;
 use App\Model\OrderVendorProduct;
 use App\Traits\inventoryManagement;
@@ -322,217 +323,240 @@ class TaskController extends BaseController
 
     public function taskFilter(Request $request)
     {
-
         $warehouseManagerId = $request->warehouseManagerId;
-        $searchWarehouse_id = $request->warehouseListingType;
+        $searchWarehouseId = $request->warehouseListingType;
+        $customerId = $request->customer_id;
+        $routesListingType = $request->routesListingType;
+
         $user = Auth::user();
         $timezone = $user->timezone ?? 251;
 
-        $team_tags = TeamTag::whereHas('team.permissionToManager', function($q) use($user){
-            $q->where('sub_admin_id', $user->id);
-        })->pluck('tag_id');
+        $teamTags = DB::table('team_tags')
+            ->join('teams', 'team_tags.team_id', '=', 'teams.id')
+            ->join('sub_admin_team_permissions','teams.id','=','sub_admin_team_permissions.team_id')
+            ->where('sub_admin_team_permissions.sub_admin_id',$user->id)
+            ->pluck('team_tags.tag_id');
+        $orders = DB::table('orders')
+            ->select(
+                'orders.id',
+                'orders.order_number',
+                'orders.order_time',
+                'orders.status',
+                'orders.updated_at',
+                'orders.created_at',
+                'customers.id AS customer_id',
+                'customers.name AS customer_name',
+                'customers.phone_number AS phone_number',
+                'tasks.is_return',
+                'agents.name AS agent_name',
+                'agents.is_available AS is_available',
+                'tasks.task_type_id',
+                'locations.short_name',
+                'locations.address'
+            )
+            ->leftJoin('customers', 'orders.customer_id', '=', 'customers.id')
+            ->leftJoin('tasks', 'orders.id', '=', 'tasks.order_id')
+            ->leftJoin('agents', 'orders.driver_id', '=', 'agents.id')
+            ->leftJoin('locations', 'tasks.location_id', '=', 'locations.id')
+            ->leftJoin('task_team_tags','orders.id',"=",'task_team_tags.task_id')
+            ->groupBy('tasks.order_id')
+            ->orderBy('orders.id', 'DESC');
 
-        $orders = Order::with(['customer', 'task', 'location', 'taskFirst', 'agent', 'task.location', 'task.warehouse'])->orderBy('id', 'DESC'); //, 'task.manager'
 
-        if (@$request->warehouseManagerId && !empty($request->warehouseManagerId)) {
-            $orders->whereHas('task.warehouse.manager', function($q) use($request){
-                $q->where('clients.id', $request->warehouseManagerId);
-            });
+
+        if (!empty($warehouseManagerId)) {
+            $orders->leftJoin('warehouses', 'tasks.warehouse_id', '=', 'warehouses.id')
+                ->leftJoin('clients', 'warehouses.manager_id', '=', 'clients.id')
+                ->where('clients.id', $warehouseManagerId);
         }
+
         if ($user->is_superadmin == 0 && $user->all_team_access == 0 && $user->manager_type == 0) {
-            $agents = Agent::orderBy('id', 'DESC');
-            $agentids = $agents->whereHas('team.permissionToManager', function ($query) use($user) {
-                $query->where('sub_admin_id', $user->id);
-            })->pluck('id');
+            $agentIds = DB::table('agents')
+                ->join('teams', 'agents.team_id', '=', 'teams.id')
+                ->join('sub_admin_team_permissions','teams.id','=','sub_admin_team_permissions.team_id')
+            ->where('sub_admin_team_permissions.sub_admin_id',$user->id)
+                ->pluck('agents.id');
+            $orders->where(function ($query) use ($agentIds) {
+                $query->whereIn('orders.driver_id', $agentIds)
+                    ->orWhereNull('orders.driver_id');
+            });
+            $orders = $orders->whereIn('task_team_tags.tag_id', $teamTags);
+        } elseif ($user->is_superadmin == 0 && $user->manager_type == 1) {
+            $managerWarehouseIds = DB::table('clients')
+                ->join('warehouses', 'clients.id', '=', 'warehouses.manager_id')
+                ->where('clients.id', $user->id)
+                ->pluck('warehouses.id');
 
-            $orders = $orders->where(function($q) use($agentids) {
-                $q->whereIn('driver_id', $agentids)->orWhereNull('driver_id');
-            });
-
-            $orders = $orders->wherehas('allteamtags', function($query) use($team_tags) {
-                $query->whereIn('tag_id', $team_tags);
-            });
-        }else if($user->is_superadmin == 0 && $user->manager_type == 1){
-            $manager_warehouses = Client::with('warehouse')->where('id', $user->id)->first();
-            $mana_warehouseIds = $manager_warehouses->warehouse->pluck('id');
-            $orders = $orders->whereHas('task', function($query) use ($mana_warehouseIds) {
-                $query->whereIn('warehouse_id', $mana_warehouseIds);
-            });
-        }
-        if($searchWarehouse_id != null && $searchWarehouse_id != ''){
-            $orders = $orders->whereHas('task', function($query) use ($searchWarehouse_id) {
-                $query->where('warehouse_id', $searchWarehouse_id);
-            });
+            $orders->whereIn('tasks.warehouse_id', $managerWarehouseIds);
         }
 
-        if($request->has('customer_id') && $request->customer_id != ''){
-            // $orders = $orders->whereHas('customer', function($query) use ($request) {
-            //     $query->where('id', $request->customer_id);
-            // });
-            $orders = $orders->where('customer_id', $request->customer_id);
+        if (!empty($searchWarehouseId)) {
+            $orders->where('tasks.warehouse_id', $searchWarehouseId);
         }
 
+        if (!empty($customerId)) {
+            $orders->where('orders.customer_id', $customerId);
+        }
+
+        $orders->where('orders.status', $routesListingType)
+            ->whereNotNull('orders.status')
+            ->orderBy('orders.updated_at', 'desc');
+
+        $preference = DB::table('client_preferences')
+            ->where('id', 1)
+            ->select('theme', 'date_format', 'time_format', 'is_dispatcher_allocation')
+            ->first();
 
 
-        $orders = $orders->where('status', $request->routesListingType)->where('status', '!=', null)->orderBy('updated_at', 'desc');
-        // dd($orders->get());
-        $preference = ClientPreference::where('id', 1)->first(['theme','date_format','time_format','is_dispatcher_allocation']);
-        $getAdditionalPreference = getAdditionalPreference(['pickup_type', 'drop_type']); 
+            $getAdditionalPreference = getAdditionalPreference(['pickup_type', 'drop_type']);
+
+
+
         return Datatables::of($orders)
-                ->addColumn('customer_id', function ($orders) use ($request) {
-                    $customerID = !empty($orders->customer->id)? $orders->customer->id : '';
-                    $length = strlen($customerID);
-                    if($length < 4){
-                        $customerID = str_pad($customerID, 4, '0', STR_PAD_LEFT);
-                    }
-                    return $customerID;
-                })
-                ->addColumn('customer_name', function ($orders) use ($request) {
-                    $customerName = !empty($orders->customer->name)? $orders->customer->name : '';
-                    return $customerName;
-                })
-                ->addColumn('phone_number', function ($orders) use ($request) {
-                    $phoneNumber = !empty($orders->customer->phone_number)? $orders->customer->phone_number : '';
-                    return $phoneNumber;
-                })
-                ->addColumn('type', function ($orders) use ($request) {
-                    $type = 'Normal';
-                    if(@$orders->task[0]->is_return && $orders->task[0]->is_return == 1){
-                        $type = 'Return';
-                    }
-                    return $type;
-                })
-                ->addColumn('is_dispatcher_allocation', function ($orders) use ($preference) {
-                    
-                    if($preference->is_dispatcher_allocation == 1)
-                    {
-                        return 1;
-                    }
-                    return 0;
-                })
-                ->addColumn('agent_name', function ($orders) use ($request) {
-                    $checkActive = (!empty($orders->agent->name) && $orders->agent->is_available == 1) ? ' '.__('Active') : ' '. __('InActive');
-                    $agentName   = !empty($orders->agent->name)? $orders->agent->name.$checkActive : '';
-                    return $agentName;
-                })
-                ->addColumn('order_number', function ($orders) use ($request) {
-                    return '<a href="'.route('tasks.edit', $orders->id).'" title="Edit Route">'.$orders->order_number.'</a>';
-                })
-                ->addColumn('order_time', function ($orders) use ($request, $timezone, $preference) {
-                    $tz              = new Timezone();
-                    $client_timezone = $tz->timezone_name($timezone);
-                    if(!empty($orders->order_time)):
-                        $timeformat      = $preference->time_format == '24' ? 'H:i:s':'g:i a';
-                        $order           = Carbon::createFromFormat('Y-m-d H:i:s', $orders->order_time, 'UTC');
+        ->addColumn('', function ($orders) use ($request) {
+            $customerID = !empty($orders->customer_id)? $orders->customer_id : '';
+            $length = strlen($customerID);
+            if($length < 4){
+                $customerID = str_pad($customerID, 4, '0', STR_PAD_LEFT);
+            }
+            return $customerID;
+        })
+        ->addColumn('customer_name', function ($orders) use ($request) {
+            $customerName = !empty($orders->customer_name)? $orders->customer_name : '';
+            return $customerName;
+        })
+        ->addColumn('phone_number', function ($orders) use ($request) {
+            $phoneNumber = !empty($orders->phone_number)? $orders->phone_number : '';
+            return $phoneNumber;
+        })
+        ->addColumn('type', function ($orders) use ($request) {
+            $type = 'Normal';
+            if(@$orders->is_return == 1){
+                $type = 'Return';
+            }
+            return $type;
+        })
+        ->addColumn('is_dispatcher_allocation', function ($orders) use ($preference) {
 
-                        $order->setTimezone($client_timezone);
-                        $preference->date_format = $preference->date_format ?? 'm/d/Y';
-                        $convertabledate = date(''.$preference->date_format.' '.$timeformat.'', strtotime($order));
-                        return $convertabledate.'<br/>'.$order->diffForHumans();
-                    else:
-                        return '';
-                    endif;
-                })
+            if($preference->is_dispatcher_allocation == 1)
+            {
+                return 1;
+            }
+            return 0;
+        })
+        ->addColumn('agent_name', function ($orders) use ($request) {
+            $checkActive = (!empty($orders->agent_name) && $orders->is_available == 1) ? ' '.__('Active') : ' '. __('InActive');
+            $agentName   = !empty($orders->agent_name)? $orders->agent_name.$checkActive : '';
+            return $agentName;
+        })
+        ->addColumn('order_number', function ($orders) use ($request) {
+            return '<a href="'.route('tasks.edit', $orders->id).'" title="Edit Route">'.$orders->order_number.'</a>';
+        })
+        ->addColumn('order_time', function ($orders) use ($request, $timezone, $preference) {
+            $tz              = new Timezone();
+            $client_timezone = $tz->timezone_name($timezone);
+            if(!empty($orders->order_time)):
+                $timeformat      = $preference->time_format == '24' ? 'H:i:s':'g:i a';
+                $order           = Carbon::createFromFormat('Y-m-d H:i:s', $orders->order_time, 'UTC');
 
-                ->addColumn('short_name', function ($orders) use ($request, $getAdditionalPreference) {
-                    $routes = array();
-                    foreach($orders->task as $task){
-                        if($task->task_type_id == 1){
-                            $taskType    = (($getAdditionalPreference['pickup_type'])?$getAdditionalPreference['pickup_type']: "Pickup");
-                            $pickupClass = "yellow_";
-                        }else if($task->task_type_id == 2){
-                            $taskType    =  (($getAdditionalPreference['drop_type'])?$getAdditionalPreference['drop_type']: "Dropoff");
-                            $pickupClass = "green_";
-                        }else{
-                            $taskType    = "Appointment";
-                            $pickupClass = "assign_";
-                        }
+                $order->setTimezone($client_timezone);
+                $preference->date_format = $preference->date_format ?? 'm/d/Y';
+                $convertabledate = date(''.$preference->date_format.' '.$timeformat.'', strtotime($order));
+                return $convertabledate.'<br/>'.$order->diffForHumans();
+            else:
+                return '';
+            endif;
+        })
+        ->addColumn('short_name', function ($orders) use ($request, $getAdditionalPreference) {
+            $routes = array();
 
-                        $shortName  = (!empty($task->location->short_name)? $task->location->short_name:'');
-                        $address    = (!empty($task->location->address)? $task->location->address:'');
+                if($orders->task_type_id == 1){
+                    $taskType    = (($getAdditionalPreference['pickup_type'])?$getAdditionalPreference['pickup_type']: "Pickup");
+                    $pickupClass = "yellow_";
+                }else if($orders->task_type_id == 2){
+                    $taskType    =  (($getAdditionalPreference['drop_type'])?$getAdditionalPreference['drop_type']: "Dropoff");
+                    $pickupClass = "green_";
+                }else{
+                    $taskType    = "Appointment";
+                    $pickupClass = "assign_";
 
-                        $addressArr   = explode(' ',trim($address));
-                        $finalAddress = (!empty($addressArr[0])) ? $addressArr[0] : '';
-                        $finalAddress = (!empty($addressArr[1])) ? $addressArr[0].' '.$addressArr[1] : $finalAddress.'';
-                        $finalAddress = (!empty($addressArr[2])) ? $addressArr[0].' '.$addressArr[1].' '.$addressArr[2] : $finalAddress.'';
-                        $finalAddress = (!empty($addressArr[3])) ? $addressArr[0].' '.$addressArr[1].' '.$addressArr[2].' '.$addressArr[3] : $finalAddress.'';
-                        $finalAddress = (!empty($addressArr[4])) ? $addressArr[0].' '.$addressArr[1].' '.$addressArr[2].' '.$addressArr[3].' '.$addressArr[4] : $finalAddress.'';
-                        $finalAddress = (!empty($addressArr[5])) ? $addressArr[0].' '.$addressArr[1].' '.$addressArr[2].' '.$addressArr[3].' '.$addressArr[4].' '.$addressArr[5] : $finalAddress.'';
-                        $finalAddress = (!empty($addressArr[6])) ? $addressArr[0].' '.$addressArr[1].' '.$addressArr[2].' '.$addressArr[3].' '.$addressArr[4].' '.$addressArr[5].'' : $finalAddress;
-                        $routes[]     = array('taskType'=>__($taskType), 'pickupClass'=>$pickupClass, 'shortName'=>$shortName, 'toolTipAddress'=>$address, 'address'=> $finalAddress);
-                    }
-                    return json_encode($routes, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
-                })
-                ->addColumn('created_at', function ($orders) use ($request,$preference) {
 
-                    $timeformat      = $preference->time_format == '24' ? 'H:i:s':'g:i a';
-                    $preference->date_format = $preference->date_format ?? 'm/d/Y';
-                    return date(''.$preference->date_format.' '.$timeformat.'', strtotime($orders->created_at));
-                    // return date('m/d/Y H:i:s', strtotime($orders->created_at));
-                })
-                ->editColumn('updated_at', function ($orders) use ($request, $timezone, $preference) {
-                    $tz              = new Timezone();
-                    $client_timezone = $tz->timezone_name($timezone);
-                    $timeformat      = $preference->time_format == '24' ? 'H:i:s':'g:i a';
-                    $order           = Carbon::createFromFormat('Y-m-d H:i:s', $orders->updated_at, 'UTC');
-                    $order->setTimezone($client_timezone);
-                    $preference->date_format = $preference->date_format ?? 'm/d/Y';
-                    return date(''.$preference->date_format.' '.$timeformat.'', strtotime($order));
-                })
-                ->addColumn('action', function ($orders) use ($request) {
-                    $action = '<div class="form-ul" style="width: 60px;">
-                                    <div class="inner-div">
-                                        <div class="set-size">
-                                            <a href1="#" href="'.route('tasks.edit', $orders->id).'" class="action-icon editIconBtn mr-2" title="Edit Route">
-                                                <i class="mdi mdi-square-edit-outline"></i>
-                                            </a>
-                                        </div>
-                                    </div>';
-                        if($orders->status!='completed'):
-                         $action.='<div class="inner-div">
-                                        <form class="mb-0" id="taskdelete'.$orders->id.'" method="POST" action="'.route('tasks.destroy', $orders->id).'">
-                                            <input type="hidden" name="_token" value="'.csrf_token().'" />
-                                            <input type="hidden" name="_method" value="DELETE">
-                                            <div class="form-group">
-                                                <button type="button" class="btn btn-primary-outline action-icon"> <i class="mdi mdi-delete" taskid="'.$orders->id.'"></i></button>
-                                            </div>
-                                        </form>
-                                    </div>';
-                        endif;
-                        $action.='</div>';
-                    return $action;
-                })
-                ->filter(function ($instance) use ($request) {
-                    if (!empty($request->get('search'))) {
+                $shortName  = (!empty($orders->short_name)? $orders->short_name:'');
+                $address    = (!empty($orders->address)? $orders->address:'');
 
-                        $search = $request->get('search');
-                        $instance->where(function($query) use($search){
-                            $query->where('order_number', 'Like', '%'.$search.'%')
-                            ->orWhereHas('customer', function($q) use($search){
-                                $q->where('name', 'Like', '%'.$search.'%')
-                                ->orWhere('phone_number', 'Like', '%'.$search.'%');
-                            })
-                            ->orWhereHas('agent', function($q) use($search){
-                                $q->where('name', 'Like', '%'.$search.'%');
-                            });
-                        });
-                    }
-                }, true)
-                ->rawColumns(['action', 'order_number', 'order_time'])
-                ->make(true);
+
+                $routes[]     = array('taskType'=>__($taskType), 'pickupClass'=>$pickupClass, 'shortName'=>$shortName, 'toolTipAddress'=>$address);
+            }
+            return json_encode($routes, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+        })
+
+        ->addColumn('created_at', function ($orders) use ($request,$preference) {
+
+            $timeformat      = $preference->time_format == '24' ? 'H:i:s':'g:i a';
+            $preference->date_format = $preference->date_format ?? 'm/d/Y';
+            return date(''.$preference->date_format.' '.$timeformat.'', strtotime($orders->created_at));
+            // return date('m/d/Y H:i:s', strtotime($orders->created_at));
+        })
+        ->editColumn('updated_at', function ($orders) use ($request, $timezone, $preference) {
+            $tz              = new Timezone();
+            $client_timezone = $tz->timezone_name($timezone);
+            $timeformat      = $preference->time_format == '24' ? 'H:i:s':'g:i a';
+            $order           = Carbon::createFromFormat('Y-m-d H:i:s', $orders->updated_at, 'UTC');
+            $order->setTimezone($client_timezone);
+            $preference->date_format = $preference->date_format ?? 'm/d/Y';
+            return date(''.$preference->date_format.' '.$timeformat.'', strtotime($order));
+        })
+        ->addColumn('action', function ($orders) use ($request) {
+            $action = '<div class="form-ul" style="width: 60px;">
+                            <div class="inner-div">
+                                <div class="set-size">
+                                    <a href1="#" href="'.route('tasks.edit', $orders->id).'" class="action-icon editIconBtn mr-2" title="Edit Route">
+                                        <i class="mdi mdi-square-edit-outline"></i>
+                                    </a>
+                                </div>
+                            </div>';
+                if($orders->status!='completed'):
+                 $action.='<div class="inner-div">
+                                <form class="mb-0" id="taskdelete'.$orders->id.'" method="POST" action="'.route('tasks.destroy', $orders->id).'">
+                                    <input type="hidden" name="_token" value="'.csrf_token().'" />
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-primary-outline action-icon"> <i class="mdi mdi-delete" taskid="'.$orders->id.'"></i></button>
+                                    </div>
+                                </form>
+                            </div>';
+                endif;
+                $action.='</div>';
+            return $action;
+        })
+        ->filter(function ($instance) use ($request) {
+            if (!empty($request->get('search'))) {
+
+                $search = $request->get('search');
+                $instance->where(function($query) use($search){
+                    $query->where('order_number', 'Like', '%'.$search.'%')
+                    ->orWhereHas('customer', function($q) use($search){
+                        $q->where('name', 'Like', '%'.$search.'%')
+                        ->orWhere('phone_number', 'Like', '%'.$search.'%');
+                    })
+                    ->orWhereHas('agent', function($q) use($search){
+                        $q->where('name', 'Like', '%'.$search.'%');
+                    });
+                });
+            }
+        }, true)
+        ->rawColumns(['action', 'order_number', 'order_time'])
+        ->make(true);
+
     }
 
 
     public function getTaskRoute(Request $request )
     {
-           
-
         $order = Order::with('task')->where('id',$request->order_id)->first();
         $agents = Agent::all();
         $returnHTML = view('tasks.route-modal')->with(['order' => $order,'agents' =>$agents])->render();
         return response()->json(array('success' => true, 'html'=>$returnHTML));
-     
-        
     }
     public function tasksExport(Request $request)
     {
@@ -749,7 +773,7 @@ class TaskController extends BaseController
                 'call_back_url' => $request->call_back_url ?? null
             ];
 
-        
+
 
             $orders = Order::create($order);
 
@@ -846,7 +870,7 @@ class TaskController extends BaseController
                         $lastTask = Task::where('order_id', $orders->id)
                         ->where('task_type_id', 1)
                         ->orderBy('id', 'desc')
-            
+
                         ->first();
                         $dep_id = $lastTask->id;
                  }
@@ -866,7 +890,7 @@ class TaskController extends BaseController
                     'alcoholic_item' => ! empty($request->alcoholic_item[$key]) ? $request->alcoholic_item[$key] : ''
                 ];
 
-                
+
                 if (checkColumnExists('tasks', 'warehouse_id')) {
                     $data['warehouse_id'] = $request->warehouse_id[$key];
                 }
@@ -912,10 +936,10 @@ class TaskController extends BaseController
                         $this->createWarehouseTasks($client,$value,$request,$orders,$dep_id,$Loction,$cus_id);
                      }
 
-                     
+
 
                     }
- 
+
                 }
 
                 // for net quantity
@@ -1048,7 +1072,7 @@ class TaskController extends BaseController
 
             $allocation = AllocationRule::where('id', 1)->first();
             Order::where('id', $orders->id)->update(['assign_logic' => $allocation->auto_assign_logic]);
-            
+
             if ($request->task_type != 'now') {
 
                 $auth = Client::where('code', Auth::user()->code)->with([
@@ -1101,8 +1125,15 @@ class TaskController extends BaseController
                     ]);
                 }
             }
+            if($request->has('agent_tag'))
+
+            {
+                $agent_tag = $request->input('agent_tag');
+            }
+
+
             DB::commit();
-            
+
             if($client->is_lumen_enabled)
             {
                 lumenDispatchToQueue($geo,$orders);
@@ -1112,20 +1143,20 @@ class TaskController extends BaseController
                     switch ($allocation->auto_assign_logic) {
                         case 'one_by_one':
                             // this is called when allocation type is one by one
-                            $this->finalRoster($geo, $notification_time, $agent_id, $orders->id, $customer, $finalLocation, $taskcount, $allocation);
+                            $this->finalRoster($geo, $notification_time, $agent_id, $orders->id, $customer, $finalLocation, $taskcount, $allocation,$agent_tag);
                             break;
                         case 'send_to_all':
                             // this is called when allocation type is send to all
                             Log::info('send_to_all taskController');
-                            $this->SendToAll($geo, $notification_time, $agent_id, $orders->id, $customer, $finalLocation, $taskcount, $allocation);
+                            $this->SendToAll($geo, $notification_time, $agent_id, $orders->id, $customer, $finalLocation, $taskcount, $allocation,$agent_tag);
                             break;
                         case 'round_robin':
                             // this is called when allocation type is round robin
-                            $this->roundRobin($geo, $notification_time, $agent_id, $orders->id, $customer, $finalLocation, $taskcount, $allocation);
+                            $this->roundRobin($geo, $notification_time, $agent_id, $orders->id, $customer, $finalLocation, $taskcount, $allocation,$agent_tag);
                             break;
                         default:
                             // this is called when allocation type is batch wise
-                            $this->batchWise($geo, $notification_time, $agent_id, $orders->id, $customer, $finalLocation, $taskcount, $allocation);
+                            $this->batchWise($geo, $notification_time, $agent_id, $orders->id, $customer, $finalLocation, $taskcount, $allocation,$agent_tag);
                     }
                 }
             }
@@ -1200,7 +1231,7 @@ class TaskController extends BaseController
                             'freelancer_commission_fixed' => $freelancer_commission_fixed,
                             'freelancer_commission_percentage' => $freelancer_commission_percentage
                         ]);
-                        
+
 
                         if($request->has('task_id'))
                         {
@@ -1219,15 +1250,18 @@ class TaskController extends BaseController
                             ]);
 
                         }
-                        
-                      
 
-                        $orderdata = Order::select('id', 'order_time', 'status', 'driver_id')->with('agent')
+
+
+                        $orderdata = Order::select('id', 'order_time', 'status', 'driver_id','call_back_url','unique_id')->with('agent')
                             ->where('id', $order->id)
                             ->first();
+
+
                         // event(new \App\Events\loadDashboardData($orderdata));
                         if (isset($orderdata) && $orderdata->driver_id != null) {
                             if ($orderdata && $orderdata->call_back_url) {
+
                                 $call_web_hook = $this->updateStatusDataToOrder($orderdata, 2,1);  # task accepted
                             }
                         }
@@ -1349,7 +1383,7 @@ class TaskController extends BaseController
             'getAllocation',
             'getPreference'
         ])->first();
-       
+
         $notification_time = $batchTime ?? $order_details->order_time;
         $expriedate = (int) $auth->getAllocation->request_expiry;
         $beforetime = (int) $auth->getAllocation->start_before_task_time;
@@ -1359,7 +1393,7 @@ class TaskController extends BaseController
         $time = $this->checkTimeDiffrence($notification_time, $beforetime); // this function is check the time diffrence and give the notification time
         $rostersbeforetime = $this->checkBeforeTimeDiffrence($notification_time, $beforetime);
         $randem = rand(11111111, 99999999);
-        
+
          $allcation_type = 'ACK';
 
         foreach ($order_details->task as $key => $value) {
@@ -1965,7 +1999,7 @@ class TaskController extends BaseController
         return $c;
     }
 
-    public function finalRoster($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $allocation)
+    public function finalRoster($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $allocation,$agent_tag= [])
     {
         $allcation_type = 'AR';
         $date = \Carbon\Carbon::today();
@@ -2044,7 +2078,7 @@ class TaskController extends BaseController
             // $geoagents = Agent::whereIn('id',  $geoagents_ids)->with(['logs','order'=> function ($f) use ($date) {
             //     $f->whereDate('order_time', $date)->with('task');
             // }])->orderBy('id', 'DESC')->get()->where("agent_cash_at_hand", '<', $cash_at_hand);
-            $geoagents = $this->getGeoBasedAgentsData($geo, '0', '', $date, $cash_at_hand,$orders_id);
+            $geoagents = $this->getGeoBasedAgentsData($geo, '0', $agent_tag, $date, $cash_at_hand,$orders_id);
 
 
 
@@ -2168,9 +2202,9 @@ class TaskController extends BaseController
             return Carbon::parse($notification_time)->subMinutes($beforetime);
         }
     }
-    
-    
-    public function OneByOne($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $allocation)
+
+
+    public function OneByOne($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $allocation,$agent_tag= [])
     {
         $allcation_type = 'AR';
         $date = \Carbon\Carbon::today();
@@ -2186,13 +2220,13 @@ class TaskController extends BaseController
         $try = $auth->getAllocation->number_of_retries;
         $cash_at_hand = $auth->getAllocation->maximum_cash_at_hand_per_person ?? 0;
         $max_redius = $auth->getAllocation->maximum_radius;
-        $max_task = $auth->getAllocation->maximum_batch_size;
+        $max_task = $auth->getAllocation->maximum_task_per_person;
         $time = $this->checkTimeDiffrence($notification_time, $beforetime);
         $randem = rand(11111111, 99999999);
         $rostersbeforetime = $this->checkBeforeTimeDiffrence($notification_time, $beforetime);
         $order_details = Order::find($orders_id);
         $data = [];
-        
+
         if ($type == 'acceptreject') {
             $allcation_type = 'AR';
         } elseif ($type == 'acknowledge') {
@@ -2200,7 +2234,7 @@ class TaskController extends BaseController
         } else {
             $allcation_type = 'N';
         }
-        
+
         $extraData = [
             'customer_name'            => $customer->name,
             'customer_phone_number'    => $customer->phone_number,
@@ -2213,7 +2247,7 @@ class TaskController extends BaseController
             'created_at'               => Carbon::now()->toDateTimeString(),
             'updated_at'               => Carbon::now()->toDateTimeString(),
         ];
-        
+
         if (!isset($geo)) {
             $oneagent = Agent::where('id', $agent_id)->first();
             if(!empty($oneagent->device_token) && $oneagent->is_available == 1){
@@ -2232,7 +2266,7 @@ class TaskController extends BaseController
                 $this->dispatch(new RosterCreate($data, $extraData));
             }
         } else {
-            $geoagents = $this->getGeoBasedAgentsData($geo, '0', '', $date, $cash_at_hand,$orders_id);
+            $geoagents = $this->getGeoBasedAgentsData($geo, '0', $agent_tag, $date, $cash_at_hand,$orders_id);
             // for ($i = 1; $i <= $try; $i++) {
             foreach ($geoagents as $key =>  $geoitem) {
                 if (!empty($geoitem->device_token) && $geoitem->is_available == 1) {
@@ -2247,7 +2281,7 @@ class TaskController extends BaseController
                         'device_type'         => $geoitem->device_type,
                         'device_token'        => $geoitem->device_token,
                         'detail_id'           => $randem,
-                        
+
                     ];
                     array_push($data, $datas);
                     if ($allcation_type == 'N' && 'ACK') {
@@ -2264,7 +2298,7 @@ class TaskController extends BaseController
         }
     }
 
-    public function SendToAll($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $allocation)
+    public function SendToAll($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $allocation,$agent_tag= [])
     {
         $allcation_type = 'AR';
         $date = \Carbon\Carbon::today();
@@ -2280,7 +2314,7 @@ class TaskController extends BaseController
         $try = $auth->getAllocation->number_of_retries;
         $cash_at_hand = $auth->getAllocation->maximum_cash_at_hand_per_person ?? 0;
         $max_redius = $auth->getAllocation->maximum_radius;
-        $max_task = $auth->getAllocation->maximum_batch_size;
+        $max_task = $auth->getAllocation->maximum_task_per_person;
         $time = $this->checkTimeDiffrence($notification_time, $beforetime);
         $randem = rand(11111111, 99999999);
         $rostersbeforetime = $this->checkBeforeTimeDiffrence($notification_time, $beforetime);
@@ -2313,7 +2347,7 @@ class TaskController extends BaseController
         ];
 
 
-       
+
         if (! isset($geo)) {
             $oneagent = Agent::where('id', $agent_id)->first();
             if (! empty($oneagent->device_token) && $oneagent->is_available == 1) {
@@ -2339,7 +2373,7 @@ class TaskController extends BaseController
             // $geoagents = Agent::whereIn('id',  $geoagents_ids)->with(['logs','order'=> function ($f) use ($date) {
             //     $f->whereDate('order_time', $date)->with('task');
             // }])->orderBy('id', 'DESC')->get()->where("agent_cash_at_hand", '<', $cash_at_hand);
-            $geoagents = $this->getGeoBasedAgentsData($geo, '0', '', $date, $cash_at_hand,$orders_id);
+            $geoagents = $this->getGeoBasedAgentsData($geo, '0', $agent_tag, $date, $cash_at_hand,$orders_id);
             for ($i = 0; $i <= $try-1; $i++) {
                 foreach ($geoagents as $key =>  $geoitem) {
                     if (!empty($geoitem->device_token) && $geoitem->is_available == 1) {
@@ -2377,7 +2411,7 @@ class TaskController extends BaseController
         }
     }
 
-    public function batchWise($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $allocation)
+    public function batchWise($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $allocation,$agent_tag= [])
     {
         $allcation_type = 'AR';
         $date = \Carbon\Carbon::today();
@@ -2393,7 +2427,7 @@ class TaskController extends BaseController
         $try = $auth->getAllocation->number_of_retries;
         $cash_at_hand = $auth->getAllocation->maximum_cash_at_hand_per_person ?? 0;
         $max_redius = $auth->getAllocation->maximum_radius;
-        $max_task = $auth->getAllocation->maximum_batch_size;
+        $max_task = $auth->getAllocation->maximum_task_per_person;
         $time = $this->checkTimeDiffrence($notification_time, $beforetime);
         $rostersbeforetime = $this->checkBeforeTimeDiffrence($notification_time, $beforetime);
         $randem = rand(11111111, 99999999);
@@ -2449,7 +2483,7 @@ class TaskController extends BaseController
             // $geoagents = Agent::whereIn('id',  $geoagents_ids)->with(['logs','order'=> function ($f) use ($date) {
             //     $f->whereDate('order_time', $date)->with('task');
             // }])->orderBy('id', 'DESC')->get()->where("agent_cash_at_hand", '<', $cash_at_hand)->toArray();
-            $geoagents = $this->getGeoBasedAgentsData($geo, '0', '', $date, $cash_at_hand,$orders_id);
+            $geoagents = $this->getGeoBasedAgentsData($geo, '0', $agent_tag, $date, $cash_at_hand,$orders_id);
             // this function is give me nearest drivers list accourding to the the task location.
             $distenseResult = $this->haversineGreatCircleDistance($geoagents, $finalLocation, $unit, $max_redius, $max_task);
 
@@ -2476,7 +2510,7 @@ class TaskController extends BaseController
                             $counter ++;
                             if ($counter == $maxsize) {
                                 $time = Carbon::parse($time)->addSeconds($expriedate)->format('Y-m-d H:i:s');
-                                $rostersbeforetime = Carbon::parse($rostersbeforetime)->addSeconds($expriedate)->format('Y-m-d H:i:s');                              
+                                $rostersbeforetime = Carbon::parse($rostersbeforetime)->addSeconds($expriedate)->format('Y-m-d H:i:s');
                                 $counter = 0;
                             }
                         }
@@ -2497,7 +2531,7 @@ class TaskController extends BaseController
         }
     }
 
-    public function roundRobin($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount)
+    public function roundRobin($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount,$agent_tag= [])
     {
         $allcation_type = 'AR';
         $date = \Carbon\Carbon::today();
@@ -2513,7 +2547,7 @@ class TaskController extends BaseController
         $try = $auth->getAllocation->number_of_retries;
         $cash_at_hand = $auth->getAllocation->maximum_cash_at_hand_per_person ?? 0;
         $max_redius = $auth->getAllocation->maximum_radius;
-        $max_task = $auth->getAllocation->maximum_batch_size;
+        $max_task = $auth->getAllocation->maximum_task_per_person;
         $time = $this->checkTimeDiffrence($notification_time, $beforetime);
         $rostersbeforetime = $this->checkBeforeTimeDiffrence($notification_time, $beforetime);
         $randem = rand(11111111, 99999999);
@@ -2569,7 +2603,7 @@ class TaskController extends BaseController
             // $geoagents = Agent::whereIn('id',  $geoagents_ids)->with(['logs','order'=> function ($f) use ($date) {
             //     $f->whereDate('order_time', $date)->with('task');
             // }])->orderBy('id', 'DESC')->get()->where("agent_cash_at_hand", '<', $cash_at_hand)->toArray();
-            $geoagents = $this->getGeoBasedAgentsData($geo, '0', '', $date, $cash_at_hand,$orders_id);
+            $geoagents = $this->getGeoBasedAgentsData($geo, '0', $agent_tag, $date, $cash_at_hand,$orders_id);
             // this function give me the driver list accourding to who have liest task for the current date
             $distenseResult = $this->roundCalculation($geoagents, $finalLocation, $unit, $max_redius, $max_task);
             if (! empty($distenseResult)) {
@@ -3255,11 +3289,15 @@ class TaskController extends BaseController
                 $code->code,
                 $order_details->unique_id
             ]);
+
             $client = new GClient([
                 'content-type' => 'application/json'
             ]);
+
             $url = $order_details->call_back_url;
             $dispatch_traking_url = $dispatch_traking_url ?? '';
+
+
             $res = $client->get($url . '?dispatcher_status_option_id=' . $dispatcher_status_option_id . '&dispatch_traking_url=' . $dispatch_traking_url . '&type=' . $type);
             $response = json_decode($res->getBody(), true);
             if ($response) {
@@ -3692,6 +3730,7 @@ class TaskController extends BaseController
             $fileModel->status = 1;
             $fileModel->save();
             $data = Excel::import(new OrderImport($fileModel->id), $request->file('bulk_upload_file'));
+            // ImportTaskCsv::dispatch($request->file('bulk_upload_file'))->onQueue('import')->delay(now()->addSeconds(5));
             return response()->json([
                 'status' => 'Success',
                 'message' => 'Route Created successfully!'
@@ -3708,29 +3747,29 @@ class TaskController extends BaseController
                 'message' => 'Order Not Found'
             ]);
         }
-    
+
         $orderId = $request->input('id');
-    
+
         $pickup_task = Task::where(['order_id' => $orderId, 'task_type_id' => 1])->first();
         $dropoff_task = Task::where(['order_id' => $orderId, 'task_type_id' => 2])->first();
-    
+
         if (!$pickup_task || !$dropoff_task) {
             return response()->json([
                 'status' => 'Error',
                 'message' => 'Tasks not found for the given order'
             ]);
         }
-    
+
         $pickupLocation = Location::find($pickup_task->location_id);
         $dropoffLocation = Location::find($dropoff_task->location_id);
-    
+
         if (!$pickupLocation || !$dropoffLocation) {
             return response()->json([
                 'status' => 'Error',
                 'message' => 'Locations not found for the given tasks'
             ]);
         }
-    
+
         $response = [
             'status' => 'Success',
             'pickup_location' => [
@@ -3742,7 +3781,7 @@ class TaskController extends BaseController
                 'lng' => (float)$dropoffLocation->longitude,
             ],
         ];
-    
+
         return response()->json($response);
     }
 

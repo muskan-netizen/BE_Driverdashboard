@@ -52,6 +52,7 @@
                         'X-CSRF-Token': '{{ csrf_token() }}',
                     },
                     data: function (d) {
+                        console.log(d);
                         // d.search = $('input[type="search"]').val();
                         d.search = $('.agents-datatable').DataTable().search()
                         d.routesListingType = $('#routes-listing-status').val();
@@ -124,9 +125,7 @@
                         });
                         return routes;
                     }},
-                    {data: 'order_cost', name: 'order_cost', orderable: false, searchable: false, "mRender": function ( data, type, full ) {
-                        return '<button class="showaccounting btn btn-primary-outline action-icon setcolor" value="'+full.id+'">'+full.order_cost+'</button>';
-                    }},
+                  
                     {data: 'created_at', name: 'created_at', orderable: true, searchable: false},
                     // {data: 'updated_at', name: 'updated_at', orderable: true, searchable: false},
                     {data: 'action', name: 'action', orderable: true, searchable: false}
@@ -164,9 +163,7 @@
                         return routes;
                     }},
 
-                    {data: 'order_cost', name: 'order_cost', orderable: false, searchable: false, "mRender": function ( data, type, full ) {
-                        return '<button class="showaccounting btn btn-primary-outline action-icon setcolor" value="'+full.id+'">'+full.order_cost+'</button>';
-                    }},
+                   
                     {data: 'created_at', name: 'created_at', orderable: true, searchable: false},
                     // {data: 'updated_at', name: 'updated_at', orderable: true, searchable: false},
                     {data: 'action', name: 'action', orderable: true, searchable: false}
@@ -580,6 +577,7 @@
         });
 
         function submitProductImportForm() {
+            spinnerJS.showSpinner();
             var form = document.getElementById('submit_bulk_upload_task');
             var formData = new FormData(form);
             var data_uri = "{{route('tasks.importCSV')}}";
@@ -614,7 +612,8 @@
                     });
                     if (response.status == 'Success') {
                             $("#upload-bulk-tasks .close").click();
-                            location.reload();
+                            spinnerJS.hideSpinner();
+                             location.reload();
                     } else {
                         $("#upload-bulk-tasks .show_all_error.invalid-feedback").show();
                         $("#upload-bulk-tasks .show_all_error.invalid-feedback").text(response.message);
@@ -627,7 +626,8 @@
                 complete: function() {
                     $(".loader_box").hide();
                     setTimeout(function() {
-                        location.reload();
+                        spinnerJS.hideSpinner();
+                         location.reload();
                     }, 2000);
 
                 }

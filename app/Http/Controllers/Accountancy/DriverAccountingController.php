@@ -102,7 +102,7 @@ class DriverAccountingController extends BaseController
                     return '';    
                 })
                 ->editColumn('order_number', function ($orders) {
-                    return $orders->id ?? null;
+                    return $orders->order_number ?? null;
                 })
                 ->editColumn('delivery_boy_id', function ($orders) {
                     return $orders->driver_id ?? 'N/A';

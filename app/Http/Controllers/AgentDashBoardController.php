@@ -19,10 +19,11 @@ use App\Model\Countries;
 use App\Traits\Dispatcher;
 use App\Traits\DispatcherOrders;
 use App\Traits\googleMapApiFunctions;
+use App\Traits\GlobalFunction;
 use Log;
 class AgentDashBoardController extends Controller
 {
-    use googleMapApiFunctions, Dispatcher, DispatcherOrders;
+    use googleMapApiFunctions, Dispatcher, DispatcherOrders, GlobalFunction;
     
     /**
      * Display a listing of the resource.
@@ -153,7 +154,7 @@ class AgentDashBoardController extends Controller
     //function to load latest order/route and agent data with or without html
     public function dashboardTeamData_old(Request $request)
     {
-        return $this->homePage($request);
+        return $this->teamData($request);
         $userstatus = isset($request->userstatus)?$request->userstatus:2;
         $team_ids = isset($request->team_id)?$request->team_id:'';
         $is_load_html = isset($request->is_load_html)?$request->is_load_html:1;
@@ -621,11 +622,11 @@ class AgentDashBoardController extends Controller
 
     public function dashboardTeamData(Request $request)
     {
-    return $this->homePage($request);
+    return $this->teamData($request);
     }
     public function dashboardOrderData(Request $request)
     {
-    return $this->orderData($request);
+    return $this->orderDataEN($request);
     }
     public function dashboardOrderData_old1(Request $request)
     {

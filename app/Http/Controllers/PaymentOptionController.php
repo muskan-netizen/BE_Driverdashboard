@@ -28,7 +28,7 @@ class PaymentOptionController extends BaseController
      */
     public function index()
     {
-        $payment_codes = array('razorpay', 'stripe','vnpay','ccavenue', 'khalti','obo','paystack','livee','dpo');
+        $payment_codes = array('razorpay', 'stripe','vnpay','ccavenue', 'khalti','obo','paystack','livee', 'mastercard');
         $payout_codes = array('cash', 'stripe', 'bank_account_m_india','razorpay','obo','livee');
         $payOption = PaymentOption::whereIn('code', $payment_codes)->get();
         $payoutOption = PayoutOption::whereIn('code', $payout_codes)->get();

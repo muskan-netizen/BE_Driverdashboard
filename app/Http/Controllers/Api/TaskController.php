@@ -664,14 +664,14 @@ class TaskController extends BaseController
         $otpCreate      = ''; //substr(str_shuffle("0123456789abcdefghijklmnopqrstvwxyz"), 0, 5);
         $taskProof      = TaskProof::all();
 
-        if (!empty($orderId->tasktype->name) && $orderId->tasktype->name == 'Pickup' &&  $taskProof[0]->otp == 1) {
+        if(!empty($orderId->tasktype->name) &&   $orderId->tasktype->name == 'Pickup' && isset($taskProof[0]) && $taskProof[0]->otp == 1) {
             $otpCreate = rand(10000, 99999);
             Order::where('id', $orderId->order_id)->update(['completion_otp' => $otpCreate]);
             $otpEnabled = 1;
             if ($taskProof[0]->otp_requried == 1) {
                 $otpRequired = 1;
             }
-        } else if (!empty($orderId->tasktype->name) && $orderId->tasktype->name == 'Drop' && $taskProof[1]->otp == 1) {
+        } else if (!empty($orderId->tasktype->name) && $orderId->tasktype->name == 'Drop' && isset($taskProof[1]) && $taskProof[1]->otp == 1) {
             $otpCreate = rand(10000, 99999);
             Order::where('id', $orderId->order_id)->update([
                 'completion_otp' => $otpCreate
@@ -680,7 +680,7 @@ class TaskController extends BaseController
             if ($taskProof[1]->otp_requried == 1) {
                 $otpRequired = 1;
             }
-        } else if (!empty($orderId->tasktype->name) && $orderId->tasktype->name == 'Appointment' && $taskProof[2]->otp == 1) {
+        } else if (!empty($orderId->tasktype->name) && $orderId->tasktype->name == 'Appointment' && isset($taskProof[2]) && $taskProof[2]->otp == 1) {
             $otpCreate = rand(10000, 99999);
             Order::where('id', $orderId->order_id)->update([
                 'completion_otp' => $otpCreate
@@ -1512,6 +1512,8 @@ class TaskController extends BaseController
                 'no_seats_for_pooling' => isset($request->no_seats_for_pooling) ? $request->no_seats_for_pooling : 0,
                 'is_cab_pooling' => isset($request->is_cab_pooling) ? $request->is_cab_pooling : 0,
                 'tip_amount' => isset($request->tip_amount) ? $request->tip_amount : 0,
+                'flight_number'=>isset($request->flight_number) ? $request->flight_number : null,
+                'name_sign_board'=> isset($request->name_sign_board) ? $request->name_sign_board : null,
             ];
 
 

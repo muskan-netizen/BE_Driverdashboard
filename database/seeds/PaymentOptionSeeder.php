@@ -32,7 +32,7 @@ class PaymentOptionSeeder extends Seeder
         array('id' => '18', 'path' => '', 'code' => 'obo', 'title' => 'Obo', 'off_site' => '1', 'status' => '0'),
         array('id' => '19', 'path' => '', 'code' => 'livee', 'title' => 'Livee', 'off_site' => '1', 'status' => '1'),
         array('id' => '20', 'path' => '', 'code' => 'dpo', 'title' => 'Direct Pay Online', 'off_site' => '1', 'status' => '0'),
-
+        array('id' => '21', 'path' => '', 'code' => 'mastercard', 'title' => 'Mastercard', 'off_site' => 1, 'status' => '1'),
 
       );
 

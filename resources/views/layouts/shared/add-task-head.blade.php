@@ -248,11 +248,9 @@ button.close.imagepri_close {
 	background: #555;
 }
 </style>
-<div id="task-modal-header" class="modal fade" tabindex="-1"
-	role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"
-	style="display: none; font-size: 14px;">
+<div id="task-modal-header" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;font-size: 14px;">
 	<div class="modal-dialog modal-dialog-top modal-xl">
-		<div class="modal-content" style="">
+		<div class="modal-content"  style="max-height: 90vh; overflow-y: auto;">
 			<div class="modal-header align-items-center border-0 mb-md-0">
 				<h4 class="page-title m-1">{{__("Add Route")}}</h4>
 				<button type="button" class="close" data-dismiss="modal"
@@ -615,14 +613,27 @@ session('preferences.map_key_1'):'kdsjhfkjsdhfsf'; $theme =
                         vehicle_type: vehicle_type
                     },
                     success: function(data) {
-                        response(data);
+                        if (data.length === 0) {
+                            response([{ label: "No driver found", value: "No driver found" }]);
+                        } else {
+                            response(data);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error: ", status, error);
                     }
                 });
             },
             select: function(event, ui) {
-                // Set selection
-                $('#task-modal-header #searchDriver').val(ui.item.label); // display the selected text
-                $('#task-modal-header #agentid').val(ui.item.value); // save selected id to input
+                if (ui.item.value === "No driver found") {
+                    $('#task-modal-header #searchDriver').val(""); // clear the input text
+                    $('#task-modal-header #agentid').val(""); // clear the hidden input
+                    return false;
+                } else {
+                    // Set selection
+                    $('#task-modal-header #searchDriver').val(ui.item.label); // display the selected text
+                    $('#task-modal-header #agentid').val(ui.item.value); // save selected id to input
+                }
                 return false;
             }
         });

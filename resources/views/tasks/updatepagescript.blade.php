@@ -697,6 +697,12 @@ $(document).ready(function(){
 
 
         });
+        
+        $('#datetime-datepicker').flatpickr({
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            minDate: "today",
+        });
     });
 
 function loadMap(autocompletesWraps){

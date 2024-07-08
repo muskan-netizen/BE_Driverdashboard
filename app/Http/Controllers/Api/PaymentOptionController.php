@@ -178,18 +178,18 @@ class PaymentOptionController extends BaseController{
                 $request->request->add(['wallet_amount' => $amount, 'transaction_id' => $transaction_id]);
                         $walletController = new WalletController();
                         $walletController->creditAgentWallet($request);
-                        return $this->successResponse('Payment Success', 200);
+                        return $this->success('Payment Success', 200);
             } 
         } catch (Exception $ex) {
-            return $this->errorResponse($ex->getMessage(), 400);
+            return $this->error($ex->getMessage(), 400);
         }
     }
     public function sdkFailedPayment(Request $request)
     {
         try {
-            return $this->errorResponse(__('Payment failed'), 400);
+            return $this->error(__('Payment failed'), 400);
         } catch (Exception $ex) {
-            return $this->errorResponse($ex->getMessage(), 400);
+            return $this->error($ex->getMessage(), 400);
         }
     }
 

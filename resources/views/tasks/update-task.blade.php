@@ -562,7 +562,7 @@ display:none;
                     @if($task->status!='completed')
                     <div class="row">
                         <div class="col-md-12">
-                            <button type="submit" class="btn btn-block btn-lg btn-blue waves-effect waves-light submitUpdateTaskHeader">{{__('Submit')}}</button>
+                            <button type="submit" class="btn btn-block btn-lg btn-blue waves-effect waves-light submitUpdateTaskHeader mb-4">{{__('Submit')}}</button>
                         </div>
                     </div>
                     @endif

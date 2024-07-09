@@ -715,9 +715,9 @@ trait Dispatcher
             $response['status'] = "success";
             // $response['client_code'] = $user->code;
             // $response['userstatus'] = $userstatus;
-            $response['agents'] = isset($agents)? $agents->toArray():[];
+            // $response['agents'] = $agents;
             // $response['routedata'] = $uniquedrivers;
-            // $response['agents'] = [];
+            $response['agents'] = [];
             $response['teams'] = $teams;
             $response['defaultCountryLongitude'] = $defaultCountryLongitude;
             $response['defaultCountryLatitude'] = $defaultCountryLatitude;

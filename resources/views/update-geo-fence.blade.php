@@ -210,9 +210,9 @@
                                     <button type="button"
                                         class="btn btn-block btn-outline-primary waves-effect waves-light mb-0">Cancel</button>
                                 </div>--}}
-                                <div class="col-md-6">
+                                <div class="col-md-6 pb-4">
                                     <button type="submit"
-                                        class="btn btn-block btn-primary waves-effect waves-light">Save</button>
+                                        class="btn btn-block btn-primary waves-effect waves-light mb-4">Save</button>
                                 </div>
                             </div>
                         </div>

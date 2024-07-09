@@ -53,10 +53,10 @@ display:none;
             </div>
         </div>
         <!-- start page title -->
-        <input type="hidden" id="order-id" value="{{ $task->id }}">
         <!-- end page title -->
         {!! Form::model($task, ['route' => ['tasks.update', $task->id], 'enctype' => 'multipart/form-data', 'id'=>'taskFormHeader']) !!}
         {{ method_field('PATCH') }}
+        <input type="hidden" id="order-id" value="{{ $task->id }}">
         @csrf
         <div class="row">
             <div class="col-sm-12 col-xl-9 col-md-7">

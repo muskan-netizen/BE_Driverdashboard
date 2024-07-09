@@ -2791,13 +2791,12 @@ body.light .card.main-table-card div#pricing-datatable_length label:after{
     .login-form ul li{
         margin-bottom:0
     }
-    body.light .custom-body-table .dt-buttons.btn-group.flex-wrap{
-        position:absolute;
-        margin-right:0!important;
-        z-index:1;
-        right:20px;
-        left:auto!important;
-        top:1%
+    body.light .custom-body-table .dt-buttons.btn-group.flex-wrap {
+        position: absolute;
+        margin-right: 0!important;
+        z-index: 1;
+        right: 270px;
+        top: 4%;
     }
     body.light .custom-body-table .dataTables_scroll{
         margin-top:40px

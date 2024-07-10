@@ -1154,7 +1154,7 @@ div#scrollbar .side_head>.d-flex{
         margin-top:60px
     }
     body.light .card-body.custom-body-table div#agents-datatable_filter label{
-        top:5%!important
+        top:17%!important
     }
     body.light .custom-body-table .dataTables_scroll{
         margin-top:0!important
@@ -2791,13 +2791,12 @@ body.light .card.main-table-card div#pricing-datatable_length label:after{
     .login-form ul li{
         margin-bottom:0
     }
-    body.light .custom-body-table .dt-buttons.btn-group.flex-wrap{
-        position:absolute;
-        margin-right:0!important;
-        z-index:1;
-        right:20px;
-        left:auto!important;
-        top:1%
+    body.light .custom-body-table .dt-buttons.btn-group.flex-wrap {
+        position: absolute;
+        margin-right: 0!important;
+        z-index: 1;
+        right: 270px;
+        top: 17%;
     }
     body.light .custom-body-table .dataTables_scroll{
         margin-top:40px
@@ -3318,7 +3317,12 @@ body .profile-circle {
 body .light .navbar-custom .topnav-menu .nav-link span {
     font-size: 14px;
 }
-
+.navigation_btn.optimize_btn {
+    cursor: pointer;
+    display: block;
+    padding: 5px 0  0;
+    font-weight: 600;
+}
 /* html, body{
     overflow-y:hidden !important;
 }

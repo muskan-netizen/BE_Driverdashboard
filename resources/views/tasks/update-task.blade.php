@@ -316,7 +316,7 @@ display:none;
                                                     <div class="form-group vehicle_type_select mt-1 mb-1">
                                                         <select class="vehicle_type" id="vehicle_type" name="vehicle_type[]" style="width:100%;">
                                                             @foreach ($vehicle_type as $vehicle)
-                                                                <option value="{{$vehicle->id}}">{{$vehicle->name}}</option>
+                                                                <option value="{{$vehicle->id}}" {{ $vehicle->id == $item->vehicle_type_id ? 'selected' : '' }}>{{$vehicle->name}}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>

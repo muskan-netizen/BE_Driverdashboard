@@ -176,19 +176,19 @@ class ActivityController extends BaseController
                         return $a['task_order'] <=> $b['task_order'];
                     });
                 }
-                foreach($tasks as $key => $task){
-                    if(!empty($task['assigned_time'])){
-                        $tasks[$key]['assigned_time'] = $this->getConvertUTCToLocalTime($task['assigned_time'], $client_code->timezone);
-                    }
-                    if(!empty($task['order']['order_time'])){
-                        $tasks[$key]['order']['order_time'] = $this->getConvertUTCToLocalTime($task['order']['order_time'], $client_code->timezone);
-                    }
-                }
+                // foreach($tasks as $key => $task){
+                //     if(!empty($task['assigned_time'])){
+                //         $tasks[$key]['assigned_time'] = $this->getConvertUTCToLocalTime($task['assigned_time'], $client_code->timezone);
+                //     }
+                //     if(!empty($task['order']['order_time'])){
+                //         $tasks[$key]['order']['order_time'] = $this->getConvertUTCToLocalTime($task['order']['order_time'], $client_code->timezone);
+                //     }
+                // }
             }
 
-            foreach($tasks as $key => $task){
-                $tasks[$key]['order']['order_time'] =  Carbon::parse( $task['order']['order_time'])->setTimezone($client_code->timezone)->toDateTimeString();
-            }
+            // foreach($tasks as $key => $task){
+            //     $tasks[$key]['order']['order_time'] =  Carbon::parse( $task['order']['order_time'])->setTimezone($client_code->timezone)->toDateTimeString();
+            // }
         }
 
         return response()->json([

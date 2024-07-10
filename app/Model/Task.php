@@ -15,6 +15,7 @@ class Task extends Model
         'location_id',
         'appointment_duration',
         'pricing_rule_id',
+        'vehicle_type_id',
         'distance',
         'assigned_time',
         'accepted_time',

@@ -1807,7 +1807,8 @@ class TaskController extends BaseController
                 'assigned_time' => $notification_time,
                 'barcode' => $request->barcode[$key],
                 'quantity' => $request->quantity[$key],
-                'alcoholic_item' => ! empty($request->alcoholic_item[$key]) ? $request->alcoholic_item[$key] : ''
+                'alcoholic_item' => ! empty($request->alcoholic_item[$key]) ? $request->alcoholic_item[$key] : '',
+                'vehicle_type_id' => $request->vehicle_type[$key]
             ];
             $task = Task::create($data);
             $dep_id = $task->id;
@@ -3201,7 +3202,8 @@ class TaskController extends BaseController
                     'vendor_id' => ! empty($request->vendor_id[$key]) ? $request->vendor_id[$key] : '',
                     'quantity' => $request->quantity[$key],
                     'assigned_time' => $notification_time,
-                    'alcoholic_item' => ! empty($request->alcoholic_item[$key]) ? $request->alcoholic_item[$key] : ''
+                    'alcoholic_item' => ! empty($request->alcoholic_item[$key]) ? $request->alcoholic_item[$key] : '',
+                    'vehicle_type_id' => $request->vehicle_type[$key]
                 ];
                 if (checkColumnExists('tasks', 'warehouse_id')) {
                     $data['warehouse_id'] = $request->warehouse_id[$key];

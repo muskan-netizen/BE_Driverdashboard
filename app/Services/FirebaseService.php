@@ -61,7 +61,7 @@ class FirebaseService
         }
     }
 
-    public static function sendNotification($data) //$token, $title, $body
+    public static function sendNotification($data,$item = null) //$token, $title, $body
     {
         $client = new Client();
 
@@ -111,7 +111,10 @@ class FirebaseService
                         'channel_id' => $data['notification']['android_channel_id'] ?? '',
                     ],
                 ];
-        
+         
+
+                if(empty($item))
+                {
                 // Process the data section, converting specific fields to strings
                 //$newData['data'] = [];
                 foreach ($data['data'] as $key => $value) {
@@ -122,6 +125,17 @@ class FirebaseService
                         //$newData['data'][$key] = $value;
                     //}
                 }
+                }
+                else{
+
+                    foreach ($item as $key => $value) {
+                            $message['data'][$key] = (string)$value;
+                          $newData['data'][$key] = $value;
+                        
+                    }
+    
+                }
+              
 
                 //$messages[] = $message;
 

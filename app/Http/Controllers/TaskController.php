@@ -892,7 +892,8 @@ class TaskController extends BaseController
                     'assigned_time' => $notification_time ?? '',
                     'barcode' => $request->barcode[$key] ?? '',
                     'quantity' => $request->quantity[$key] ?? '',
-                    'alcoholic_item' => ! empty($request->alcoholic_item[$key]) ? $request->alcoholic_item[$key] : ''
+                    'alcoholic_item' => ! empty($request->alcoholic_item[$key]) ? $request->alcoholic_item[$key] : '',
+                    'vehicle_type_id' => $request->vehicle_type[$key]
                 ];
 
 
@@ -1758,7 +1759,7 @@ class TaskController extends BaseController
         // here is task save code is started
 
         $dep_id = null; // this is used as dependent task id
-
+       
         foreach ($request->task_type_id as $key => $value) {
             $taskcount ++;
             if (isset($request->address[$key])) {
@@ -1795,7 +1796,7 @@ class TaskController extends BaseController
             array_push($longitude, $location->longitude);
 
             $task_appointment_duration = empty($request->appointment_date[$key]) ? '0' : $request->appointment_date[$key];
-
+            
             $data = [
                 'order_id' => $orders->id,
                 'task_type_id' => $value,

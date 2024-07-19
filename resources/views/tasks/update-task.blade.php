@@ -42,7 +42,7 @@ display:none;
         <div class="row">
             <div class="col-md-12">
                 <div class="page-title-box">
-                    <h4 class="page-title">{{__('Edit Route')}}    
+                    <h4 class="page-title">{{__('Edit Route')}}
 
                     <a href="{{ route('tasks.index') }}" class="float-right">
                     <button type="button" class="btn btn-blue" title="Back To List" data-keyboard="false"><span><i class="mdi mdi-chevron-double-left mr-1"></i> Back</span></button>
@@ -60,7 +60,7 @@ display:none;
         @csrf
         <div class="row">
             <div class="col-sm-12 col-xl-9 col-md-7">
-                <div class="card-box p-3">            
+                <div class="card-box p-3">
                     <div class="row d-flex">
                         <div class="col-sm-12 col-xl-4 col-md-12" style="border-right: 1px solid #ccc;">
                             @csrf
@@ -77,7 +77,7 @@ display:none;
                                 </div>
                             </div>
                             @php
-                            
+
                                 $order = Carbon::createFromFormat('Y-m-d H:i:s', $task->order_time, 'UTC');
                                 // $order->setTimezone(isset(Auth::user()->timezone) ? Auth::user()->timezone : 'Asia/Kolkata');
                                 $order->setTimezone($client_timezone);
@@ -153,7 +153,7 @@ display:none;
                                 <input type="hidden" id="check-drop-barcode" value="{{ (!empty($task_proofs[1]->barcode_requried) ? $task_proofs[1]->barcode_requried : 0)}}">
                                 <input type="hidden" id="check-appointment-barcode" value="{{ (!empty($task_proofs[2]->barcode_requried) ? $task_proofs[2]->barcode_requried : 0)}}">
                             </div>
-                            
+
 
                             <h4 class="header-title mb-2">{{__("Meta Data")}} <a href="javascript:void(0)" class="edit-icon-float-right"> <i class="mdi mdi-chevron-down"></i></a></h4>
                             <div class="meta_data_task_div" style="display:{{($task->task_description!='' || $task->images_array!='' > 0)?'block':'none'}};">
@@ -174,7 +174,7 @@ display:none;
                                         </span>
                                     </div>
                                 </div>
-                                
+
                                 <div class="row mb-2">
                                     <div class="col-md-12">
                                         <input type="file" data-plugins="dropify" class="dropify" name="file[]" multiple data-height="300" accept="image/*"/>
@@ -194,7 +194,7 @@ display:none;
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="row mb-2">
                                 <div class="col-md-12"  id="make_modelInput">
                                     {!! Form::text('call_back_url', $task->call_back_url, ['class' => 'form-control rec', 'placeholder' => __('Call Back URL')]) !!}
@@ -226,7 +226,7 @@ display:none;
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <span class="span1 tagspan">{{__("Please select atlest one tag for ".getAgentNomenclature())}}</span>
                             <div class="tags">
                                 <div class="row">
@@ -327,7 +327,7 @@ display:none;
                                                 <div class="col-md-3">
                                                   @if(($item->task_type_id == 1) && (count($item->orderVendorProducts) > 0))
                                                  <h6 id="#show-product_{{$item->id}}" class="product-modal show-product text-center text-primary" style="cursor: pointer;" onclick="showProductDetail({{$item->id}})"  data-id="{{ $item->id}}">Show Product Details</h6>
-                                                    
+
                                                       @endif
                                                     <div class="form-group select_category-field mt-1 mb-1" style="display:{{$style}};">
                                                         <select class="form-control category_id" name="category_id" id="category_id">
@@ -355,8 +355,8 @@ display:none;
                                                                     }
                                                                 @endphp
                                                                 @if(($item->task_type_id == 1) && (count($item->orderVendorProducts) > 0))
-                                                                
-                                                             
+
+
 
                                                             <div class="warehouse-fields" >
                                                                 <div class="form-group mb-1 select_warehouse-field">
@@ -364,7 +364,7 @@ display:none;
                                                                         <option value="{{$item->vendor_id}}" selected>{{ !empty($item->vendor) ? $item->vendor->name:''}}</option>
                                                                     </select>
                                                                     <select class="form-control warehouse d-none" name="warehouse_id[]" id="warehouse">
-                                                                        <option value="">Select Warehouse</option> 
+                                                                        <option value="">Select Warehouse</option>
                                                                         @foreach($warehouses as $warehouse)
                                                                         <option value="{{$warehouse->id}}">{{$warehouse->name}}</option>
                                                                         @endforeach
@@ -394,7 +394,7 @@ display:none;
                                                                         {!! Form::text('post_code[]', null, ['class' => 'form-control address postcode','placeholder' => __('Post Code'),'id'=>'add'.$newcount.'-postcode']) !!}
                                                                     </div>
                                                                 </div>
-                                                               
+
                                                                 @php
                                                                     if($item->warehouse_id != ""){
                                                                         $style = "block";
@@ -421,10 +421,10 @@ display:none;
                                                                     <h6 class="or-text text-center">OR</h6>
                                                                     <h6 class="choose_warehouse text-center text-primary" style="text-decoration: underline;cursor: pointer;" data-id="{{ ($keys+1)}}">{{$choose_text}}</h6>
                                                                 @endif
-                                                                
-                                                                @endif 
+
+                                                                @endif
                                                             </div>
-                                                           
+
                                                             <div class="alContactOther col-6">
                                                                 <div class="row">
                                                                     <div class="col-6 alRightBorder">
@@ -445,7 +445,7 @@ display:none;
                                                                             <div class="form-group mb-1 col-12">
                                                                                 {!! Form::text('barcode[]', $item->barcode, ['class' => 'form-control barcode','placeholder' => __('Task Barcode')]) !!}
                                                                                 {!! Form::hidden('vendor_id[]', $item->vendor_id, ['class' => 'form-control vendor_id']) !!}
-                                                                            
+
                                                                             </div>
                                                                             <div class="form-group mb-1 col-12">
                                                                                 {!! Form::text('quantity[]', $item->quantity, ['class' => 'form-control quantity onlynumber','placeholder' => __('Quantity')]) !!}
@@ -461,13 +461,13 @@ display:none;
                                                     </div>
                                                     @php $vendor_data = []; @endphp
                                                     @foreach($item->orderVendorProducts as $product )
-                                                    
+
                                                       {!! Form::hidden('product_variant_id[]', $product->product_id, ['class' => 'form-control product_id']) !!}
 
                                                       {!! Form::hidden('product_vendor_id[]', $product->vendor_id, ['class' => 'form-control product_vendor_id']) !!}
-                                                 
+
                                                       {!! Form::hidden('product_quantity[]', $product->quantity, ['class' => 'form-control product_quantity']) !!}
-                                                    
+
 
                                                     @endforeach
                                                 @if((count($item->orderVendorProducts) == 0))
@@ -499,13 +499,13 @@ display:none;
                                                                                 id="{{ $keys }}{{ $items->id }}{{ 12 }}"
                                                                                 name="old_address_id{{ $keys != 0 ? $keys : '' }}"
                                                                                 value="{{ $items->id }}"
-                                                                                data-srtadd="{{ $items->short_name }}" 
-                                                                                data-adr="{{ $items->address }}" 
-                                                                                data-lat="{{ $items->latitude }}" 
-                                                                                data-long="{{ $items->longitude }}" 
-                                                                                data-pstcd="{{ $items->post_code }}" 
-                                                                                data-flat_no="{{ $items->flat_no }}" 
-                                                                                data-emil="{{ $items->email }}" 
+                                                                                data-srtadd="{{ $items->short_name }}"
+                                                                                data-adr="{{ $items->address }}"
+                                                                                data-lat="{{ $items->latitude }}"
+                                                                                data-long="{{ $items->longitude }}"
+                                                                                data-pstcd="{{ $items->post_code }}"
+                                                                                data-flat_no="{{ $items->flat_no }}"
+                                                                                data-emil="{{ $items->email }}"
                                                                                 data-ph="{{ $items->phone_number }}"
                                                                                 {{ $item->location_id == $items->id ? 'checked' : '' }}
                                                                                 class="custom-control-input redio old-select-address">
@@ -538,7 +538,7 @@ display:none;
                                                                         </div>
                                                                     <?php }
                                                                 } ?>
-                                                                    
+
                                                             @php $maincount++; @endphp
                                                         </div>
                                                     </div>
@@ -569,7 +569,7 @@ display:none;
                 </div>
             </div>
             <div class="col-sm-12 col-xl-3 col-md-5">
-                <div class="card-box p-3">            
+                <div class="card-box p-3">
                     <div class="row">
                         <div class="col-md-12">
                             <h4 class="header-title mb-2">{{__("Order Tracking")}}</h4>
@@ -583,12 +583,12 @@ display:none;
                                     </label>
                                 </div>
                                 </div>
-                            </div>                  
+                            </div>
                             <div class="row no-gutters">
                                 <div class="col-12">
                                     <div class="map_box">
                                         <div id="map_canvas"></div>
-                                        
+
                                     </div>
                                 </div>
                             </div>
@@ -611,7 +611,7 @@ display:none;
                                                         <div class="col-lg-6 d-flex align-items-center address_box mb-3">
                                                             <i class="fas fa-map-marker-alt"></i>
                                                             <div class="right_text">
-                                                                <h4>{{ $task_type_array[$item->task_type_id - 1] }}</h4>
+                                                                <h4>{{ @$task_type_array[$item->task_type_id - 1] }}</h4>
                                                                 <p>{{ $item->address }}</p>
                                                             </div>
                                                         </div>
@@ -631,12 +631,12 @@ display:none;
                                             class="fas fa-comment position-absolute"></i><span>{{__('Message')}}</span></a>
                                 </div>
                             </div>
-                             
-                        </div>
-                    </div>   
-                </div>                                                
 
-                <div class="card-box p-3">            
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-box p-3">
                     <div class="row">
                         <div class="col-md-12">
                             <h4 class="header-title mb-2">{{__("Route Proofs")}}</h4>
@@ -644,8 +644,8 @@ display:none;
                                 @foreach($task->task as $keys => $item)
                                 <div class="col-md-12 all-remove">
                                     <div class="task-card">
-                                        <div class="assigned-block bg-transparent"><h5>      
-                                        @if($item->task_type_id == 1)    
+                                        <div class="assigned-block bg-transparent"><h5>
+                                        @if($item->task_type_id == 1)
                                         {{__('Pickup Task')}}
                                         @elseif($item->task_type_id == 2)
                                         {{__('Drop Off Task')}}
@@ -655,8 +655,8 @@ display:none;
                                         </h5>
                                         </div>
                                         <div class="row">
-                                        @if(($item->proof_image != '' && $item->proof_image != NULL) || ($item->proof_signature != '' && $item->proof_signature != NULL) || ($item->note != '' && $item->note != NULL))  
-                                            
+                                        @if(($item->proof_image != '' && $item->proof_image != NULL) || ($item->proof_signature != '' && $item->proof_signature != NULL) || ($item->note != '' && $item->note != NULL))
+
                                             @if($item->proof_image != '' && $item->proof_image != NULL)
                                             <div class="col-md-12">
                                                 <label class="mb-1">{{__('Image')}}</label>
@@ -733,7 +733,7 @@ display:none;
             </div>
         </div>
 
-        
+
         {!! Form::close() !!}
 
     </div>
@@ -768,7 +768,7 @@ display:none;
             </div>
         </div>
     </div>
-    
+
     <div id="show-product-modal" class="modal fade" role="dialog">
        <div class="modal-dialog">
 
@@ -778,7 +778,7 @@ display:none;
         <h4 class="modal-title text-dark product-title"></h4>
       </div>
       <div class="modal-body product-body">
-      
+
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -797,7 +797,7 @@ display:none;
     <script src="{{ asset('tracking/js/common.js') }}"></script>
     <script>
         var savedFileListArray = {!! json_encode($images) !!};
-    
+
 
     </script>
     @include('tasks.updatepagescript')

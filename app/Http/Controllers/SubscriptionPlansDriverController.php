@@ -42,6 +42,8 @@ class SubscriptionPlansDriverController extends BaseController
      */
     public function getSubscriptionPlans(Request $request, $domain = '')
     {
+        $preference  = ClientPreference::where('client_id', Auth::user()->code)->first();
+
         $sub_plans = SubscriptionPlansDriver::orderBy('id', 'asc')->get();
         // $featuresList = SubscriptionFeaturesListUser::where('status', 1)->get();
         $user_subscriptions = SubscriptionInvoicesDriver::groupBy('driver_id')->get();
@@ -68,7 +70,7 @@ class SubscriptionPlansDriverController extends BaseController
         //         $plan->features = $features;
         //     }
         // }
-        return view('subscriptions/subscriptionPlansDriver')->with(['subscription_plans'=>$sub_plans, 'subscribed_users_count'=>$subscribed_users_count, 'subscribed_users_percentage'=>$subscribed_users_percentage]);
+        return view('subscriptions/subscriptionPlansDriver')->with(['subscription_plans'=>$sub_plans, 'subscribed_users_count'=>$subscribed_users_count, 'subscribed_users_percentage'=>$subscribed_users_percentage,'preference'=>$preference]);
     }
 
     /**
@@ -79,18 +81,32 @@ class SubscriptionPlansDriverController extends BaseController
      */
     public function saveSubscriptionPlan(Request $request, $domain = '', $slug='')
     {
+        $preference  = ClientPreference::where('client_id', Auth::user()->code)->first();
+
         $message = 'added';
-        $rules = array(
-            'title' => 'required|string|max:50',
-            // 'features' => 'required',
-            'price' => 'required',
-            'frequency' => 'required',
-            'driver_type' => 'required',
-            'commission_fixed' => 'required',
-            'commission_percentage' => 'required',
-            // 'period' => 'required',
-            // 'sort_order' => 'required'
-        );
+        if($preference->driver_subscription){
+            $rules = array(
+                'title' => 'required|string|max:50',
+                'price' => 'required',
+                'frequency' => 'required',
+                'driver_type' => 'required',
+                'period_of_validity' => 'required',
+                'no_of_rides'=>'required',
+                'type_of_sub'=>'required',
+            );
+        }else{
+            $rules = array(
+                'title' => 'required|string|max:50',
+                // 'features' => 'required',
+                'price' => 'required',
+                'frequency' => 'required',
+                'driver_type' => 'required',
+                'commission_fixed' => 'required',
+                'commission_percentage' => 'required',
+                // 'period' => 'required',
+                // 'sort_order' => 'required'
+            );
+        }
         if(!empty($slug)){
             $plan = SubscriptionPlansDriver::where('slug', $slug)->firstOrFail();
             $rules['title'] = $rules['title'].',id,'.$plan->id;
@@ -107,18 +123,33 @@ class SubscriptionPlansDriverController extends BaseController
             $plan = new SubscriptionPlansDriver;
             $plan->slug = uniqid();
         }
-        $plan->title = $request->title;
-        $plan->price = $request->price;
-        // $plan->period = $request->period;
-        $plan->frequency = $request->frequency;
-        $plan->driver_type = $request->driver_type;
-        $plan->driver_commission_fixed = $request->commission_fixed;
-        $plan->driver_commission_percentage = $request->commission_percentage;
-        // $plan->sort_order = $request->sort_order;
-        $plan->status = ($request->has('status') && $request->status == '1') ? '1' : '0';
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $plan->image = Storage::disk('s3')->put($this->folderName, $file,'public');
+        if($preference->driver_subscription){
+            $plan->title = $request->title;
+            $plan->price = $request->price;
+            $plan->period = $request->period_of_validity;
+            $plan->frequency = $request->frequency;
+            $plan->driver_type = $request->driver_type;
+            $plan->no_of_rides = $request->no_of_rides;
+            $plan->type_of_sub = $request->type_of_sub;
+            $plan->status = ($request->has('status') && $request->status == '1') ? '1' : '0';
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $plan->image = Storage::disk('s3')->put($this->folderName, $file,'public');
+            }
+        }else{
+            $plan->title = $request->title;
+            $plan->price = $request->price;
+            // $plan->period = $request->period;
+            $plan->frequency = $request->frequency;
+            $plan->driver_type = $request->driver_type;
+            $plan->driver_commission_fixed = $request->commission_fixed;
+            $plan->driver_commission_percentage = $request->commission_percentage;
+            // $plan->sort_order = $request->sort_order;
+            $plan->status = ($request->has('status') && $request->status == '1') ? '1' : '0';
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $plan->image = Storage::disk('s3')->put($this->folderName, $file,'public');
+            }
         }
         if( ($request->has('description')) && (!empty($request->description)) ){
             $plan->description = $request->description;
@@ -160,6 +191,8 @@ class SubscriptionPlansDriverController extends BaseController
      */
     public function editSubscriptionPlan(Request $request, $domain = '', $slug='')
     {
+        $preference  = ClientPreference::where('client_id', Auth::user()->code)->first();
+
         $plan = SubscriptionPlansDriver::where('slug', $slug)->firstOrFail();
         // $planFeatures = SubscriptionPlanFeaturesUser::select('feature_id', 'percent_value')->where('subscription_plan_id', $plan->id)->get();
         // $featuresList = SubscriptionFeaturesListUser::where('status', 1)->get();
@@ -167,7 +200,7 @@ class SubscriptionPlansDriverController extends BaseController
         // foreach($planFeatures as $feature){
         //     $subPlanFeaturesIds[] = $feature->feature_id;
         // }
-        $returnHTML = view('subscriptions.edit-subscriptionPlanDriver')->with(['plan' => $plan])->render();
+        $returnHTML = view('subscriptions.edit-subscriptionPlanDriver')->with(['plan' => $plan,'preference'=>$preference])->render();
         return response()->json(array('success' => true, 'html'=>$returnHTML));
     }
 

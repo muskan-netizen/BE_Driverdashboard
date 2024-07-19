@@ -109,7 +109,7 @@ class SendPushNotification
                         try{
                             $fcm_server_key = !empty($client_preferences->fcm_server_key)? $client_preferences->fcm_server_key : 'null';
                             $fcmObj = new Fcm($fcm_server_key);
-                            if($item['is_particular_driver'] != 2 ){
+                            if(isset($item['is_particular_driver']) && $item['is_particular_driver'] != 2 ){
                                 $fcm_store = $fcmObj->to([$item['device_token']]) // $recipients must an array
                                         ->priority('high')
                                         ->timeToLive(0)
@@ -139,6 +139,7 @@ class SendPushNotification
                                     'body' => 'Pickup your order #'.$item['order_id'],
                                 ])
                                 ->send();
+                            \Log::info('$fcm_store',[$fcm_store]);
                             }
                         }
                         catch(Exception $e){

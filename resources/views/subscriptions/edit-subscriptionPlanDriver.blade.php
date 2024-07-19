@@ -55,10 +55,10 @@
                         <div class="form-group">
                             <label for="">{{ __("Frequency") }}</label>
                             <select class="form-control" name="frequency" value="{{ $plan->frequency }}" required="required">
-                                <option value="days" {{ $plan->frequency == 'days' ? 'selected' : '' }}>{{ __("Days") }}</option>
-                                <option value="weeks" {{ $plan->frequency == 'weeks' ? 'selected' : '' }}>{{ __("Weeks") }}</option>
-                                <option value="months" {{ $plan->frequency == 'months' ? 'selected' : '' }}>{{ __("Months") }}</option>
-                                <option value="years" {{ $plan->frequency == 'years' ? 'selected' : '' }}>{{ __("Years") }}</option>
+                                <option value="day" {{ $plan->frequency == 'day' ? 'selected' : '' }}>{{ __("Days") }}</option>
+                                <option value="week" {{ $plan->frequency == 'week' ? 'selected' : '' }}>{{ __("Weeks") }}</option>
+                                <option value="month" {{ $plan->frequency == 'month' ? 'selected' : '' }}>{{ __("Months") }}</option>
+                                <option value="year" {{ $plan->frequency == 'year' ? 'selected' : '' }}>{{ __("Years") }}</option>
                             </select>
                         </div>
                     </div>

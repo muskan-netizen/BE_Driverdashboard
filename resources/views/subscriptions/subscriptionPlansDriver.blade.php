@@ -348,10 +348,10 @@
                                             <label for="">{{ __("Frequency") }}</label>
                                             <select class="form-control" name="frequency" id="frequency" onchange="getTimePeriod()" required="required">
                                                 <option disabled    selected>Select Frequency</option>
-                                                <option value="days">{{ __("Days") }}</option>
-                                                <option value="weeks">{{ __("Weeks") }}</option>
-                                                <option value="months">{{ __("Months") }}</option>
-                                                <option value="years">{{ __("Years") }}</option>
+                                                <option value="day">{{ __("Day") }}</option>
+                                                <option value="week">{{ __("Week") }}</option>
+                                                <option value="month">{{ __("Month") }}</option>
+                                                <option value="year">{{ __("Year") }}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -608,16 +608,16 @@
         var label = "";
 
         switch(selected_frequency) {
-            case "days":
+            case "day":
                 label = "Plan validity in Days";
                 break;
-            case "weeks":
+            case "week":
                 label = "Plan validity in Weeks";
                 break;
-            case "months":
+            case "month":
                 label = "Plan validity in Months";
                 break;
-            case "years":
+            case "year":
                 label = "Plan validity in Years";
                 break;
             default:

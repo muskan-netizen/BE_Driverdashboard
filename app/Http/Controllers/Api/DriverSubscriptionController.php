@@ -321,16 +321,16 @@ class DriverSubscriptionController extends BaseController
                     }
                 }
 
-                if($subscription_plan->frequency == 'days'){
+                if($subscription_plan->frequency == 'day'){
                     $end_date = Carbon::parse($start_date)->addDays($number_of_days)->toDateString();
                 }
-                elseif($subscription_plan->frequency == 'weeks'){
-                    $number_of_days=$number_of_days*7;//converting weeks into days
+                elseif($subscription_plan->frequency == 'week'){
+                    $number_of_days=$number_of_days*7;  //converting weeks into days
                     $end_date = Carbon::parse($start_date)->addDays($number_of_days)->toDateString();
-                }elseif($subscription_plan->frequency == 'months'){
+                }elseif($subscription_plan->frequency == 'month'){
                     $number_of_months=$number_of_days;
                     $end_date = Carbon::parse($start_date)->addMonths($number_of_months)->subDays(1)->toDateString();
-                }elseif($subscription_plan->frequency == 'years'){
+                }elseif($subscription_plan->frequency == 'year'){
                     $number_of_years=$number_of_days;
                     $end_date = Carbon::parse($start_date)->addYears($number_of_years)->subDays(1)->toDateString();
                 }

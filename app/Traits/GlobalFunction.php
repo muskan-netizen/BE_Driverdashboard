@@ -116,10 +116,10 @@ trait GlobalFunction{
                         $query->whereHas('subscriptionPlan', function ($query) use($current_date) {
                             $query->where('end_date','>=',$current_date);
                         });
-
                     })->get();
                     if($geoagents_data){
-                        foreach ($geoagents_data as $id => $data) {
+                        \Log::info("got Subscribed Agent Data");
+                        foreach($geoagents_data as $id => $data) {
                             $available_rides = $data->agent->subscriptionPlan->available_rides;
                             $startDate = Carbon::parse($data->agent->subscriptionPlan->start_date)->format('Y-m-d H:i:s');
                             $endDate= Carbon::parse($data->agent->subscriptionPlan->end_date)->format('Y-m-d H:i:s');
@@ -127,8 +127,8 @@ trait GlobalFunction{
                             $orderCount = Order::where('driver_id', $data->driver_id)
                                 ->whereBetween('created_at',[$startDate,$endDate])
                                 ->count();
-                                \Log::info("orderCount",[$orderCount]);
-                                \Log::info("did",[$data->driver_id]);
+                            \Log::info("orderCount",[$orderCount]);
+                            \Log::info("did",[$data->driver_id]);
 
                             $remaining_rides = $available_rides - $orderCount;
                             \Log::info("remaining_rides",[$remaining_rides]);
@@ -146,14 +146,16 @@ trait GlobalFunction{
                     \Log::info("agentids",[$agentids]);
                 $geoagents_ids=$geoagents_ids->whereIn('driver_id',$agentids);
             }
-            $order = Order::find($order_id);
-
-            if($order)
-            {
-                $geoagents_ids = $geoagents_ids->whereHas('agent', function($q) use ($order){
-                    $q->where('id', '!=', $order->driver_id);
-                });
-            }            
+            else{
+                $order = Order::find($order_id);
+                if($order)
+                {
+                    $geoagents_ids = $geoagents_ids->whereHas('agent', function($q) use ($order){
+                        $q->where('id', '!=', $order->driver_id);
+                    });
+                }   
+            }
+                     
             $geoagents_ids =  $geoagents_ids->pluck('driver_id');
             \Log::info("gwo",[$geoagents_ids]);
             $geoagents = Agent::whereIn('id',  $geoagents_ids)->with(['logs','order'=> function ($f) use ($date) {

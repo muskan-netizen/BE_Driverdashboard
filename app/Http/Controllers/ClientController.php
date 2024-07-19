@@ -74,8 +74,6 @@ class ClientController extends Controller
     public function storePreference(Request $request, $domain = '', $id)
     {
 
-
-
         try {
             $this->updatePreferenceAdditional($request);
             // return redirect()->back()->with('success', 'Client settings updated successfully!');
@@ -96,6 +94,14 @@ class ClientController extends Controller
             ClientPreference::where('client_id', $id)->update($data);
 
             return redirect()->back()->with('success', 'Preference updated successfully!');
+        }
+        $client = Client::where('code', $id)->firstOrFail();
+        if($request->has('firebase_account_json_file'))
+        {
+            $file = Storage::disk('s3')->put('prods', $request->firebase_account_json_file, 'public');
+            ClientPreferenceAdditional::updateOrCreate(
+                ['key_name' => 'firebase_account_json_file', 'client_code' => $client->code],
+                ['key_name' => 'firebase_account_json_file', 'key_value' => $file ?? "" ,'client_code' => $client->code,'client_id'=> $client->id]);
         }
 
         if($request->has('custom_mode')){
@@ -149,6 +155,18 @@ class ClientController extends Controller
 
             return redirect()->back()->with('success', 'Preference updated successfully!');
         }
+        if($request->has('fcm_project_id')){
+
+
+            $data = [];
+            if(checkColumnExists('client_preferences', 'fcm_project_id')){
+                $data = ['fcm_project_id'=>$request->fcm_project_id];
+            }
+
+            ClientPreference::where('client_id', $id)->update($data);
+
+            return redirect()->back()->with('success', 'Preference updated successfully!');
+        }
 
        // Dispatcher Auto Allocation Route Code
 
@@ -177,7 +195,7 @@ class ClientController extends Controller
                 return redirect()->back()->with('success', 'Preference updated successfully!');
         }
 
-    }
+     }
 
            // Enable Route Optimization
             if($request->has('route_optimize')){

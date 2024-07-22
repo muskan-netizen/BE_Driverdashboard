@@ -1227,6 +1227,8 @@ class TaskController extends BaseController
     {
 
         try {
+
+            // dd($request->all());
             if ($request->type != 'B') {
                 $agent_id = $request->has('agent_id') ? $request->agent_id : null;
                 $agent_details = Agent::where('id', $agent_id)->where('is_approved', 1)->first();
@@ -1310,6 +1312,8 @@ class TaskController extends BaseController
                                 $call_web_hook = $this->updateStatusDataToOrder($orderdata, 2,1);  # task accepted
                             }
                         }
+                        \Log::info("order->id",[$order->id]);
+                        \Log::info("agent_id",[$agent_id]);
                         $this->MassAndEditNotification($order->id, $agent_id);
                     }
                     Session::put('success', __(getAgentNomenclature() . ' assigned successfully'));
@@ -1321,7 +1325,6 @@ class TaskController extends BaseController
             } else {
 
                 $batchs = BatchAllocation::with('batchDetails')->where('id', $request->batchId)->first();
-                // dd($batchs->batchDetails);
 
                 foreach ($batchs->batchDetails as $k => $batch) {
                     if (! empty($request->agent_id)) {
@@ -1382,10 +1385,12 @@ class TaskController extends BaseController
                     $batchs->agent_id = $request->agent_id;
                     $batchs->save();
                 }
+                \Log::info("end");
                 $this->MassAndEditNotification($batchs->batchDetails[0]->order->id, $request->agent_id, $request->batchId);
                 return redirect()->back();
             }
         } catch (\Exception $e) {
+            \Log::info("catch",[$e->getMessage()]);
             dd($e->getMessage());
         }
     }
@@ -1418,7 +1423,7 @@ class TaskController extends BaseController
             $batchTime = $batch->batch_time;
             $batch_id = $batch->batch_no;
         }
-        // Log::info('mass and edit notification');
+        Log::info('mass and edit notification');
         $order_details = Order::where('id', $orders_id)->with([
             'customer',
             'agent',
@@ -1477,7 +1482,7 @@ class TaskController extends BaseController
         // Send message to customer friend
         try {
 
-
+            \Log::info("in try");
 
             if (isset($order_details->type) && $order_details->type == 1 && strlen($order_details->friend_phone_number) > 8) {
                 // $friend_sms_body = 'Hi '.($order_details->friend_name).', '.($order_details->customer->name??'Our customer').' have booked a ride for you. '.getAgentNomenclature().' '.($oneagent->name??'').' in our '.($oneagent->make_model ?? '').' with license plate '.($oneagent->plate_number??'').' has been assgined.';
@@ -1500,7 +1505,7 @@ class TaskController extends BaseController
                 $send = $this->sendSmsNew($order_details->friend_phone_number, $friend_sms_body);
             }
         } catch (\Exception $e) {
-            Log::info("Error While sending sms to friend");
+            \Log::info("Error While sending sms to friend");
         }
 
         $this->dispatch(new RosterCreate($data, $extraData)); // this job is for create roster in main database for send the notification in manual alloction
@@ -3094,6 +3099,7 @@ class TaskController extends BaseController
     public function update(Request $request, $domain = '', $id)
     {
         try {
+            \Log::info('here');
             DB::beginTransaction();
             $iinputs = $request->toArray();
             $old_address_ids = array();
@@ -3147,7 +3153,7 @@ class TaskController extends BaseController
                 }
                 $last .= $file_paths;
             }
-
+            \Log::info("ids",[$request->ids]);
             if (! isset($request->ids)) {
                 $customer = Customer::where('email', '=', $request->email)->first();
                 if (isset($customer->id)) {
@@ -3184,7 +3190,7 @@ class TaskController extends BaseController
             $pricingRule = PricingRule::where('id', 1)->first();
 
             $agent_id = isset($request->allocation_type) && $request->allocation_type == 'm' ? $request->agent : null;
-
+            \log::info("agent_id",[$agent_id]);
             if (isset($agent_id) && $task_id->driver_cost <= 0.00) {
                 $agent_details = Agent::where('id', $agent_id)->first();
                 if ($agent_details->type == 'Employee') {
@@ -3199,6 +3205,7 @@ class TaskController extends BaseController
                 $percentage = $task_id->driver_cost;
             }
             $agent_fleet = AgentFleet::where('agent_id', $agent_id)->value('fleet_id');
+            \Log::info("agent_fleet",[$agent_fleet]);
             $settime = ($request->task_type == "schedule") ? $request->schedule_time : Carbon::now()->toDateTimeString();
             $notification_time = ($request->task_type == "schedule") ? Carbon::parse($settime . ' ' . $auth->timezone ?? 'UTC')->tz('UTC') : Carbon::now()->toDateTimeString();
             $order = [
@@ -3366,6 +3373,7 @@ class TaskController extends BaseController
             ]);
         } catch (Exception $e) {
             DB::rollback();
+            \Log::info("Error",[$e->getMessage()]);
             return response()->json([
                 'status' => "failure",
                 'message' => $e->getMessage()

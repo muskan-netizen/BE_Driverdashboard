@@ -81,31 +81,7 @@ trait GlobalFunction{
             }
 
             $agents = [];
-            if (!empty($agent_tag)) {
 
-                if (is_array($agent_tag)) {
-
-                    $agents = AgentsTag::whereIn('tag_id', $agent_tag)->whereHas('agent',function($qry){
-                        $qry->where('is_available',1);
-                    })->pluck('agent_id')->toArray();
-
-                } else {
-
-                    // Case 2: $agent_tag is a string
-
-                    $agents = AgentsTag::whereHas('tags', function ($qry) use ($agent_tag) {
-
-                        $qry->where('name', 'LIKE', '%' . $agent_tag . '%');
-
-                    })->whereHas('agent',function($qry){
-                        $qry->where('is_available',1);
-                    })->pluck('agent_id')->toArray();
-
-                }
-
-
-                $geoagents_ids =  DriverGeo::where('geo_id', $geo)->whereIn('driver_id', $agents);
-            }
             if ($preference->driver_subscription) {
                 $now = Carbon::now();
                 $current_date = $now->toDateString();
@@ -144,24 +120,52 @@ trait GlobalFunction{
                         }
                     }
                     \Log::info("agentids",[$agentids]);
+                    \Log::info("before",[$geoagents_ids]);
                 $geoagents_ids=$geoagents_ids->whereIn('driver_id',$agentids);
             }
             else{
+                if (!empty($agent_tag)) {
+
+                    if (is_array($agent_tag)) {
+
+                        $agents = AgentsTag::whereIn('tag_id', $agent_tag)->whereHas('agent',function($qry){
+                            $qry->where('is_available',1);
+                        })->pluck('agent_id')->toArray();
+
+                    } else {
+
+                        // Case 2: $agent_tag is a string
+
+                        $agents = AgentsTag::whereHas('tags', function ($qry) use ($agent_tag) {
+
+                            $qry->where('name', 'LIKE', '%' . $agent_tag . '%');
+
+                        })->whereHas('agent',function($qry){
+                            $qry->where('is_available',1);
+                        })->pluck('agent_id')->toArray();
+
+                    }
+                    $geoagents_ids =  DriverGeo::where('geo_id', $geo)->whereIn('driver_id', $agents);
+                }
                 $order = Order::find($order_id);
                 if($order)
                 {
                     $geoagents_ids = $geoagents_ids->whereHas('agent', function($q) use ($order){
                         $q->where('id', '!=', $order->driver_id);
                     });
-                }   
+                }
             }
-                     
+            \Log::info("date",[$date]);
+            \Log::info("geoagents_ids",[$geoagents_ids]);
             $geoagents_ids =  $geoagents_ids->pluck('driver_id');
             \Log::info("gwo",[$geoagents_ids]);
-            $geoagents = Agent::whereIn('id',  $geoagents_ids)->with(['logs','order'=> function ($f) use ($date) {
+            $geoagents = Agent::whereIn('id',  $geoagents_ids)
+            ->with(['logs',
+            'order'=> function ($f) use ($date) {
                 $f->whereDate('order_time', $date)->with('task');
-            }]);
-
+            }
+        ]);
+            \Log::info("dd",[$geoagents]);
             if($particular_driver_id){
                 $geoagents = $geoagents->where('id','!=',$particular_driver_id);
             }

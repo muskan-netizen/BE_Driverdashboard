@@ -33,7 +33,7 @@ class DriverSubscriptionController extends BaseController
         $active_subscription = SubscriptionInvoicesDriver::with(['plan'])
             // ->whereNull('cancelled_at')
             ->where('driver_id', $user->id)
-            ->where('end_date', '>=', $now )
+            ->where('end_date','>=',$now)
             ->orderBy('end_date', 'desc')->first();
 
         return response()->json(["status"=>"Success", "data"=>['all_plans'=>$sub_plans, 'subscription'=>$active_subscription, "clientCurrency"=> $preferences->currency ?? NULL]]);
@@ -321,16 +321,16 @@ class DriverSubscriptionController extends BaseController
                     }
                 }
 
-                if($subscription_plan->frequency == 'day'){
+                if($subscription_plan->frequency == 'days'){
                     $end_date = Carbon::parse($start_date)->addDays($number_of_days)->toDateString();
                 }
-                elseif($subscription_plan->frequency == 'week'){
+                elseif($subscription_plan->frequency == 'weeks'){
                     $number_of_days=$number_of_days*7;  //converting weeks into days
                     $end_date = Carbon::parse($start_date)->addDays($number_of_days)->toDateString();
-                }elseif($subscription_plan->frequency == 'month'){
+                }elseif($subscription_plan->frequency == 'months'){
                     $number_of_months=$number_of_days;
                     $end_date = Carbon::parse($start_date)->addMonths($number_of_months)->subDays(1)->toDateString();
-                }elseif($subscription_plan->frequency == 'year'){
+                }elseif($subscription_plan->frequency == 'years'){
                     $number_of_years=$number_of_days;
                     $end_date = Carbon::parse($start_date)->addYears($number_of_years)->subDays(1)->toDateString();
                 }

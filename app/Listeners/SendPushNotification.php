@@ -213,6 +213,7 @@ class SendPushNotification
     }
 
     public function seperate_connection($schemaName){
+        \Log::info($schemaName);
         $default = [
             'driver' => env('DB_CONNECTION', 'mysql'),
             'host' => env('DB_HOST'),
@@ -227,6 +228,9 @@ class SendPushNotification
             'strict' => false,
             'engine' => null
         ];
-        Config::set("database.connections.$schemaName", $default);
+        \Log::info('Database Connection Settings: ', $default);
+        \Config::set("database.connections.$schemaName", $default);
+        DB::setDefaultConnection($schemaName);
+        \Log::info('Current Connection Database: ' . DB::connection()->getDatabaseName());
     }
 }

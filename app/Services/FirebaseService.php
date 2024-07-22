@@ -64,6 +64,10 @@ class FirebaseService
     public static function sendNotification($data,$item = null) //$token, $title, $body
     {
         $client = new Client();
+        $connectionName = (new ModelClientPreference())->getConnectionName();
+
+        \Log::info("coonection",[$connectionName]);
+
 
         $preference = ModelClientPreference::select('fcm_project_id')->first();
         if (!$preference) {
@@ -93,7 +97,7 @@ class FirebaseService
 
             $messages = [];
             foreach ($data['registration_ids'] as $token) {
-            
+
                 $message['token'] = $token;
 
                 foreach ($data['notification'] as $key => $value) {
@@ -111,7 +115,7 @@ class FirebaseService
                         'channel_id' => $data['notification']['android_channel_id'] ?? '',
                     ],
                 ];
-         
+
 
                 if(empty($item))
                 {
@@ -131,18 +135,18 @@ class FirebaseService
                     foreach ($item as $key => $value) {
                             $message['data'][$key] = (string)$value;
                           $newData['data'][$key] = $value;
-                        
+
                     }
-    
+
                 }
-              
+
 
                 //$messages[] = $message;
 
                 \Log::info('message');
                 \Log::info($message);
 
-          
+
                 try {
                     $response = $client->post($url, [
                         'headers' => [
@@ -154,14 +158,12 @@ class FirebaseService
                             'message' => $message,
                         ],
                     ]);
-    
+
                     $results[] = [
                         'status' => 'fulfilled',
                         'body' => (string) $response->getBody()
                     ];
                 } catch (RequestException $e) {
-
-                    
                     $results[] = [
                         'status' => 'rejected',
                         'reason' => $e->getMessage()
@@ -173,7 +175,7 @@ class FirebaseService
 
             return $results;
 
-       
+
             \Log::info('response');
             \Log::info($data);
             \Log::info($messages);
@@ -188,8 +190,14 @@ class FirebaseService
     public static function sendSingleNotification($data,$item) //$token, $title, $body
     {
         $client = new Client();
+        $query = ModelClientPreference::select('fcm_project_id');
+        $query = ModelClientPreference::select('fcm_project_id');
+        $databaseName = $query->getConnection()->getDatabaseName();
+
+        \Log::info("Database Name", ['database_name' => $databaseName]);
 
         $preference = ModelClientPreference::select('fcm_project_id')->first();
+
         if (!$preference) {
             \Log::error('FCM Send Error: FCM project ID not found in database.');
             return false;
@@ -211,7 +219,7 @@ class FirebaseService
 
         try {
 
-            $messages = [];            
+            $messages = [];
                 $message['token'] = $data['token'];
 
                 foreach ($data['notification'] as $key => $value) {
@@ -247,7 +255,7 @@ class FirebaseService
                 \Log::info('message');
                 \Log::info($message);
 
-          
+
                 try {
                     $response = $client->post($url, [
                         'headers' => [
@@ -259,14 +267,14 @@ class FirebaseService
                             'message' => $message,
                         ],
                     ]);
-    
+
                     $results[] = [
                         'status' => 'fulfilled',
                         'body' => (string) $response->getBody()
                     ];
                 } catch (RequestException $e) {
 
-                    
+
                     $results[] = [
                         'status' => 'rejected',
                         'reason' => $e->getMessage()
@@ -274,11 +282,11 @@ class FirebaseService
                     \Log::info('firebase error');
                     \Log::info($results);
                 }
-            
+
 
             return $results;
 
-       
+
             \Log::info('response');
             \Log::info($data);
             \Log::info($messages);

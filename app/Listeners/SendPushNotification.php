@@ -91,15 +91,12 @@ class SendPushNotification
 
     public function sendnotification($recipients)
     {
-        \Log::info('reciepients');
-        \Log::info("connection",[DB::connection()->getDatabaseName()]);
-        \Log::info($recipients);
+
         try {
             $array = json_decode(json_encode($recipients), true);
             $counter = 1;
             foreach($array as $item){
-                \Log::info('loop');
-                \Log::info($counter);
+
 
                 if(isset($item['device_token']) && !empty($item['device_token'])){
                     $item['title']     = 'Pickup Request';
@@ -109,13 +106,11 @@ class SendPushNotification
                    unset($item['type']); // done by Preet due to notification title is displaying like AR in iOS
 
 
-                   \Log::info('client item');
-                   \Log::info([$item]);
+
                       array_push($new,$item['device_token']);
                     $clientRecord = Client::where('code', $item['client_code'])->first();
 
-                    \Log::info('client record');
-                    \Log::info([$clientRecord]);
+
 
                     $this->seperate_connection('db_'.$clientRecord->database_name);
                     $client_preferences = DB::connection('db_'.$clientRecord->database_name)->table('client_preferences')->where('client_id', $item['client_code'])->first();
@@ -213,7 +208,6 @@ class SendPushNotification
     }
 
     public function seperate_connection($schemaName){
-        \Log::info($schemaName);
         $default = [
             'driver' => env('DB_CONNECTION', 'mysql'),
             'host' => env('DB_HOST'),
@@ -228,9 +222,7 @@ class SendPushNotification
             'strict' => false,
             'engine' => null
         ];
-        \Log::info('Database Connection Settings: ', $default);
         \Config::set("database.connections.$schemaName", $default);
         DB::setDefaultConnection($schemaName);
-        \Log::info('Current Connection Database: ' . DB::connection()->getDatabaseName());
     }
 }

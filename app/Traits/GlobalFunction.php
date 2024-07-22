@@ -99,12 +99,12 @@ trait GlobalFunction{
                             $available_rides = $data->agent->subscriptionPlan->available_rides;
                             $startDate = Carbon::parse($data->agent->subscriptionPlan->start_date)->format('Y-m-d H:i:s');
                             $endDate= Carbon::parse($data->agent->subscriptionPlan->end_date)->format('Y-m-d H:i:s');
-                            \Log::info("endDate",[$endDate]);
+                            // \Log::info("endDate",[$endDate]);
                             $orderCount = Order::where('driver_id', $data->driver_id)
                                 ->whereBetween('created_at',[$startDate,$endDate])
                                 ->count();
                             \Log::info("orderCount",[$orderCount]);
-                            \Log::info("did",[$data->driver_id]);
+                            \Log::info("driver_id",[$data->driver_id]);
 
                             $remaining_rides = $available_rides - $orderCount;
                             \Log::info("remaining_rides",[$remaining_rides]);
@@ -120,7 +120,6 @@ trait GlobalFunction{
                         }
                     }
                     \Log::info("agentids",[$agentids]);
-                    \Log::info("before",[$geoagents_ids]);
                 $geoagents_ids=$geoagents_ids->whereIn('driver_id',$agentids);
             }
             else{

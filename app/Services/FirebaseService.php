@@ -65,10 +65,6 @@ class FirebaseService
     {
         $client = new Client();
         $connectionName = (new ModelClientPreference())->getConnectionName();
-
-        \Log::info("coonection",[$connectionName]);
-
-
         $preference = ModelClientPreference::select('fcm_project_id')->first();
         if (!$preference) {
             \Log::error('FCM Send Error: FCM project ID not found in database.');
@@ -76,12 +72,6 @@ class FirebaseService
         }
 
         $projectId = $preference->fcm_project_id;
-
-
-        \Log::info('projectId');
-        \Log::info($projectId);
-        \Log::info('data dd');
-        \Log::info('projectId');
         //$url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
         $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
         //$accessToken = $this->getAccessToken();
@@ -139,14 +129,7 @@ class FirebaseService
                     }
 
                 }
-
-
                 //$messages[] = $message;
-
-                \Log::info('message');
-                \Log::info($message);
-
-
                 try {
                     $response = $client->post($url, [
                         'headers' => [
@@ -176,11 +159,6 @@ class FirebaseService
             return $results;
 
 
-            \Log::info('response');
-            \Log::info($data);
-            \Log::info($messages);
-            \Log::info('response');
-
         } catch (RequestException $e) {
             // Handle the error appropriately
             return ['error' => $e->getMessage()];
@@ -193,21 +171,13 @@ class FirebaseService
         $query = ModelClientPreference::select('fcm_project_id');
         $query = ModelClientPreference::select('fcm_project_id');
         $databaseName = $query->getConnection()->getDatabaseName();
-
-        \Log::info("Database Name", ['database_name' => $databaseName]);
-
         $preference = ModelClientPreference::select('fcm_project_id')->first();
-
         if (!$preference) {
             \Log::error('FCM Send Error: FCM project ID not found in database.');
             return false;
         }
 
         $projectId = $preference->fcm_project_id;
-
-
-        \Log::info('projectId');
-        \Log::info($projectId);
         $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
         // $accessToken = Self::getAccessToken();
         $accessToken = getFcmOauthToken();
@@ -237,8 +207,7 @@ class FirebaseService
                         'channel_id' => $data['notification']['android_channel_id'] ?? '',
                     ],
                 ];
-                \Log::info('item');
-                \Log::info($item);
+
                 // Process the data section, converting specific fields to strings
                 //$newData['data'] = [];
                 foreach ($item as $key => $value) {
@@ -251,10 +220,6 @@ class FirebaseService
                 }
 
                 //$messages[] = $message;
-
-                \Log::info('message');
-                \Log::info($message);
-
 
                 try {
                     $response = $client->post($url, [
@@ -285,12 +250,6 @@ class FirebaseService
 
 
             return $results;
-
-
-            \Log::info('response');
-            \Log::info($data);
-            \Log::info($messages);
-            \Log::info('response');
 
         } catch (RequestException $e) {
             // Handle the error appropriately

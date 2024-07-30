@@ -144,7 +144,7 @@ function handleDrawRouteSuccess(data, isMultiple = false) {
         destination: dropoffLocation,
         travelMode: google.maps.TravelMode.DRIVING,
     };
-
+    
     allRenderRoute.push(request);
 
     if (typeof map !== "undefined") {
@@ -172,6 +172,7 @@ function handleDrawRouteSuccess(data, isMultiple = false) {
         directionsRenderer.setMap(map);
 
         directionsService.route(request, function (response, status) {
+        
             if (status === "OK") {
                 directionsRenderer.setDirections(response);
                var pickupIcon = mapIcons(1);

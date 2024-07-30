@@ -51,7 +51,7 @@ $agentslocations[] = $defaultmaplocation;
                             <?php
                             if(isset($distance_matrix[0]))
                             {
-                                if($teams[0]->task_order == 0){
+                                if(isset($teams[0]) && $teams[0]->task_order == 0){
                                     $opti0 = "yes";
                                 }else{
                                     $opti0 = "";
@@ -66,6 +66,7 @@ $agentslocations[] = $defaultmaplocation;
                                 $turnbyturn0 = "";
                             }
                             ?>
+                            
                             <a class="profile-block collapsed pro-block" role="button" data-toggle="collapse" href="#collapse0" aria-expanded="false" aria-controls="collapse0">
                                 <div class="row">
                                     <div class="col-md-2 col-2">
@@ -78,7 +79,7 @@ $agentslocations[] = $defaultmaplocation;
                                 </div>
                             </a>
                         </div>
-                           
+                        
                         <div id="collapse0" class="collapse" data-parent="#accordion-0" aria-labelledby="by0">
                             <div id="handle-dragula-left0" class="dragable_tasks" agentid="0"  params="{{ $params0 }}" date="{{ $date }}">
                                 @foreach(@$unassigned_orders as $orders)

@@ -73,7 +73,6 @@ class ClientController extends Controller
      */
     public function storePreference(Request $request, $domain = '', $id)
     {
-       
         try {
             $this->updatePreferenceAdditional($request);
             // return redirect()->back()->with('success', 'Client settings updated successfully!');
@@ -94,6 +93,14 @@ class ClientController extends Controller
             ClientPreference::where('client_id', $id)->update($data);
 
             return redirect()->back()->with('success', 'Preference updated successfully!');
+        }
+        $client = Client::where('code', $id)->firstOrFail();
+        if($request->has('firebase_account_json_file'))
+        {
+            $file = Storage::disk('s3')->put('prods', $request->firebase_account_json_file, 'public');
+            ClientPreferenceAdditional::updateOrCreate(
+                ['key_name' => 'firebase_account_json_file', 'client_code' => $client->code],
+                ['key_name' => 'firebase_account_json_file', 'key_value' => $file ?? "" ,'client_code' => $client->code,'client_id'=> $client->id]);
         }
 
         if($request->has('custom_mode')){
@@ -128,7 +135,7 @@ class ClientController extends Controller
         }
 
         if($request->has('dashboard_mode')){
-            
+
             $dashboardMode['show_dashboard_by_agent_wise'] = $request->dashboard_mode['show_dashboard_by_agent_wise'];
             $data = [];
             if($request->dashboard_mode['show_dashboard_by_agent_wise'] == 1){
@@ -147,7 +154,19 @@ class ClientController extends Controller
 
             return redirect()->back()->with('success', 'Preference updated successfully!');
         }
-      
+        if($request->has('fcm_project_id')){
+
+
+            $data = [];
+            if(checkColumnExists('client_preferences', 'fcm_project_id')){
+                $data = ['fcm_project_id'=>$request->fcm_project_id];
+            }
+
+            ClientPreference::where('client_id', $id)->update($data);
+
+            return redirect()->back()->with('success', 'Preference updated successfully!');
+        }
+
        // Dispatcher Auto Allocation Route Code
 
        if($request->has('dispatcher_autoallocation')){
@@ -175,13 +194,13 @@ class ClientController extends Controller
                 return redirect()->back()->with('success', 'Preference updated successfully!');
         }
 
-    }
-        
+     }
+
            // Enable Route Optimization
             if($request->has('route_optimize')){
-                
+
                 if (!empty($request->route_optimization)) {
-                    
+
                     if ($request->route_optimization == 'on') {
                         $data = [
                             'route_optimization' => ($request->route_optimization == 'on') ? 1 : 0
@@ -191,7 +210,7 @@ class ClientController extends Controller
                             'route_optimization' => 0,
                         ];
                     }
-                   
+
                     ClientPreference::where('client_id', $id)->update($data);
                     return redirect()->back()->with('success', 'Preference updated successfully!');
                 }else{
@@ -205,9 +224,9 @@ class ClientController extends Controller
 
             }
             if($request->has('is_lumen')){
-                
+
                 if (!empty($request->is_lumen_enabled)) {
-                    
+
                     if ($request->is_lumen_enabled == 'on') {
                         $data = [
                             'is_lumen_enabled' => ($request->is_lumen_enabled == 'on') ? 1 : 0,
@@ -219,7 +238,7 @@ class ClientController extends Controller
                             'is_lumen_enabled' => 0,
                         ];
                     }
-                   
+
                     ClientPreference::where('client_id', $id)->update($data);
                     return redirect()->back()->with('success', 'Preference updated successfully!');
                 }else{
@@ -232,7 +251,7 @@ class ClientController extends Controller
                 }
 
             }
-             
+
         if(!empty($request->fcm_server_key)){
             $data = ['fcm_server_key'=>$request->fcm_server_key];
             ClientPreference::where('client_id', $id)->update($data);
@@ -487,6 +506,7 @@ class ClientController extends Controller
             $request->request->add(['verify_phone_for_driver_registration' => ($request->has('verify_phone_for_driver_registration') && $request->verify_phone_for_driver_registration == 'on') ? 1 : 0]);
             $request->request->add(['is_edit_order_driver' => ($request->has('is_edit_order_driver') && $request->is_edit_order_driver == 'on') ? 1 : 0]);
             $request->request->add(['is_cancel_order_driver' => ($request->has('is_cancel_order_driver') && $request->is_cancel_order_driver == 'on') ? 1 : 0]);
+            $request->request->add(['driver_subscription' => ($request->has('driver_subscription') && $request->driver_subscription == 'on') ? 1 : 0]);
             $request->request->add(['is_driver_slot' => ($request->has('is_driver_slot') && $request->is_driver_slot == 'on') ? 1 : 0]);
             $request->request->add(['is_freelancer' => ($request->has('is_freelancer') && $request->is_freelancer == 'on') ? 1 : 0]);
             $request->request->add(['manage_fleet' => ($request->has('manage_fleet') && $request->manage_fleet == 'on') ? 1 : 0]);
@@ -505,7 +525,7 @@ class ClientController extends Controller
         if($request->has('address_limit_order_config')){
             $request->request->add(['show_limited_address' => ($request->has('show_limited_address') && $request->show_limited_address == 'on') ? 1 : 0]);
         }
-       
+
         $request->request->add(['toll_fee' => ($request->has('toll_fee') && $request->toll_fee == 'on') ? 1 : 0]);
         $request->request->add(['distance_in_meter' => ($request->has('distance_in_meter') && $request->distance_in_meter > 0) ? $request->distance_in_meter : 0]);
         $request->request->add(['is_road_side_pickup' => ($request->has('is_road_side_pickup') && $request->is_road_side_pickup == 'on') ? 1 : 0]);
@@ -648,7 +668,7 @@ class ClientController extends Controller
         $vehicleType = VehicleType::latest()->get();
         $agent_docs = DriverRegistrationDocument::get();
         $driverRatingQuestion = FormAttribute::getFormAttribute(2); // 2 for driverRatingQuestion 1 for defoult FormAttribute
-       
+
         $agents    = Agent::where('is_activated','1')->get();
         $smsTypes = SmsProvider::where('status', '1')->get();
         $data['preferenceAdditional']  = ClientPreferenceAdditional::where('client_code', Auth::user()->code)->pluck('key_value','key_name')->toArray();
@@ -764,7 +784,7 @@ class ClientController extends Controller
             $driver_registration_document->save();
             DB::commit();
             if($request->has('option_name')){
-               
+
                 foreach($request->option_name as $value){
 
                     if(isset($value[0]) && !empty($value[0])){

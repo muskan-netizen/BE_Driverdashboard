@@ -608,11 +608,9 @@ trait Dispatcher
         $startdate = $request->start_date ?? '';
         $enddate = $request->end_date ?? '';
         $user = $response['user'];
-      
         // Get client information based on user's code
         $limit = 10;
 
-        
         $sql = "SELECT teams.*,
                 COUNT(DISTINCT ag.id) AS total_agents,
                 SUM(ag.is_available = 1) AS online_agents,
@@ -729,7 +727,7 @@ trait Dispatcher
             $response['page'] = $page;
             $response['lastPage'] = $lastPage;
             $response['unassigned_orders'] =[];
-            $response['unassigned_distance'] = [];
+            $response['unassigned_distance'] = '';
             $response['routedata'] = [];
 //pr($response);
             if ($is_load_html == 1) {

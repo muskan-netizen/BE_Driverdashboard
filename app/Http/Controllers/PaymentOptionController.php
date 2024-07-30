@@ -28,7 +28,7 @@ class PaymentOptionController extends BaseController
      */
     public function index()
     {
-        $payment_codes = array('razorpay', 'stripe','vnpay','ccavenue', 'khalti','obo','paystack','livee');
+        $payment_codes = array('razorpay', 'stripe','vnpay','ccavenue', 'khalti','obo','paystack','livee', 'mastercard');
         $payout_codes = array('cash', 'stripe', 'bank_account_m_india','razorpay','obo','livee');
         $payOption = PaymentOption::whereIn('code', $payment_codes)->get();
         $payoutOption = PayoutOption::whereIn('code', $payout_codes)->get();
@@ -281,6 +281,16 @@ class PaymentOptionController extends BaseController
                     $json_creds = json_encode(array(
                         'livee_merchant_key' => $request->livee_merchant_key,
                         'livee_resource_key' => $request->livee_resource_key,
+                    ));
+                }
+                else if ((isset($method_name_arr[$key])) && (strtolower($method_name_arr[$key]) == 'dpo')) {
+                    $request->validate([
+                        'company_token' => 'required',
+                        'service_type' => 'required',
+                    ]);
+                    $json_creds = json_encode(array(
+                        'company_token' => $request->company_token,
+                        'service_type' => $request->service_type,
                     ));
                 }
             }

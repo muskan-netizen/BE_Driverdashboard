@@ -73,7 +73,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                     @endif
                                 </div>
                             </div>
-                            <div class="col-md-12"> 
+                            <div class="col-md-12">
                                 <div class="form-group d-flex justify-content-between mb-3">
                                 <label for="" class="mr-2 mb-0">{{__("Toll Api")}} </label>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -112,18 +112,18 @@ $sms_crendential = json_decode($preference->sms_credentials);
                         <p class="sub-header">{{ __("View and update your SMS Gateway and it's API keys.") }}</p>
                         <div class="d-flex align-items-center justify-content-between mt-3 mb-2">
                             <h5 class="font-weight-normal m-0">{{ __('Send Static Otp ') }} {{ __(getAgentNomenclature()) }}</h5>
-                            
+
                             <div class="custom-control custom-switch">
-     
+
                                 <input type="checkbox" class="custom-control-input"
                                     id="cancelOrderCustomSwitch_static_otp"
                                     name="static_otp"
                                     {{ (isset( $sms_crendential->static_otp ) && $sms_crendential->static_otp == 1) ? 'checked' : '' }}>
                                 <label class="custom-control-label"
                                     for="cancelOrderCustomSwitch_static_otp"></label>
-                                
+
                             </div>
-                            
+
                         </div>
                         <div class="row mb-2">
                             <div class="col-md-12">
@@ -617,7 +617,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
             </div>
 
             <div class="col-md-4 mb-3">
-                <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
+                <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}" enctype="multipart/form-data">
                     @csrf
                     <div class="card-box h-100">
                         <div class="d-flex align-items-center justify-content-between mb-2">
@@ -640,6 +640,31 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                     @if ($errors->has('fcm_server_key'))
                                         <span class="text-danger" role="alert">
                                             <strong>{{ $errors->first('fcm_server_key') }}</strong>
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-2">
+                                    <label for="fcm_project_id">{{ __('Project ID') }}</label>
+                                    <input type="text" name="fcm_project_id" id="fcm_project_id" placeholder=""
+                                        class="form-control"
+                                        value="{{ old('fcm_project_id', $preference->fcm_project_id ?? '') }}" required>
+                                    @if ($errors->has('fcm_project_id'))
+                                        <span class="text-danger" role="alert">
+                                            <strong>{{ $errors->first('fcm_project_id') }}</strong>
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-2">
+                                    <label for="firebase_account_json_file">{{ __('Firebase Service Account Json File') }}</label>
+                                    <input type="file" accept="json"  name="firebase_account_json_file" data-plugins="dropify"/>
+    
+                                    @if ($errors->has('firebase_account_json_file'))
+                                        <span class="text-danger" role="alert">
+                                            <strong>{{ $errors->first('firebase_account_json_file') }}</strong>
                                         </span>
                                     @endif
                                 </div>
@@ -786,7 +811,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-12">
                                 <div class="d-flex align-items-center justify-content-between mt-3 mb-2">
@@ -801,7 +826,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                     </div>
                                 </div>
                             </div>
-                        </div> 
+                        </div>
                         <div class="row">
                             <div class="col-12">
                                 <div class="d-flex align-items-center justify-content-between mt-3 mb-2">
@@ -812,8 +837,8 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                             name="is_go_to_home"
                                             {{ $preference->is_go_to_home == 1 ? 'checked' : '' }}>
                                             <label class="custom-control-label" for="is_go_to_home"></label>
-                                           
-                                          
+
+
                                     </div>
                                 </div>
                             </div>
@@ -821,7 +846,18 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                 <input type="number"  class="form-control" placeholder="{{ __('Go to home Radians in KM') }}"  id="" value="{{ $preference->go_to_home_radians }}" name="go_to_home_radians" >
                             </div>
                         </div>
-                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center justify-content-between mt-3 mb-2">
+                                    <h5 class="font-weight-normal m-0">{{ Session::has('agent_name') ? Session::get('agent_name') : 'Agent' }} {{ __('Subscription  (To Access Rides)') }}</h5>
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input"
+                                            id="driver_subscription" name="driver_subscription"{{ $preference->driver_subscription == 1 ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="driver_subscription"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-12">
                                 <div class="d-flex align-items-center justify-content-between mt-3 mb-2">
@@ -834,7 +870,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                         <label class="custom-control-label" for="editRoadSideSwitch"></label>
                                     </div>
                                 </div>
-                            </div> 
+                            </div>
                         </div>
 
                         <div class="row">
@@ -850,7 +886,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                     </div>
                                 </div>
                             </div>
-                        </div> 
+                        </div>
 
                         <div class="row">
                             <div class="col-12">
@@ -865,8 +901,8 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                     </div>
                                 </div>
                             </div>
-                        </div> 
-
+                        </div>
+                    </div>
                     </form>
                 </div>
             </div>
@@ -1227,7 +1263,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                 </form>
                 <!-- Custom Mods start -->
             </div> --}}
-            
+
 
             <div class="col-md-4 mb-3">
                 <!-- Custom Mods start -->
@@ -1343,7 +1379,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                                 <div class="form-group d-block justify-content-between mb-3">
                                     <label for="agent_ids" class="mr-2 mb-0">{{__("Recursive")}} </label>
                                     @if(!empty($preference->threshold_data))
-                                        @php 
+                                        @php
                                             $threshold_data      =   json_decode($preference->threshold_data,true);
                                             $recursive_type      =   isset($threshold_data['recursive_type']) ? $threshold_data['recursive_type'] : '';
                                             $threshold_amount    =   isset($threshold_data['threshold_amount']) ? $threshold_data['threshold_amount'] : '';
@@ -1399,7 +1435,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                         </div>
                     </div>
                 </form>
-            </div> 
+            </div>
 
             @if ($preference->refer_earn_driver_to_driver_toggle == 1)
                 <div class="col-md-4 mb-3">
@@ -1423,7 +1459,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                     </form>
                 </div>
             @endif
-            
+
             <div class="col-md-4 mb-3 d-none">
                 <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
                 @csrf
@@ -1448,7 +1484,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                         </div>
                     </div>
                 </form>
-            </div> 
+            </div>
             <div class="col-md-4 mb-3">
                 <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
                 @csrf
@@ -1510,33 +1546,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                         </div>
                     </div>
                     </div>
-           
-                    </div>
-                </form>
-            </div> 
-        
-        <div class="col-md-4 mb-3">
-                <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
-                @csrf
-                    <input type="hidden" name="is_azureUpload" value="0">
-                    <div class="card-box h-100">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <h4 class="header-title text-uppercase mb-0">{{__("FILE UPLOAD THROUGH AZURE")}}</h4>
-                            <button class="btn btn-outline-info d-block" type="submit"> {{__('Save')}} </button>
-                        </div>
-                        <div class="row align-items-start">
-                            <div class="col-md-12">
-                                <div class="form-group d-flex justify-content-between mb-3">
-                                    <label for="enabled-threshold" class="mr-2 mb-0">{{__("Enable")}} </label>
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <div class="custom-control custom-switch">
-                                            <input type="checkbox" class="custom-control-input " id="is_azureUpload" name="is_azureUpload" {{ ($preferenceAdditional['is_azureUpload'] ?? "") ? 'checked' :'' }}>
-                                            <label class="custom-control-label" for="is_azureUpload"></label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
                     </div>
                 </form>
             </div>
@@ -1617,7 +1627,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
         </div>
 
 
-        
+
 
         <!-- end page title -->
         {{-- <div class="row">
@@ -1797,7 +1807,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
             </div>
         </div>
 
-        
+
         @include('rating.ratingModel')
 
         @include('rating.ratingAttributeModel')
@@ -1958,7 +1968,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                             $.each(response.data.driver_option, function(i, option){
                                 dynamicOption +=  "<div id='row"+option.id+"'><div class='input-group m-3'><div class='input-group-prepend'><button class='btn btn-danger' id='DeleteRow"+option.id+"' type='button'><i class='bi bi-trash'></i>Delete</button></div><input type='text' name='option_name[]' value='"+option.driver_registartion_option_name+"' class='form-control m-input'></div></div>";
                                 $('body').on('click', '#DeleteRow'+option.id, function() {
-                                    $(this).parents('#row'+option.id).remove(); 
+                                    $(this).parents('#row'+option.id).remove();
                                 });
                             });
                         }
@@ -2050,7 +2060,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
             $(document).find('.threshold_amount').removeClass('d-none').addClass('d-block');
         });
 
-        
+
 
 
         $('#toll_fee').on('change',function(){

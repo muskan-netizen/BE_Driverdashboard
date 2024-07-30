@@ -121,7 +121,7 @@ class StripeGatewayController extends BaseController{
                 //     // 'transfer_group' => $charge_id,
                 // ]);
                 
-                $amount = $request->amount; //getDollarCompareAmount($request->amount, $this->currency_id);
+                $amount =round($request->amount, 2); //getDollarCompareAmount($request->amount, $this->currency_id);
                 \Stripe\Stripe::setApiKey($this->payout_secret_key);
 
                 // Create a PaymentIntent:
@@ -140,6 +140,7 @@ class StripeGatewayController extends BaseController{
                     'destination' => $connected_account->account_id,
                     'transfer_group' => 'driver_payout',
                 ]);
+
                 $transactionReference = $transfer->balance_transaction;
                 return $this->success($transactionReference, 'Payout is completed successfully', 200);
 

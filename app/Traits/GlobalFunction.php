@@ -71,8 +71,9 @@ trait GlobalFunction{
     public function getGeoBasedAgentsData($geo, $is_cab_pooling, $agent_tag = '', $date, $cash_at_hand,$order_id='',$particular_driver_id = '')
     {
         try {
-            $preference = ClientPreference::select('manage_fleet', 'is_cab_pooling_toggle', 'is_threshold','is_go_to_home','go_to_home_radians')->first();
-            $geoagents_ids =  DriverGeo::where('geo_id', $geo);
+            $preference = ClientPreference::select('manage_fleet', 'is_cab_pooling_toggle', 'is_threshold','is_go_to_home','go_to_home_radians','driver_subscription')->first();
+            $geoagents_ids =DriverGeo::where('geo_id',$geo);
+
             if($preference->is_cab_pooling_toggle == 1 && $is_cab_pooling == 1){
                 $geoagents_ids = $geoagents_ids->whereHas('agent', function($q) use ($geo, $is_cab_pooling){
                     $q->where('is_pooling_available', $is_cab_pooling);
@@ -80,60 +81,101 @@ trait GlobalFunction{
             }
 
             $agents = [];
-            if (!empty($agent_tag)) {
 
-                if (is_array($agent_tag)) {
+            if ($preference->driver_subscription) {
+                $now = Carbon::now();
+                $current_date = $now->toDateString();
+                $agentids=[];
+                $geoagents_data = DriverGeo::with('agent.subscriptionPlan')
+                    ->where('geo_id', $geo)
+                    ->whereHas('agent', function ($query) use($current_date) {
+                        $query->whereHas('subscriptionPlan', function ($query) use($current_date) {
+                            $query->where('end_date','>=',$current_date);
+                        });
+                    })->get();
+                    if($geoagents_data){
+                        \Log::info("got Subscribed Agent Data");
+                        foreach($geoagents_data as $id => $data) {
+                            $available_rides = $data->agent->subscriptionPlan->available_rides;
+                            $startDate = Carbon::parse($data->agent->subscriptionPlan->start_date)->format('Y-m-d H:i:s');
+                            $endDate= Carbon::parse($data->agent->subscriptionPlan->end_date)->format('Y-m-d H:i:s');
+                            // \Log::info("endDate",[$endDate]);
+                            $orderCount = Order::where('driver_id', $data->driver_id)
+                                ->whereBetween('created_at',[$startDate,$endDate])
+                                ->count();
+                            \Log::info("orderCount",[$orderCount]);
+                            \Log::info("driver_id",[$data->driver_id]);
 
-                    $agents = AgentsTag::whereIn('tag_id', $agent_tag)->whereHas('agent',function($qry){
-                        $qry->where('is_available',1);
-                    })->pluck('agent_id')->toArray();
-
-                } else {
-
-                    // Case 2: $agent_tag is a string
-
-                    $agents = AgentsTag::whereHas('tags', function ($qry) use ($agent_tag) {
-
-                        $qry->where('name', 'LIKE', '%' . $agent_tag . '%');
-
-                    })->whereHas('agent',function($qry){
-                        $qry->where('is_available',1);
-                    })->pluck('agent_id')->toArray();
-
-                }
-                
-                
-                $geoagents_ids =  DriverGeo::where('geo_id', $geo)->whereIn('driver_id', $agents);
-
-                
-
+                            $remaining_rides = $available_rides - $orderCount;
+                            \Log::info("remaining_rides",[$remaining_rides]);
+                            if ( $remaining_rides > 0) {
+                                $agentids[] = $data->driver_id;
+                            }
+                            if ($remaining_rides == 0) {
+                                $index = array_search($data->driver_id, $agentids);
+                                if ($index !== false) {
+                                    unset($agentids[$index]);
+                                }
+                            }
+                        }
+                    }
+                    \Log::info("agentids",[$agentids]);
+                $geoagents_ids=$geoagents_ids->whereIn('driver_id',$agentids);
             }
+            else{
+                if (!empty($agent_tag)) {
 
-            $order = Order::find($order_id);
+                    if (is_array($agent_tag)) {
 
-            if($order)
-            {
-                $geoagents_ids = $geoagents_ids->whereHas('agent', function($q) use ($order){
-                    $q->where('id', '!=', $order->driver_id);
-                });
-            }            
+                        $agents = AgentsTag::whereIn('tag_id', $agent_tag)->whereHas('agent',function($qry){
+                            $qry->where('is_available',1);
+                        })->pluck('agent_id')->toArray();
+
+                    } else {
+
+                        // Case 2: $agent_tag is a string
+
+                        $agents = AgentsTag::whereHas('tags', function ($qry) use ($agent_tag) {
+
+                            $qry->where('name', 'LIKE', '%' . $agent_tag . '%');
+
+                        })->whereHas('agent',function($qry){
+                            $qry->where('is_available',1);
+                        })->pluck('agent_id')->toArray();
+
+                    }
+                    $geoagents_ids =  DriverGeo::where('geo_id', $geo)->whereIn('driver_id', $agents);
+                }
+                $order = Order::find($order_id);
+                if($order)
+                {
+                    $geoagents_ids = $geoagents_ids->whereHas('agent', function($q) use ($order){
+                        $q->where('id', '!=', $order->driver_id);
+                    });
+                }
+            }
+            \Log::info("date",[$date]);
+            \Log::info("geoagents_ids",[$geoagents_ids]);
             $geoagents_ids =  $geoagents_ids->pluck('driver_id');
-
-            $geoagents = Agent::whereIn('id',  $geoagents_ids)->with(['logs','order'=> function ($f) use ($date) {
+            \Log::info("gwo",[$geoagents_ids]);
+            $geoagents = Agent::whereIn('id',  $geoagents_ids)
+            ->with(['logs',
+            'order'=> function ($f) use ($date) {
                 $f->whereDate('order_time', $date)->with('task');
-            }]);
-
+            }
+        ]);
+            \Log::info("dd",[$geoagents]);
             if($particular_driver_id){
                 $geoagents = $geoagents->where('id','!=',$particular_driver_id);
             }
             if(@$preference->is_threshold == 1){
                 $geoagents = $geoagents->where('is_threshold', 1);
             }
-           
+
             if(@$preference->manage_fleet){
                 $geoagents = $geoagents->whereHas('agentFleet');
             }
-            // geting task only 
+            // geting task only
             if((@$preference->is_go_to_home ==1) && ($order_id!='')){
                 $dropOfTask = Task::with('location')->where(['order_id'=>$order_id,'task_type_id'=>2])->first();
                 $dropLat  = $dropOfTask ?  ($dropOfTask->location ? $dropOfTask->location->latitude : '' ) : '' ;
@@ -143,7 +185,7 @@ trait GlobalFunction{
                     $geoagents = $geoagents->onlyGetingAgentByHomeAddress($dropLat, $dropLong, $radians);
                 }
             }
-          
+
             $geoagents = $geoagents->orderBy('id', 'DESC');
             $geoagents = $geoagents->get()->where("agent_cash_at_hand", '<', $cash_at_hand);
 
@@ -163,15 +205,15 @@ trait GlobalFunction{
                                 })->count();
         $totalTask = Task::whereIn('order_id', $orders)
                                 ->where(function($q) {
-                                    $q->whereIn('task_status',[5,4] ) 
+                                    $q->whereIn('task_status',[5,4] )
                                     ->orWhereHas('order', function($q1){
                                         $q1->where('status', 'cancelled');
                                     });
                                 })->count();
         $average =0;
         if( $CompletedTasks > 0){
-            $average  = (  $CompletedTasks * 100) /$totalTask;        
-        }         
+            $average  = (  $CompletedTasks * 100) /$totalTask;
+        }
         $data['averageRating'] = number_format($average,2);
         $data['CompletedTasks'] = $CompletedTasks;
         $data['totalTask'] =  $totalTask;
@@ -181,7 +223,7 @@ trait GlobalFunction{
       //---------function to get pricing rule based on agent_tag/geo fence/timetable/day/time
       public function getPricingRuleData($geoid, $agent_tag = '', $order_datetime = '')
       {
-  
+
           try {
               $pricingRule = '';
               if(!empty($geoid))
@@ -189,13 +231,13 @@ trait GlobalFunction{
                   $pricingRule = PricingRule::whereHas('priceRuleTags.geoFence',function($q)use($geoid){
                       $q->where('id', $geoid);
                   });
-  
+
                   if(!empty($agent_tag)){
                       $pricingRule->whereHas('priceRuleTags.tagsForAgent',function($q)use($agent_tag){
                       $q->where('name', $agent_tag);
                   });
                   }
-  
+
                   if(!empty($order_datetime)){
                       $dayname =Carbon::parse($order_datetime)->format('l') ;
                       $time =  Carbon::parse($order_datetime)->format('H:i');
@@ -209,12 +251,12 @@ trait GlobalFunction{
                       $pricingRule->where('apply_timetable', '!=', 1);
                   }
                   $pricingRule =   $pricingRule->orderBy('id', 'desc')->first();
-  
+
                   if(empty($pricingRule)){
                       $pricingRule = PricingRule::whereHas('priceRuleTags.geoFence',function($q)use($geoid){
                           $q->where('id', $geoid);
                       });
-      
+
                       if(!empty($agent_tag)){
                           $pricingRule->whereHas('priceRuleTags.tagsForAgent',function($q)use($agent_tag){
                           $q->where('name', $agent_tag);
@@ -223,16 +265,16 @@ trait GlobalFunction{
                       $pricingRule =   $pricingRule->orderBy('id', 'desc')->first();
                   }
               }
-            
+
               if(empty($pricingRule)){
                   $pricingRule = PricingRule::where('is_default', 1)->first();
               }
               return $pricingRule;
-  
+
           } catch (\Throwable $th) {
-              
+
               // \Log::info('Eror '.$th->getMessage());
-  
+
               return [];
           }
       }
@@ -246,7 +288,7 @@ trait GlobalFunction{
 //     // echo $no.'---';
 //     $pr = $no * $number;
 //     // echo $pr.'=';
-//    $sum +=  $pr; 
+//    $sum +=  $pr;
 //    $last = $key;
 // }
 // echo $sum;
@@ -254,9 +296,9 @@ trait GlobalFunction{
 
     public function setPricingRuleDynamic($id,$time)
     {
-        try {           
+        try {
             $order  = Order::where('id', $id)->first();
-            $timeTotal = Task::where('order_id',$order->id)->sum('waiting_time');   
+            $timeTotal = Task::where('order_id',$order->id)->sum('waiting_time');
             $time = $timeTotal??$time;
 
             if(isset($order)) {
@@ -304,16 +346,16 @@ trait GlobalFunction{
 
                     if(empty($distancePricing)  && count($distancePricing)==0)
                     {
-                        return $sum??0;  
+                        return $sum??0;
                     }
-                    
+
                     foreach($distancePricing as $key => $number)
                     {
                         $no = ($number->distance_fee - $last);
                         if($lastDistance >= $number->distance_fee)
                         {
                             $pr = $no * $number->duration_price;
-                            $sum +=  $pr; 
+                            $sum +=  $pr;
                         }
                         $lastDistance = $lastDistance - $no;
                         $last = $number->distance_fee;
@@ -322,13 +364,13 @@ trait GlobalFunction{
                     if($lastDistance){
                         $upperPrice = DistanceWisePricingRule::where('price_rule_id',$pricingRule->id)->where('distance_fee','>',$lastDistance)->value('duration_price');
                         $pr = $lastDistance * $upperPrice;
-                        $sum +=  $pr; 
+                        $sum +=  $pr;
                     }
                 }else{
                     $distancePricing = DistanceWisePricingRule::where('price_rule_id',$pricingRule->id)->where('distance_fee','>=',$lastDistance)->orderBy('distance_fee','asc')->first();
                     if(empty($distancePricing)  && count($distancePricing)==0)
                     {
-                        return $sum??0;  
+                        return $sum??0;
                     }
                     $sum = $lastDistance * $distancePricing->duration_price;
                 }
@@ -338,7 +380,7 @@ trait GlobalFunction{
           \Log::info(json_encode($th->getMessage()));
           return 0;
         }
-    
+
     }
 
 
@@ -353,20 +395,20 @@ trait GlobalFunction{
     {
         $requestOnly = ['category_name','specific_instruction'];
         $validated_keys = $request->only($requestOnly);
-       
+
         $order_id = @$order_id;
-    
+
         foreach($validated_keys as $key => $value){
           OrderAdditionData::updateOrCreate(
                 ['key_name' => $key, 'order_id' => $order_id],
                 ['key_name' => $key, 'key_value' => $value,'order_id' => $order_id]);
         }
         return 1;
-        
+
     }
 
 
-    
+
     /**
      * Check agent go to home address Distance enable or disabled
      */
@@ -386,16 +428,16 @@ trait GlobalFunction{
                     }else{
                         return false;
                     }
-                    
+
                 }else{
                     $location =  $this->lastAgentDropoffLocation($id);
-                   
+
                     if(isset($location) && !empty($location)){
                         $location   = $location->location;
                         $latitude   = $location->latitude;
                         $longitude  = $location->longitude;
                         $distance   = $this->DistanceAgentHomeAddess($finalLocation->latitude,$finalLocation->longitude,$latitude,$longitude);
-                        
+
                         if($distance <= $max_distance){
                             return true;
                         }else{
@@ -444,8 +486,8 @@ trait GlobalFunction{
                     $totalDistance = $totalDistance + (isset($item[$i]->distance) ? $item[$i]->distance->value : 0);
                     $totalDuration = $totalDuration + (isset($item[$i]->duration) ? $item[$i]->duration->value : 0);
                 }
-    
-    
+
+
                 if ($client->distance_unit == 'metric') {
                     $send['distance'] = round($totalDistance/1000, 2);      //km
                 } else {
@@ -455,7 +497,7 @@ trait GlobalFunction{
                 $newvalue = round($totalDuration/60, 2);
                 $whole = floor($newvalue);
                 $fraction = $newvalue - $whole;
-    
+
                 if ($fraction >= 0.60) {
                     $send['duration'] = $whole + 1;
                 } else {
@@ -463,9 +505,9 @@ trait GlobalFunction{
                 }
             }
             return $send;
-            
+
     }
-   
+
    /**
      *  Distance between go to home address and agent last frop off location
      */
@@ -559,7 +601,7 @@ trait GlobalFunction{
         // function to get distance between 2 location
         public function GoogleDistanceMatrix($lat1, $long1, $lat2, $long2)
         {
-           
+
             $client = ClientPreference::where('id', 1)->first();
             $ch = curl_init();
             $headers = array('Accept: application/json',
@@ -571,9 +613,9 @@ trait GlobalFunction{
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             $response = curl_exec($ch);
             $result = json_decode($response);
-          
+
             curl_close($ch); // Close the connection
-    
+
             $value =   $result->rows[0]->elements??'';
             if (isset($value[0]->distance)) {
                 $totalDistance = $value[0]->distance->value;
@@ -582,7 +624,7 @@ trait GlobalFunction{
             }
             return round($totalDistance);
         }
-    
+
         //for optimizing route
         public function optimizeRoute(Request $request)
         {
@@ -597,7 +639,7 @@ trait GlobalFunction{
             $agentid = $request->route_agentid;
             $distancematrix = $request->distance_matrix;
             $distancematrixarray = json_decode($distancematrix);
-    
+
             if ($driver_start_location=='current') {
                 if ($agentid != 0) {
                     $singleagentdetail = Agent::where('id', $agentid)->with('agentlog')->first();
@@ -632,13 +674,13 @@ trait GlobalFunction{
             //arranging starting location in distance matrix
             $distancematrixarray[0][0] = $driver_lat;
             $distancematrixarray[0][1] = $driver_long;
-    
+
             $auth = Client::where('code', Auth::user()->code)->with(['getAllocation', 'getPreference'])->first();
-    
+
             //setting timezone from id
             $tz = new Timezone();
             $auth->timezone = $tz->timezone_name(Auth::user()->timezone);
-    
+
             $startdate = date("Y-m-d 00:00:00", strtotime($request->route_date));
             $enddate = date("Y-m-d 23:59:59", strtotime($request->route_date));
             $startdate = Carbon::parse($startdate . $auth->timezone ?? 'UTC')->tz('UTC');
@@ -646,7 +688,7 @@ trait GlobalFunction{
             $points = $distancematrixarray;
             $distance_matrix = $this->distanceMatrix($points, $taskids);
             $payload = json_encode(array("data" => $distance_matrix));
-    
+
             //api for getting optimize path
             $url = "https://optimizeroute.royodispatch.com/optimize";
             $ch = curl_init($url);
@@ -674,9 +716,9 @@ trait GlobalFunction{
                 echo "Try again later";
             }
         }
-    
+
     public function updateAgentLog($data ,$order_id =""){
-      
+
         if(empty($order_id)){
             AgentLog::where('agent_id', $data['agent_id'])
             ->latest('created_at')
@@ -693,37 +735,37 @@ trait GlobalFunction{
         //This is for drag and drop functionality
         public function arrangeRoute(Request $request)
         {
-          
+
             $taskids = explode(',', $request->taskids);
             $taskids = array_filter($taskids);
-    
+
             $auth = Client::where('code', Auth::user()->code)->with(['getAllocation', 'getPreference'])->first();
-    
+
             //setting timezone from id
             $tz = new Timezone();
             $auth->timezone = $tz->timezone_name(Auth::user()->timezone);
-    
+
             $startdate = date("Y-m-d 00:00:00", strtotime($request->date));
             $enddate = date("Y-m-d 23:59:59", strtotime($request->date));
             $startdate = Carbon::parse($startdate . $auth->timezone ?? 'UTC')->tz('UTC');
             $enddate = Carbon::parse($enddate . $auth->timezone ?? 'UTC')->tz('UTC');
             $task = Task::with('location')->whereIn('id',$taskids)->get();
-           
+
             $agentid = $request->agentid;
-            
+
             for ($i=0; $i < count($taskids); $i++) {
                 $taskorder = [
                     'task_order' => $i
                  ];
                 Task::where('id', $taskids[$i])->update($taskorder);
             }
-    
+
             $orderdetail = Task::where('id', $taskids[0])->with('order')->first();
             $orderdate =  date("Y-m-d", strtotime($orderdetail->order->order_time));
-    
+
             //getting all routes
             $allTasks = Order::where('order_time', '>=', $startdate)->where('order_time', '<=', $enddate)->with(['customer', 'task.location', 'agent.team'])->get();
-    
+
             $allmarker = [];
             foreach ($allTasks as $key => $tasks) {
                 $append = [];
@@ -748,12 +790,12 @@ trait GlobalFunction{
                     $append['customer_name']         = isset($tasks->customer->name)?$tasks->customer->name:'';
                     $append['customer_phone_number'] = isset($tasks->customer->phone_number)?$tasks->customer->phone_number:'';
                     $append['task_order']            = $task->task_order;
-    
+
                     array_push($allmarker, $append);
                 }
             }
-           
-    
+
+
             $allagents = Agent::with('agentlog')->get()->toArray();
             $alldrivers = array();
             $j = 0;
@@ -780,8 +822,8 @@ trait GlobalFunction{
                 }
             }
 
-            
-    
+
+
             //unassigned_orders
             $unassigned_orders = array();
             $un_order  = Order::where('order_time', '>=', $startdate)->where('order_time', '<=', $enddate)->where('auto_alloction', 'u')->with(['customer', 'task.location'])->get();
@@ -815,14 +857,14 @@ trait GlobalFunction{
                         $aappend['task_order']            = $singleua['task_order'];
                         $un_route[] = $aappend;
                     }
-    
+
                     $first_un_loc = array('lat'=>floatval($unassigned_orders[0]['task'][0]['location']['latitude']),'long'=>floatval($unassigned_orders[0]['task'][0]['location']['longitude']));
                     $final_un_route['driver_detail'] = $first_un_loc;
                     $final_un_route['task_details'] = $un_route;
                     $alldrivers[] = $final_un_route;
                 }
             }
-    
+
             //calculating distance
             $driverlocation = [];
             if ($agentid != 0) {
@@ -838,10 +880,10 @@ trait GlobalFunction{
                     $driverlocation['long'] = $singleagentdetail->agentlog->long;
                 }
             }
-    
+
             // $gettotal_distance = $this->getTotalDistance($taskids, $driverlocation);
             // $distance  = $gettotal_distance['total_distance_miles'];
-    
+
             if ($agentid!=0) {
                 $allcation_type = 'silent';
                 $oneagent = Agent::where('id', $agentid)->first();
@@ -861,19 +903,19 @@ trait GlobalFunction{
                 ];
                 $this->sendsilentnotification($notification_data);
             }
-    
+
             $output = array();
             $output['allroutedata'] = $alldrivers;
-             
+
             // $output['total_distance'] = $distance;
             $output['current_location'] = Task::where('id', $taskids[0])->whereHas('order.agent.agentlog')->count();
             echo json_encode($output);
         }
-    
+
         //for updating task time after drag drop functionality
         public function optimizeArrangeRoute(Request $request)
         {
-          
+
             $driver_start_time = $request->driver_start_time;
             $task_duration = $request->task_duration;
             $brake_start_time = $request->brake_start_time;
@@ -881,19 +923,19 @@ trait GlobalFunction{
             $driver_start_location = $request->driver_start_location;
             $driver_latitude = $request->latitude;
             $driver_longitude = $request->longitude;
-    
+
             $agentid = $request->route_agentid;
             $distancematrix = $request->distance_matrix;
-    
+
             $taskids = explode(',', $request->route_taskids);
             $taskids = array_filter($taskids);
             $firsttaskdetail = Task::where('id', $taskids[0])->with('location')->first();
-    
+
             if ($driver_start_location=='current') {
                 if ($agentid != 0) {
                     $singleagentdetail = Agent::where('id', $agentid)->with('agentlog')->first();
                     if(empty($singleagentdetail)){
-                        $singleagentdetail = Agent::with('agentlog')->first(); 
+                        $singleagentdetail = Agent::with('agentlog')->first();
                     }
                     if ($singleagentdetail->is_available == 1) {
                         $driver_lat = $singleagentdetail->agentlog->lat;
@@ -928,29 +970,29 @@ trait GlobalFunction{
                $this->getTotalDistancewithLatLong($taskids,$driver_latitude,$driver_longitude);
             }
 
-           
-    
+
+
             $output = array();
-            
+
             echo json_encode($output);
         }
-    
+
         public function getTotalDistance($taskids=null, $driverlocation=null)
         {
             $points = array();
             $totaldistance = 0;
             $distancearray  = [];
             $loc1 = $loc2 = $prev_latitude = $prev_longitude = 0;
-           
+
             for ($i=0;$i<count($taskids);$i++) {
-                
+
                 $Taskdetail = Task::where('id', $taskids[$i])->with('location')->first();
-               
+
                     if (isset($driverlocation['lat'])) {
                         $distance = $this->GoogleDistanceMatrix($driverlocation['lat'], $driverlocation['long'], $Taskdetail->location->latitude??'', $Taskdetail->location->longitude??'');
                         $totaldistance += $distance;
                         $distancearray[$Taskdetail->id] = number_format($distance/1000, 2);
-                        
+
                     } else {
                         $distancearray[] = 0;
                     }
@@ -975,7 +1017,7 @@ trait GlobalFunction{
                 //     $prev_longitude = $Taskdetail->location->longitude ?? '';
                 // }
             }
-            
+
             $distance_in_km = number_format($totaldistance/1000, 2);
             $distance_in_miles = number_format($totaldistance/1609.344, 2);
             $output['total_distance'] = $totaldistance;
@@ -991,7 +1033,7 @@ trait GlobalFunction{
             $j = 0;
            foreach($output['distances'] as $taskId => $distance){
               $update_task = Task::where('id',$taskId)->update(['task_order'=>$j]);
-              $j++; 
+              $j++;
            }
             return $output;
         }
@@ -999,22 +1041,22 @@ trait GlobalFunction{
 
         public function getTotalDistancewithLatLong($taskids=null, $driverlat=null,$driverlong=null)
         {
-            
+
             $points = array();
             $totaldistance = 0;
             $distancearray  = [];
             $loc1 = $loc2 = $prev_latitude = $prev_longitude = 0;
-          
+
             for ($i=0;$i<count($taskids);$i++) {
-                
+
                 $Taskdetail = Task::where('id', $taskids[$i])->with('location')->first();
-                    
+
                     if (isset($driverlat)) {
                         $distance = $this->GoogleDistanceMatrix($driverlat, $driverlong, $Taskdetail->location->latitude??'', $Taskdetail->location->longitude??'');
-                        
+
                         $totaldistance += $distance;
                         $distancearray[$Taskdetail->id] = number_format($distance/1000, 2);
-                        
+
                     } else {
                         $distancearray[] = 0;
                     }
@@ -1039,12 +1081,12 @@ trait GlobalFunction{
                 //     $prev_longitude = $Taskdetail->location->longitude ?? '';
                 // }
             }
-            
+
             $distance_in_km = number_format($totaldistance/1000, 2);
             $distance_in_miles = number_format($totaldistance/1609.344, 2);
             $output['total_distance'] = $totaldistance;
             $output['distance'] = $distancearray;
-            
+
             $output['distance'] = Arr::sort($output['distance']);
           // If you want to maintain keys, use sortBy()
            $output['distances'] = collect($output['distance'])->sortBy(function ($distance) {
@@ -1055,14 +1097,14 @@ trait GlobalFunction{
             $j = 0;
            foreach($output['distances'] as $taskId => $distance){
               $update_task = Task::where('id',$taskId)->update(['task_order'=>$j]);
-              $j++; 
+              $j++;
            }
             return $output;
         }
 
 
-      
-    
+
+
         // for turn by turn funcationality
         public function ExportPdfPath(Request $request)
         {
@@ -1081,7 +1123,7 @@ trait GlobalFunction{
                 }
                 $agent_name = $singleagentdetail->name;
             }
-    
+
             $totallocations = count($taskids);
             $w=0;
             $taskids = Task::whereIn('id',$taskids)->orderBy('task_order','asc')->pluck('id');
@@ -1100,9 +1142,9 @@ trait GlobalFunction{
                     $w++;
                 }
             }
-    
+
             $routedetail = $this->GetRouteDirection($origin, $destination, $waypoints);
-    
+
             $p['route']=$routedetail;
             $p['path'] = $location;
             $p['date'] = $request->date;
@@ -1111,7 +1153,7 @@ trait GlobalFunction{
             // return $pdf_doc->download('routedetail.pdf');
             echo json_encode($p);
         }
-    
+
         public function generatePdf(Request $request)
         {
             if (isset(Auth::user()->logo)) {
@@ -1119,7 +1161,7 @@ trait GlobalFunction{
             }
             $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fit/300/100/sm/0/plain/';
             $image = $imgproxyurl.$urlImg;
-    
+
             $result = json_decode($request->pdfdata);
             $p['route'] = $result->route;
             $p['path'] = $result->path;
@@ -1130,7 +1172,7 @@ trait GlobalFunction{
             // return $pdf_doc->download('routedetail.pdf');
             return view('pdf', $p);
         }
-    
+
         public function GetRouteDirection($origin, $destination, $midpoints)
         {
             $lat1 = $origin['lat'];
@@ -1152,14 +1194,14 @@ trait GlobalFunction{
                        'Content-Type: application/json',
                        );
             $url =  'https://maps.googleapis.com/maps/api/directions/json?origin='.$lat1.','.$long1.'&destination='.$lat2.','.$long2.'&key='.$client->map_key_1.$waypoint;
-    
+
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             $response = curl_exec($ch);
             $result = json_decode($response);
             curl_close($ch); // Close the connection
-    
+
             $routes = $result->routes[0]->legs[0]->steps??'';
             $output = array();
             if (isset($routes)) {
@@ -1172,20 +1214,20 @@ trait GlobalFunction{
                         $j++;
                     }
                 }
-    
+
             }
             return $output;
         }
-    
+
         // this function is for getting all the task details with location address
         public function getTaskDetails(Request $request)
         {
             $taskids = explode(',', $request->taskids);
             $taskids = array_filter($taskids);
-    
+
             $taskdetails = [];
             $html = "";
-    
+
             for ($i=0;$i<count($taskids);$i++) {
                 $singletaskdetail = Task::where('id', $taskids[$i])->with('location')->first();
                 $singletaskdetail['current_location'] = Task::where('id', $taskids[0])->whereHas('order.agent.agentlog')->count();
@@ -1193,7 +1235,7 @@ trait GlobalFunction{
             }
             echo json_encode($taskdetails);
         }
-    
+
         // This function is for sending silent push notification
         public function sendsilentnotification($notification_data)
         {
@@ -1209,18 +1251,18 @@ trait GlobalFunction{
                 ->send();
             }
         }
-    
+
         //function to load latest order/route and agent data with or without html
         public function dashboardTeamData(Request $request)
         {
             $userstatus = isset($request->userstatus)?$request->userstatus:2;
             $is_load_html = isset($request->is_load_html)?$request->is_load_html:1;
             $auth = Client::where('code', Auth::user()->code)->with(['getAllocation', 'getPreference'])->first();
-    
+
             //setting timezone from id
             $tz = new Timezone();
             $auth->timezone = $tz->timezone_name(Auth::user()->timezone);
-    
+
             if(isset($request->routedate)) {
                 $date = Carbon::parse(strtotime($request->routedate))->format('Y-m-d');
             }else{
@@ -1228,18 +1270,18 @@ trait GlobalFunction{
             }
             $startdate = date("Y-m-d 00:00:00", strtotime($date));
             $enddate = date("Y-m-d 23:59:59", strtotime($date));
-    
-    
+
+
             $startdate = Carbon::parse($startdate . @$auth->timezone ?? 'UTC')->tz('UTC');
             $enddate = Carbon::parse($enddate . @$auth->timezone ?? 'UTC')->tz('UTC');
-    
+
             //left side bar list for display all teams
             if($userstatus!=2):
                 $teams  = Team::with(
-                    [ 
+                    [
                         'agents' => function ($query) use ($userstatus, $startdate, $enddate) {
                             $query->where('is_available', '=', $userstatus)
-                                ->with(['agentlog', 
+                                ->with(['agentlog',
                                     'order'  => function ($q) use ($startdate, $enddate){
                                     $q->where('order_time', '>=', $startdate)->where('order_time', '<=', $enddate)->where('status','!=','completed')->with(['customer', 'task.location']);
                                     }
@@ -1257,14 +1299,14 @@ trait GlobalFunction{
                     ]
                 );
             endif;
-            
+
             if (Auth::user()->is_superadmin == 0 && Auth::user()->all_team_access == 0) {
                 $teams = $teams->whereHas('permissionToManager', function ($query) {
                     $query->where('sub_admin_id', Auth::user()->id);
                 });
             }
             $teams = $teams->get();
-    
+
             foreach ($teams as $team) {
                 $online  = 0;
                 $offline = 0;
@@ -1283,45 +1325,45 @@ trait GlobalFunction{
                     $agent['free'] = count($agent->order) > 0 ? 'Busy' : 'Free';
                     $agent['agent_task_count'] = $agent_task_count;
                 }
-    
+
                 $team['online_agents']  = $online;
                 $team['offline_agents'] = $offline;
                 $agent['agent_count']   = $count;
             }
-    
+
             //left side bar list for display unassigned team
             $unassigned = Agent::where('team_id', null)->with(['order' => function ($o) use ($startdate, $enddate) {
                 $o->where('order_time', '>=', $startdate)->where('order_time', '<=', $enddate)->with('customer')->with('task.location');
             }])->get();
-    
+
             $online  = 0;
             $offline = 0;
             $count   = 0;
-    
+
             foreach ($unassigned as $agent) {
                 $agent_task_count = 0;
                 foreach ($agent->order as $tasks) {
                     $agent_task_count = $agent_task_count + count($tasks->task);
                 }
-    
+
                 if ($agent->is_available == 1) {
                     $online++;
                 } else {
                     $offline++;
                 }
                 $count++;
-    
+
                 $agent['free'] = count($agent->order) > 0 ? 'Busy' : 'Free';
                 $agent['online_agents']    = $online;
                 $agent['offline_agents']   = $offline;
                 $agent['agent_count']      = $count;
                 $agent['agent_task_count'] = $agent_task_count;
             }
-    
+
             //create array for map marker
             $allTasks = Order::where('order_time', '>=', $startdate)->where('order_time', '<=', $enddate)->where('status','!=','completed')->with(['customer', 'task.location', 'agent.team'])->get();
             $newmarker = [];
-    
+
             foreach ($allTasks as $key => $tasks) {
                 $append = [];
                 foreach ($tasks->task as $task) {
@@ -1348,10 +1390,10 @@ trait GlobalFunction{
                     array_push($newmarker, $append);
                 }
             }
-    
+
             $unassigned->toArray();
             $teams->toArray();
-    
+
             $agents = Agent::with('agentlog','getDriver');
             if($userstatus!=2):
                 $agents->where('is_available', $userstatus);
@@ -1359,7 +1401,7 @@ trait GlobalFunction{
             $agents = $agents->get()->toArray();
             // \Log::info($agents);
             $preference  = ClientPreference::where('id', 1)->first(['theme','date_format','time_format']);
-    
+
             $uniquedrivers = array();
             $j = 0;
             foreach ($agents as $singleagent) {
@@ -1396,10 +1438,10 @@ trait GlobalFunction{
                         $j++;
                     }
                 }else{
-    
+
                 }
             }
-    
+
             //for route optimization
             $routeoptimization = array();
             $taskarray = array();
@@ -1412,21 +1454,21 @@ trait GlobalFunction{
                         $points[] = array(floatval($singletask['latitude']),floatval($singletask['longitude']));
                         $taskids[] = $singletask['task_id'];
                     }
-    
+
                     $taskarray[$singledriver['driver_detail']['agent_id']] = implode(',', $taskids);
                     $routeoptimization[$singledriver['driver_detail']['agent_id']] = $points;
                 }
             }
-    
+
             //create distance matrix
             $distancematrix = array();
             foreach ($routeoptimization as $key=>$value) {
                 $distancematrix[$key]['tasks'] = $taskarray[$key];
                 $distancematrix[$key]['distance'] = $routeoptimization[$key];
             }
-    
+
             $teamdata = $teams->toArray();
-    
+
             foreach ($teamdata as $k1=>$singleteam) {
                 foreach ($singleteam['agents'] as $k2=>$singleagent) {
                     $teamdata[$k1]['agents'][$k2]['taskids']  = [];
@@ -1454,12 +1496,12 @@ trait GlobalFunction{
                     }
                 }
             }
-    
+
             //unassigned_orders
             $unassigned_orders = array();
             $un_total_distance = '';
             $un_order  = Order::where('order_time', '>=', $startdate)->where('order_time', '<=', $enddate)->where('status', 'unassigned')->with(['customer', 'task.location'])->get();
-    
+
             if (count($un_order)>=1) {
                 $unassigned_orders = $this->splitOrder($un_order->toarray());
                 if (count($unassigned_orders)>1) {
@@ -1476,7 +1518,7 @@ trait GlobalFunction{
                             // dd($singleua['task'][0]['location']['latitude']);
                             $unassigned_points[] = array(floatval($singleua['task'][0]['location']['latitude']),floatval($singleua['task'][0]['location']['longitude']));
                         }
-    
+
                         //for drawing route
                         $s_task = $singleua['task'][0];
                         if ($s_task['task_type_id'] == 1) {
@@ -1512,17 +1554,17 @@ trait GlobalFunction{
                     $final_un_route['driver_detail'] = $first_un_loc;
                     $final_un_route['task_details'] = $un_route;
                     $uniquedrivers[] = $final_un_route;
-    
+
                     $gettotal_un_distance = $this->getTotalDistance($unassigned_taskids);
-    
+
                     $un_total_distance = $gettotal_un_distance['total_distance_miles'];
                 }
             }
-    
+
             $client = ClientPreference::where('id', 1)->first();
-    
+
             $googleapikey = $client->map_key_1??'';
-    
+
             $getAdminCurrentCountry = Countries::where('id', '=', Auth::user()->country_id)->get()->first();
             if(!empty($getAdminCurrentCountry)){
                 $defaultCountryLatitude  = $getAdminCurrentCountry->latitude;
@@ -1531,7 +1573,7 @@ trait GlobalFunction{
                 $defaultCountryLatitude  = '';
                 $defaultCountryLongitude  = '';
             }
-            
+
             $data = array('status' =>"success", 'teams' => $teamdata, 'userstatus' => $userstatus, 'client_code' => Auth::user()->code, 'defaultCountryLongitude' => $defaultCountryLongitude, 'defaultCountryLatitude' => $defaultCountryLatitude, 'newmarker' => $newmarker, 'unassigned' => $unassigned, 'agents' => $agents,'date'=> $date,'preference' =>$preference, 'routedata' => $uniquedrivers,'distance_matrix' => $distancematrix, 'unassigned_orders' => $unassigned_orders,'unassigned_distance' => $un_total_distance, 'map_key'=>$googleapikey, 'client_timezone'=>$auth->timezone);
             if($is_load_html == 1)
             {
@@ -1540,9 +1582,9 @@ trait GlobalFunction{
                 return json_encode($data);
             }
         }
-    
+
         public function api_documentation(){
-         
+
             return File::get(public_path() . '/assets/api_documentation/index.html');
         }
 
@@ -1552,11 +1594,11 @@ trait GlobalFunction{
             $new_order = [];
             if (is_array($orders) && count($orders)>0 && !empty($orders)) {
                 $counter = 0;
-                
-                
+
+
                 foreach ($orders as $order) {
-    
-                    
+
+
                     if(isset($order['task'] )){
                     foreach ($order['task'] as $task) {
                         $new_order[] = $order;
@@ -1567,7 +1609,7 @@ trait GlobalFunction{
                     }
                  }
                 }
-    
+
                 //sort array
                 usort($new_order, function ($a, $b) {
                     return $a['task_order'] <=> $b['task_order'];
@@ -1581,5 +1623,3 @@ trait GlobalFunction{
 
 
 }
-
-

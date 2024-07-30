@@ -2,7 +2,14 @@
 
     $(document).ready(function() {
 
-
+        if ($('#success-alert').length) {
+            // Set a timeout to hide the alert after 2 seconds
+            setTimeout(function() {
+                $('#success-alert').fadeOut('slow', function() {
+                    $(this).remove(); // Optionally remove the alert from the DOM
+                });
+            }, 2000); // 2000 milliseconds = 2 seconds
+        }
         
         var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
         hash = hashes[0].split('=');

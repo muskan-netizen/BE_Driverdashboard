@@ -90,11 +90,15 @@ trait FormAttributeTrait
                                 // $file = $request->file('profile_picture');
                                 $file = $request['attribute_data_images_'.$attribute_id][0];
 
-                            
+                                if(is_azureEnable())
+                                {
+                                    $image = uploadAzureImage($file);
+                                }else{
                                     // $file = $value;
                                     $file_name = uniqid() . '.' .  $file->getClientOriginalExtension();
                                     $s3filePath = '/assets/' . $folder . '/' . $file_name;
                                     $image = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                                }
                             }
                             $insert_arr[$insert_count]['order_id'] = $orderId->order_id;
                             $insert_arr[$insert_count]['attribute_id'] = $value['id'];

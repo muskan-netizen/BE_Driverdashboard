@@ -28,6 +28,7 @@ trait ClientPreferenceManager
         'reffered_by_amount',
         'refferel_to_agent_amount',
         'refferel_by_agent_amount',
+        'is_azureUpload'
     ];
 
     /**
@@ -39,13 +40,12 @@ trait ClientPreferenceManager
      */
     public function updatePreferenceAdditional($request = [])
     {
-        $validated_keys = $request->only($this->client_preference_fillable_key);
+        $validated_keys = $request->only($this->client_preference_fillable_key);     
         $client = Client::first();
         foreach ($validated_keys as $key => $value) {
             if ($key == 'is_attendence' && $value == 'on') {
                 $value = 1;
             }
-
             ClientPreferenceAdditional::updateOrCreate([
                 'key_name' => $key,
                 'client_code' => $client->code

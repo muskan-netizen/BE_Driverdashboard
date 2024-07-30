@@ -13,6 +13,7 @@ use Config;
 use Log;
 use Carbon\Carbon;
 use App\Model\Client;
+use App\Services\FirebaseService;
 use Exception;
 use Kawankoding\Fcm\Fcm;
 
@@ -116,38 +117,70 @@ class RosterDelete implements ShouldQueue
                     $client_preferences = DB::connection('db_'.$clientRecord->database_name)->table('client_preferences')->where('client_id', $item['client_code'])->first();                    
                     if(isset($new)){
                         try{
-                            $fcm_server_key = !empty($client_preferences->fcm_server_key)? $client_preferences->fcm_server_key : 'null';
-                            $fcmObj = new Fcm($fcm_server_key);
+                            // $fcm_server_key = !empty($client_preferences->fcm_server_key)? $client_preferences->fcm_server_key : 'null';
+                            // $fcmObj = new Fcm($fcm_server_key);
                             if($item['is_particular_driver'] != 2 ){
-                                $fcm_store = $fcmObj->to($new) // $recipients must an array
-                                ->priority('high')
-                                ->timeToLive(0)
-                                ->data($item)
-                                ->notification([
-                                    'title'              => 'Pickup Request',
-                                    'body'               => 'Check All Details For This Request In App',
-                                    'sound'              => 'notification.mp3',
-                                    'android_channel_id' => 'Royo-Delivery',
-                                    'soundPlay'          => true,
-                                    'show_in_foreground' => true,
-                                ])
-                                ->send();
+                                $data = [
+                                    "registration_ids" => is_array($item['device_token']) ? $item['device_token'] : array($item['device_token']),//$item['device_token'],
+                                    "notification" => [
+                                        'title' => 'Pickup Request',
+                                        'body' => 'Check All Details For This Request In App',
+                                        'sound' => 'notification.mp3',
+                                        "android_channel_id" => "Royo-Delivery",
+                                    ],
+                                    "data" => [
+                                        'title' => 'Pickup Request',
+                                        'body' => 'Check All Details For This Request In App',
+                                        'data' => json_encode($item),
+                                        'soundPlay' => true,
+                                        'show_in_foreground' => true,
+                                    ],
+                                    "priority" => "high"
+                                ];
+                                $response = FirebaseService::sendNotification($data);
+                                // $fcm_store = $fcmObj->to($new) // $recipients must an array
+                                // ->priority('high')
+                                // ->timeToLive(0)
+                                // ->data($item)
+                                // ->notification([
+                                //     'title'              => 'Pickup Request',
+                                //     'body'               => 'Check All Details For This Request In App',
+                                //     'sound'              => 'notification.mp3',
+                                //     'android_channel_id' => 'Royo-Delivery',
+                                //     'soundPlay'          => true,
+                                //     'show_in_foreground' => true,
+                                // ])
+                                // ->send();
                                //  \Log::info( "fcm" );
                                // \Log::info( $fcm_store );
                             }else{
-                                $fcm_store =   $fcmObj
-                                ->to([$item['device_token']])
-                                ->priority('high')
-                                ->timeToLive(0)
-                                ->data([
-                                    'title' => 'Reminder Order',
-                                    'body' => 'Pickup your order #'.$item['order_id'],
-                                ])
-                                ->notification([
-                                    'title' => 'Reminder Order',
-                                    'body' => 'Pickup your order #'.$item['order_id'],
-                                ])
-                                ->send();
+                                $data = [
+                                    "registration_ids" => is_array($item['device_token']) ? $item['device_token'] : array($item['device_token']),//$item['device_token'],
+                                    "notification" => [
+                                        'title' => 'Reminder Order',
+                                        'body' => 'Pickup your order #'.$item['order_id'],
+                                    ],
+                                    "data" => [
+                                        'title' => 'Reminder Order',
+                                        'body' => 'Pickup your order #'.$item['order_id'],
+                                    ],
+                                    "priority" => "high"
+                                ];
+				                $response = FirebaseService::sendNotification($data);
+
+                                // $fcm_store =   $fcmObj
+                                // ->to([$item['device_token']])
+                                // ->priority('high')
+                                // ->timeToLive(0)
+                                // ->data([
+                                //     'title' => 'Reminder Order',
+                                //     'body' => 'Pickup your order #'.$item['order_id'],
+                                // ])
+                                // ->notification([
+                                //     'title' => 'Reminder Order',
+                                //     'body' => 'Pickup your order #'.$item['order_id'],
+                                // ])
+                                // ->send();
                             }
                         }
                         catch(Exception $e){

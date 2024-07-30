@@ -201,9 +201,15 @@ exit;
                                                             class="custom-control-input agent_checkbox team_checkbox_{{ $agent->team_id ?? 0 }}"
                                                             id="{{ $agent->id }}" name="agents[]" value="{{ $agent->id }}">
                                                         <label class="custom-control-label new" for="{{ $agent->id }}"></label>
+                                                        @if(is_azureEnable())
                                                         <img class="imageagent"
-                                                            src="{{isset($agent->profile_picture) ? $imgproxyurl.Storage::disk('s3')->url($agent->profile_picture) : '' }}"
-                                                            alt="" style="border-radius:50%; ">
+                                                                src="{{isset($agent->profile_picture) ? getAzureUrl().$agent->profile_picture : '' }}"
+                                                                alt="" style="border-radius:50%; ">
+                                                        @else
+                                                            <img class="imageagent"
+                                                                src="{{isset($agent->profile_picture) ? $imgproxyurl.Storage::disk('s3')->url($agent->profile_picture) : '' }}"
+                                                                alt="" style="border-radius:50%; ">
+                                                        @endif
                                                     </div>
                                                     <div class="col-10">
                                                         <span class="spans">{{ $agent->name }}</span><br>
@@ -219,12 +225,12 @@ exit;
 
                         <div class="geo_bottom_btns">
                             <div class="row">
-                                <div class="col-md-6 mb-2 mb-md-0">
+                                <div class="col-md-6 mb-4 mb-md-0 pb-4">
                                     <button type="button"
-                                        class="btn btn-block btn-outline-blue waves-effect waves-light mb-0">{{__("Cancel")}}</button>
+                                        class="btn btn-block btn-outline-blue waves-effect waves-light mb-4">{{__("Cancel")}}</button>
                                 </div>
                                 <div class="col-md-6">
-                                    <button type="submit" class="btn btn-block btn-blue waves-effect waves-light">{{__("Save")}}</button>
+                                    <button type="submit" class="btn btn-block btn-blue waves-effect waves-light mb-4">{{__("Save")}}</button>
                                 </div>
                             </div>
                         </div>

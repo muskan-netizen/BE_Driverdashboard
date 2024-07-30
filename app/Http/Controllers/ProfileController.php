@@ -106,24 +106,40 @@ class ProfileController extends Controller
 
         if ($request->hasFile('logo')) {
             $file = $request->file('logo');
-            $s3filePath = '/assets/Clientlogo';
-            $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
-            $getFileName = $path;
+            if(is_azureEnable())
+            {
+               $getFileName = uploadAzureImage($file);
+            }else{
+                
+                $s3filePath = '/assets/Clientlogo';
+                $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                $getFileName = $path;
+            }
         }
 
-        if ($request->hasFile('favicon')) {
-           $file = $request->file('favicon');
-           $s3filePath = '/assets/Clientfavicon';
-            $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
-            $faviconFileName = $path;
+        if($request->hasFile('favicon')) {
+            $file = $request->file('favicon');
+            if(is_azureEnable())
+            {
+                $faviconFileName= uploadAzureImage($file);
+            }else{
+                $s3filePath = '/assets/Clientfavicon';
+                $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                $faviconFileName = $path;
+            }
         }
        
 
         $getDarkLogoFileName = $user->dark_logo;
         if ($request->hasFile('dark_logo')) {
             $file = $request->file('dark_logo');
-            $s3filePath = '/assets/Clientlogo';
-            $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+            if(is_azureEnable())
+            {
+                $path = uploadAzureImage($file);
+            }else{
+                $s3filePath = '/assets/Clientlogo';
+                $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+            }
             $getDarkLogoFileName = $path;
         }
 
@@ -142,9 +158,14 @@ class ProfileController extends Controller
        
         if ($request->hasFile('admin_signin_image')) {
            $file = $request->file('admin_signin_image');
-           $s3filePath = '/assets/adminSigninImage';
+           if(is_azureEnable())
+           {
+               $path = uploadAzureImage($file);
+           }else{
+            $s3filePath = '/assets/adminSigninImage';
             $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
-            $alldata['admin_signin_image'] = $path;
+           }
+           $alldata['admin_signin_image'] = $path;
         }
         //echo $request->timezone; die;
         if($user->is_superadmin == 1){

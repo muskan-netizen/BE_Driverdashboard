@@ -7,11 +7,21 @@
         @include('layouts.shared.title-meta', ['title' => "Log In"])
 
         @include('layouts.shared.head-css')
+        @if(is_azureEnable())
+           
+            <style>
+            .authentication-bg-pattern {
+                background-image: url({{ !empty($image->admin_signin_image) ? getAzureUrl().$image->admin_signin_image : ''  }}) !important;
+            }
+    </style>
+        @else
         <style>
             .authentication-bg-pattern {
                 background-image: url({{ !empty($image->admin_signin_image) ? Storage::disk('s3')->url($image->admin_signin_image) : ''  }}) !important;
             }
     </style>
+        @endif
+       
     </head>
 
     <body class="authentication-bg authentication-bg-pattern">        
@@ -43,7 +53,14 @@
                                     <div class="auth-logo">
                                         <a href="{{route('index')}}" class="logo logo-dark text-center">
                                             <span class="logo-lg">
+                                                    @if(is_azureEnable())
+                                                        
+                                                <img src="{{'https://imgproxy.royodispatch.com/insecure/fit/90/90/sm/0/plain/'.getAzureUrl().$pic}}" alt="" height="40">
+
+                                                    @else
                                                 <img src="{{'https://imgproxy.royodispatch.com/insecure/fit/90/90/sm/0/plain/'.Storage::disk('s3')->url($pic)}}" alt="" height="40">
+                                                        
+                                                    @endif
                                             </span>
                                         </a>
                                         

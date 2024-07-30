@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use App\Model\Agent;
 use Illuminate\Support\Facades\Log;
 use App\Model\Client;
+use App\Services\FirebaseService;
 use Exception;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -83,24 +84,43 @@ class NotifyDriverBeforePickupJob implements ShouldQueue
 
                 if(isset($new)){
                     try{
-                        $fcm_server_key = !empty($client_preferences->fcm_server_key)? $client_preferences->fcm_server_key : 'null';
+                        $data = [
+                            "registration_ids" => is_array($item['device_token']) ? $item['device_token'] : array($item['device_token']),//$item['device_token'],
+                            "notification" => [
+                                'title' => 'Pickup Request',
+                                'body' => 'Check All Details For This Request In App',
+                                'sound' => 'notification.mp3',
+                                "android_channel_id" => "Royo-Delivery",
+                            ],
+                            "data" => [
+                                'title' => 'Pickup Request',
+                                'body' => 'Check All Details For This Request In App',
+                                'data' => json_encode($item),
+                                'soundPlay' => true,
+                                'show_in_foreground' => true,
+                            ],
+                            "priority" => "high"
+                        ];
+                        $response = FirebaseService::sendNotification($data);
+                        Log::warning(['was' => $response]);
+                        // $fcm_server_key = !empty($client_preferences->fcm_server_key)? $client_preferences->fcm_server_key : 'null';
                 
-                        $fcmObj = new Fcm($fcm_server_key);
-                        $fcm_store = $fcmObj->to($new) 
-                                        ->priority('high')
-                                        ->timeToLive(0)
-                                        ->data($item)
-                                        ->notification([
-                                            'title'              => 'Pickup Request',
-                                            'body'               => 'Check All Details For This Request In App',
-                                            'sound'              => 'notification.mp3',
-                                            'android_channel_id' => 'Royo-Delivery',
-                                            'soundPlay'          => true,
-                                            'show_in_foreground' => true,
-                                        ])
-                                        ->send();
+                        // $fcmObj = new Fcm($fcm_server_key);
+                        // $fcm_store = $fcmObj->to($new) 
+                        //                 ->priority('high')
+                        //                 ->timeToLive(0)
+                        //                 ->data($item)
+                        //                 ->notification([
+                        //                     'title'              => 'Pickup Request',
+                        //                     'body'               => 'Check All Details For This Request In App',
+                        //                     'sound'              => 'notification.mp3',
+                        //                     'android_channel_id' => 'Royo-Delivery',
+                        //                     'soundPlay'          => true,
+                        //                     'show_in_foreground' => true,
+                        //                 ])
+                        //                 ->send();
 
-                                        Log::warning(['was' => $fcm_store]);
+                                        // Log::warning(['was' => $fcm_store]);
                     }
                     catch(Exception $e){
                         Log::info($e->getMessage());

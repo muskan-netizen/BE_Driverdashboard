@@ -76,6 +76,8 @@ use App\Model\Users;
 use App\Models\OrderPanel;
 use App\Model\OrderPanelDetail;
 use App\OrderWaitTimeLog;
+use App\Services\FirebaseService;
+
 // use Illuminate\Support\Facades\Log as FacadesLog;
 // use PhpOffice\PhpSpreadsheet\Calculation\MathTrig\Exp;
 
@@ -404,9 +406,14 @@ class TaskController extends BaseController
                 $folder = str_pad($client_details->code, 8, '0', STR_PAD_LEFT);
                 $folder = 'client_' . $folder;
                 $file = $request->file('image');
+                if(is_azureEnable())
+                {
+                    $path = uploadAzureImage($file);
+                }else{
                 $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
                 $s3filePath = '/assets/' . $folder . '/orders' . $file_name;
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                }
                 $proof_image = $path;
 
                 $task = Task::where('id', $request->task_id)->update([
@@ -422,9 +429,14 @@ class TaskController extends BaseController
                 $folder = str_pad($client_details->code, 8, '0', STR_PAD_LEFT);
                 $folder = 'client_' . $folder;
                 $file = $request->file('proof_face');
+                if(is_azureEnable())
+                {
+                    $path = uploadAzureImage($file);
+                }else{
                 $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
                 $s3filePath = '/assets/' . $folder . '/orders' . $file_name;
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                }
                 $proof_face = $path;
 
                 $task = Task::where('id', $request->task_id)->update([
@@ -440,9 +452,14 @@ class TaskController extends BaseController
                 $folder = str_pad($client_details->code, 8, '0', STR_PAD_LEFT);
                 $folder = 'client_' . $folder;
                 $file = $request->file('signature');
+                if(is_azureEnable())
+                {
+                    $path = uploadAzureImage($file);
+                }else{
                 $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
                 $s3filePath = '/assets/' . $folder . '/orders' . $file_name;
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                }
                 $proof_signature = $path;
 
                 $task = Task::where('id', $request->task_id)->update([
@@ -664,7 +681,7 @@ class TaskController extends BaseController
         $otpCreate      = ''; //substr(str_shuffle("0123456789abcdefghijklmnopqrstvwxyz"), 0, 5);
         $taskProof      = TaskProof::all();
 
-        if(!empty($orderId->tasktype->name) && $orderId->tasktype->name == 'Pickup' && isset($taskProof[0]) && $taskProof[0]->otp == 1) {
+        if(!empty($orderId->tasktype->name) &&   $orderId->tasktype->name == 'Pickup' && isset($taskProof[0]) && $taskProof[0]->otp == 1) {
             $otpCreate = rand(10000, 99999);
             Order::where('id', $orderId->order_id)->update(['completion_otp' => $otpCreate]);
             $otpEnabled = 1;
@@ -969,9 +986,14 @@ class TaskController extends BaseController
                 $folder = str_pad($client_details->code, 8, '0', STR_PAD_LEFT);
                 $folder = 'client_' . $folder;
                 $file = $request->file('proof_face');
+                if(is_azureEnable())
+                {
+                    $path = uploadAzureImage($file);
+                }else{
                 $file_name = uniqid() . '.' .  $file->getClientOriginalExtension();
                 $s3filePath = '/assets/' . $folder . '/orders' . $file_name;
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                }
                 $proof_face = $path;
             }
         }
@@ -1401,10 +1423,15 @@ class TaskController extends BaseController
                 $files = $request->file('file');
                 foreach ($files as $key => $value) {
                     $file = $value;
+                    if(is_azureEnable())
+                    {
+                        $path = uploadAzureImage($file);
+                    }else{
                     $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
 
                     $s3filePath = '/assets/' . $folder . '/' . $file_name;
                     $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                    }
                     array_push($images, $path);
                 }
                 $last = implode(",", $images);
@@ -1516,6 +1543,8 @@ class TaskController extends BaseController
                 'no_seats_for_pooling' => isset($request->no_seats_for_pooling) ? $request->no_seats_for_pooling : 0,
                 'is_cab_pooling' => isset($request->is_cab_pooling) ? $request->is_cab_pooling : 0,
                 'tip_amount' => isset($request->tip_amount) ? $request->tip_amount : 0,
+                'flight_number'=>isset($request->flight_number) ? $request->flight_number : null,
+                'name_sign_board'=> isset($request->name_sign_board) ? $request->name_sign_board : null,
             ];
 
 
@@ -2664,9 +2693,7 @@ class TaskController extends BaseController
             }
         } else {
             $geoagents = $this->getGeoBasedAgentsData($geo, $is_cab_pooling, $agent_tag, $date, $cash_at_hand,$orders_id,$particular_driver_id);
-
-            \Log::info(' geo agents array ');
-            \Log::info([$geoagents]);
+            // \Log::info("geoagents",[$geoagents]);
             if(count($geoagents) > 0){
                 for ($i = 1; $i <= $try; $i++) {
                     foreach ($geoagents as $key =>  $geoitem) {
@@ -3439,9 +3466,14 @@ class TaskController extends BaseController
             $folder = str_pad($shortcode, 8, '0', STR_PAD_LEFT);
             $folder = 'client_' . $folder;
             $file = $request->file('upload_photo');
+            if(is_azureEnable())
+            {
+                $path = uploadAzureImage($file);
+            }else{
             $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
             $s3filePath = '/assets/' . $folder;
             $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+            }
             $getFileName = $path;
         }
 
@@ -3515,10 +3547,10 @@ class TaskController extends BaseController
                     $order = Order::where('call_back_url', 'LIKE', '%' . $web_hook_code . '%')->first();
                     if ($order) {
                         $driver_id = $order->driver_id;
-                        $device_token = Agent::where('id', $driver_id)->value('device_token');
+                        $item['device_token'] = Agent::where('id', $driver_id)->value('device_token');
 
                         $new = [];
-                        array_push($new, $device_token);
+                        array_push($new, $item);
 
                         $item['title'] = 'Edit Order Status';
                         $item['body'] = 'Check Status of Edit Order Approval';
@@ -3527,26 +3559,45 @@ class TaskController extends BaseController
 
                         $client_preferences = ClientPreference::where('id', 1)->first();
                         if (count($new)) {
-                            $fcm_server_key = !empty($client_preferences->fcm_server_key) ? $client_preferences->fcm_server_key : config('laravel-fcm.server_key');
-
-                            $fcmObj = new Fcm($fcm_server_key);
-                            $fcm_store = $fcmObj->to($new)
-                                ->
-                                // $recipients must an array
-                                priority('high')
-                                ->timeToLive(0)
-                                ->data($item)
-                                ->notification([
-                                    'title' => 'Edit Order Status',
-                                    'body' => 'Check Status of Edit Order Approval',
-                                    'sound' => 'notification',
-                                    'android_channel_id' => 'Royo-Delivery',
+                            $data = [
+                                "registration_ids" => is_array($item['device_token']) ? $item['device_token'] : array($item['device_token']),//$item['device_token'],
+                                "notification" => [
+                                    'title' => 'Pickup Request',
+                                    'body' => 'Check All Details For This Request In App',
+                                    'sound' => 'notification.mp3',
+                                    "android_channel_id" => "Royo-Delivery",
+                                ],
+                                "data" => [
+                                    'title' => 'Pickup Request',
+                                    'body' => 'Check All Details For This Request In App',
+                                    'data' => json_encode($item),
                                     'soundPlay' => true,
-                                    'show_in_foreground' => true
-                                ])
-                                ->send();
+                                    'show_in_foreground' => true,
+                                ],
+                                "priority" => "high"
+                            ];
+                            $response = FirebaseService::sendNotification($data);
+                            return $response;
+                            // $fcm_server_key = !empty($client_preferences->fcm_server_key) ? $client_preferences->fcm_server_key : config('laravel-fcm.server_key');
 
-                            return $fcm_store;
+                            // $fcmObj = new Fcm($fcm_server_key);
+                            // $fcm_store = $fcmObj->to($new)
+                            //     ->
+                            //     // $recipients must an array
+                            //     priority('high')
+                            //     ->timeToLive(0)
+                            //     ->data($item)
+                            //     ->notification([
+                            //         'title' => 'Edit Order Status',
+                            //         'body' => 'Check Status of Edit Order Approval',
+                            //         'sound' => 'notification',
+                            //         'android_channel_id' => 'Royo-Delivery',
+                            //         'soundPlay' => true,
+                            //         'show_in_foreground' => true
+                            //     ])
+                            //     ->send();
+
+                            // return $fcm_store;
                         }
                     }
                 }
@@ -3580,10 +3631,10 @@ class TaskController extends BaseController
                     $order = Order::where('call_back_url', 'LIKE', '%' . $web_hook_code . '%')->first();
                     if ($order) {
                         $driver_id = $order->driver_id;
-                        $device_token = Agent::where('id', $driver_id)->value('device_token');
+                        $item['device_token'] = Agent::where('id', $driver_id)->value('device_token');
 
                         $new = [];
-                        array_push($new, $device_token);
+                        array_push($new, $item);
 
                         $item['title'] = 'Cancel Order Status';
                         $item['body'] = 'Check Status of Cancel Order Request';
@@ -3592,26 +3643,45 @@ class TaskController extends BaseController
 
                         $client_preferences = ClientPreference::where('id', 1)->first();
                         if (count($new)) {
-                            $fcm_server_key = !empty($client_preferences->fcm_server_key) ? $client_preferences->fcm_server_key : config('laravel-fcm.server_key');
-
-                            $fcmObj = new Fcm($fcm_server_key);
-                            $fcm_store = $fcmObj->to($new)
-                                ->
-                                // $recipients must an array
-                                priority('high')
-                                ->timeToLive(0)
-                                ->data($item)
-                                ->notification([
-                                    'title' => 'Cancel Order Status',
-                                    'body' => 'Check Status of Cancel Order Request',
-                                    'sound' => 'notification',
-                                    'android_channel_id' => 'Royo-Delivery',
+                            $data = [
+                                "registration_ids" => is_array($item['device_token']) ? $item['device_token'] : array($item['device_token']),//$item['device_token'],
+                                "notification" => [
+                                    'title' => 'Pickup Request',
+                                    'body' => 'Check All Details For This Request In App',
+                                    'sound' => 'notification.mp3',
+                                    "android_channel_id" => "Royo-Delivery",
+                                ],
+                                "data" => [
+                                    'title' => 'Pickup Request',
+                                    'body' => 'Check All Details For This Request In App',
+                                    'data' => json_encode($item),
                                     'soundPlay' => true,
-                                    'show_in_foreground' => true
-                                ])
-                                ->send();
+                                    'show_in_foreground' => true,
+                                ],
+                                "priority" => "high"
+                            ];
+                            $response = FirebaseService::sendNotification($data);
+                            return $response;
+                            // $fcm_server_key = !empty($client_preferences->fcm_server_key) ? $client_preferences->fcm_server_key : config('laravel-fcm.server_key');
 
-                            return $fcm_store;
+                            // $fcmObj = new Fcm($fcm_server_key);
+                            // $fcm_store = $fcmObj->to($new)
+                            //     ->
+                            //     // $recipients must an array
+                            //     priority('high')
+                            //     ->timeToLive(0)
+                            //     ->data($item)
+                            //     ->notification([
+                            //         'title' => 'Cancel Order Status',
+                            //         'body' => 'Check Status of Cancel Order Request',
+                            //         'sound' => 'notification',
+                            //         'android_channel_id' => 'Royo-Delivery',
+                            //         'soundPlay' => true,
+                            //         'show_in_foreground' => true
+                            //     ])
+                            //     ->send();
+
+                            // return $fcm_store;
                         }
                     }
                 }
@@ -3744,10 +3814,15 @@ class TaskController extends BaseController
                 $files = $request->file('file');
                 foreach ($files as $key => $value) {
                     $file = $value;
+                    if(is_azureEnable())
+                    {
+                        $path = uploadAzureImage($file);
+                    }else{
                     $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
 
                     $s3filePath = '/assets/' . $folder . '/' . $file_name;
                     $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                    }
                     array_push($images, $path);
                 }
                 $last = implode(",", $images);

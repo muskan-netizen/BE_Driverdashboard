@@ -13,7 +13,6 @@ class DatabaseSeeder extends Seeder
     {
          $this->call([
               CurrenciesTableSeeder::class,
-              // RosterDummyDataSeeder::class,
              // CountriesTableSeeder::class,
              CountriesWithLatLongTableSeeder::class,
              // ClientsTableSeeder::class,
@@ -30,7 +29,6 @@ class DatabaseSeeder extends Seeder
               PaymentOptionSeeder::class,
               PayoutOptionSeeder::class,
               SmsProviderSeeder::class,
-              // RosterDummyDataSeeder::class,
               CustomerTypeSeeder::class
              ]);
     }

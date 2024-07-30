@@ -4,7 +4,14 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
  <div class="row mb-2">
     <div class="col-md-4">
         <div class="form-group" id="profile_pictureInputEdit">
-            <input type="file" id="profilePic" data-plugins="dropify" name="profile_picture" data-default-file="" showImg="{{ isset($agent->profile_picture) ? Storage::disk('s3')->url($agent->profile_picture) : '' }}" />
+        @if(is_azureEnable())
+         
+            <input type="file" id="profilePic" data-plugins="dropify" name="profile_picture" data-default-file="" showImg="{{ isset($agent->profile_picture) ?    getAzureUrl().$agent->profile_picture : '' }}" />
+
+        @else
+        <input type="file" id="profilePic" data-plugins="dropify" name="profile_picture" data-default-file="" showImg="{{ isset($agent->profile_picture) ? Storage::disk('s3')->url($agent->profile_picture) : '' }}" />
+            
+        @endif
             <span class="invalid-feedback" role="alert">
                 <strong></strong>
             </span>
@@ -202,14 +209,28 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
         <div class="form-group" id="{{$driver_registration_document->name}}Input">
             <label for="" class="control-label d-flex align-items-center justify-content-between">{{$driver_registration_document->name ? ucwords($driver_registration_document->name)  : ''}} 
                 @if(strtolower($driver_registration_document->file_type) == 'pdf' && (!empty($field_value)))
+                @if(is_azureEnable())
+                  
+                <a href="{{   getAzureUrl().$field_value }}" download target="_blank"><i class="fa fa-eye" aria-hidden="true"></i></a>
+
+                @else
                 <a href="{{ Storage::disk('s3')->url($field_value) }}" download target="_blank"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                    
+                @endif
                 @endif
             </label>
             @if(strtolower($driver_registration_document->file_type) == 'text' || strtolower($driver_registration_document->file_type) == 'date')
             <input type="text" class="form-control" id="input_file_logo_{{$driver_registration_document->id}}" name="{{$driver_registration_document->name}}" placeholder="Enter Text" value="{{ $field_value }}" {{ (!empty($driver_registration_document->is_required))?'required':''}}>
             @else
             @if(strtolower($driver_registration_document->file_type) == 'image')
+            @if(is_azureEnable())
+               
+            <input type="file" data-plugins="dropify" name="{{$driver_registration_document->name}}" accept="image/*" data-default-file="{{ (!empty($field_value)) ?  getAzureUrl().$field_value : '' }}" class="dropify" />
+
+            @else
             <input type="file" data-plugins="dropify" name="{{$driver_registration_document->name}}" accept="image/*" data-default-file="{{ (!empty($field_value)) ? $imgproxyurl.Storage::disk('s3')->url($field_value) : '' }}" class="dropify" />
+                
+            @endif
             @elseif(strtolower($driver_registration_document->file_type) == 'pdf')
             <input type="file" data-plugins="dropify" name="{{$driver_registration_document->name}}" accept=".pdf" class="dropify" />
             @endif

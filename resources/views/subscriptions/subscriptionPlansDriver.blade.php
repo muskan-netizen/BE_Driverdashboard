@@ -17,7 +17,7 @@
         color: #000000bd;
     }
     .user_info_icon{position: relative;cursor: pointer;}
-    
+
     .user_info_icon p {
         position: absolute;
         background-color: #000;
@@ -57,7 +57,7 @@
                 line-height: 15px;
                 letter-spacing: 0.1px;
                 color: #000000bd;
-    }   
+    }
     }
 </style>
 @endsection
@@ -178,6 +178,20 @@
                                     <form name="saveOrder" id="saveOrder"> @csrf </form>
                                     <table class="table table-centered table-nowrap table-striped" id="sub-plans-datatable">
                                         <thead>
+                                            @if($preference->driver_subscription)
+                                            <tr>
+                                                <th>{{ __("Image") }}</th>
+                                                <th>{{ __("Title") }}</th>
+                                                <th>{{ __("Description") }}</th>
+                                                <th>{{ __("Price") }}</th>
+                                                <th>{{ __("Validity Period") }}</th>
+                                                <th>{{__("Validity in Numbers")}}</th>
+                                                <th>{{ __(getAgentNomenclature()." Type") }}</th>
+                                                <th>{{ __("Number Of Rides") }}</th>
+                                                <th>{{ __("Status") }}</th>
+                                                <th>{{ __("Action") }}</th>
+                                            </tr>
+                                            @else
                                             <tr>
                                                 <th>{{ __("Image") }}</th>
                                                 <th>{{ __("Title") }}</th>
@@ -190,40 +204,73 @@
                                                 <th>{{ __("Status") }}</th>
                                                 <th>{{ __("Action") }}</th>
                                             </tr>
+                                            @endif
                                         </thead>
                                         <tbody id="subscriptions_list">
                                             @foreach($subscription_plans as $i => $plan)
                                             <?php
                                             ?>
-                                            <tr data-row-id="{{$plan->slug}}">
-                                                <td>
-                                                    <img src="{{ !empty($plan->image) ? $plan->image : '' }}" class="rounded-circle" alt="{{$plan->slug}}" width="40px" height="40px">
-                                                </td>
-                                                <td><a href="javascript:void(0)" class="editSubscriptionPlanBtn" data-id="{{$plan->slug}}">{{$plan->title}}</a></td>
-                                                <td>{{$plan->description}}</td>
-                                                <td>${{number_format($plan->price, 2, '.', '')}}</td>
-                                                <td>{{__(ucfirst($plan->frequency))}}</td>
-                                                <td>{{__($plan->driver_type)}}</td>
-                                                <td>{{__($plan->driver_commission_fixed)}}</td>
-                                                <td>{{__($plan->driver_commission_percentage)}}</td>
-                                                <td>
-                                                    <div class="custom-switch redio-all">
-                                                        <input type="checkbox" name="userSubscriptionStatus" class="custom-control-input status_check" data-id="{{$plan->slug}}" value="{{ $plan->status }}" id="userSubscriptionStatus_{{ $i }}" {{($plan->status == 1) ? 'checked' : ''}}>
-                                                        <label class="custom-control-label" for="userSubscriptionStatus_{{ $i }}"></label>
-                                                    </div>
-                                                    {{-- <input type="checkbox" data-id="{{$plan->slug}}" data-plugin="switchery" name="userSubscriptionStatus" class="chk_box status_check" data-color="#43bee1" {{($plan->status == 1) ? 'checked' : ''}} > --}}
-                                                </td>
-                                                <td>
-                                                    <div class="form-ul" style="width: 60px;">
-                                                        <div class="inner-div" >
-                                                            @if(Auth::user()->is_superadmin == 1)
-                                                                <a href="javascript:void(0)" class="action-icon editSubscriptionPlanBtn" data-id="{{$plan->slug}}"><i class="mdi mdi-square-edit-outline"></i></a>
-                                                                <a href="{{route('subscription.plan.delete.driver', $plan->slug)}}" onclick="return confirm('Are you sure? You want to delete the subscription plan.')" class="action-icon deleteSubscriptionPlanBtn"> <i class="mdi mdi-delete" title="Delete subscription plan"></i></a>
-                                                            @endif
+                                            @if($preference->driver_subscription)
+                                                <tr data-row-id="{{$plan->slug}}">
+                                                    <td>
+                                                        <img src="{{ !empty($plan->image) ? $plan->image : '' }}" class="rounded-circle" alt="{{$plan->slug}}" width="40px" height="40px">
+                                                    </td>
+                                                    <td><a href="javascript:void(0)" class="editSubscriptionPlanBtn" data-id="{{$plan->slug}}">{{$plan->title}}</a></td>
+                                                    <td>{{$plan->description}}</td>
+                                                    <td>${{number_format($plan->price, 2, '.', '')}}</td>
+                                                    <td>{{__(ucfirst($plan->frequency))}}</td>
+                                                    <td>{{__($plan->period)}}</td>
+                                                    <td>{{__($plan->driver_type)}}</td>
+
+                                                    <td>{{__($plan->no_of_rides)}}</td>
+                                                    <td>
+                                                        <div class="custom-switch redio-all">
+                                                            <input type="checkbox" name="userSubscriptionStatus" class="custom-control-input status_check" data-id="{{$plan->slug}}" value="{{ $plan->status }}" id="userSubscriptionStatus_{{ $i }}" {{($plan->status == 1) ? 'checked' : ''}}>
+                                                            <label class="custom-control-label" for="userSubscriptionStatus_{{ $i }}"></label>
                                                         </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                                    </td>
+                                                    <td>
+                                                        <div class="form-ul" style="width: 60px;">
+                                                            <div class="inner-div" >
+                                                                @if(Auth::user()->is_superadmin == 1)
+                                                                    <a href="javascript:void(0)" class="action-icon editSubscriptionPlanBtn" data-id="{{$plan->slug}}"><i class="mdi mdi-square-edit-outline"></i></a>
+                                                                    <a href="{{route('subscription.plan.delete.driver', $plan->slug)}}" onclick="return confirm('Are you sure? You want to delete the subscription plan.')" class="action-icon deleteSubscriptionPlanBtn"> <i class="mdi mdi-delete" title="Delete subscription plan"></i></a>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @else
+                                                <tr data-row-id="{{$plan->slug}}">
+                                                    <td>
+                                                        <img src="{{ !empty($plan->image) ? $plan->image : '' }}" class="rounded-circle" alt="{{$plan->slug}}" width="40px" height="40px">
+                                                    </td>
+                                                    <td><a href="javascript:void(0)" class="editSubscriptionPlanBtn" data-id="{{$plan->slug}}">{{$plan->title}}</a></td>
+                                                    <td>{{$plan->description}}</td>
+                                                    <td>${{number_format($plan->price, 2, '.', '')}}</td>
+                                                    <td>{{__(ucfirst($plan->frequency))}}</td>
+                                                    <td>{{__($plan->driver_type)}}</td>
+                                                    <td>{{__($plan->driver_commission_fixed)}}</td>
+                                                    <td>{{__($plan->driver_commission_percentage)}}</td>
+                                                    <td>
+                                                        <div class="custom-switch redio-all">
+                                                            <input type="checkbox" name="userSubscriptionStatus" class="custom-control-input status_check" data-id="{{$plan->slug}}" value="{{ $plan->status }}" id="userSubscriptionStatus_{{ $i }}" {{($plan->status == 1) ? 'checked' : ''}}>
+                                                            <label class="custom-control-label" for="userSubscriptionStatus_{{ $i }}"></label>
+                                                        </div>
+                                                        {{-- <input type="checkbox" data-id="{{$plan->slug}}" data-plugin="switchery" name="userSubscriptionStatus" class="chk_box status_check" data-color="#43bee1" {{($plan->status == 1) ? 'checked' : ''}} > --}}
+                                                    </td>
+                                                    <td>
+                                                        <div class="form-ul" style="width: 60px;">
+                                                            <div class="inner-div" >
+                                                                @if(Auth::user()->is_superadmin == 1)
+                                                                    <a href="javascript:void(0)" class="action-icon editSubscriptionPlanBtn" data-id="{{$plan->slug}}"><i class="mdi mdi-square-edit-outline"></i></a>
+                                                                    <a href="{{route('subscription.plan.delete.driver', $plan->slug)}}" onclick="return confirm('Are you sure? You want to delete the subscription plan.')" class="action-icon deleteSubscriptionPlanBtn"> <i class="mdi mdi-delete" title="Delete subscription plan"></i></a>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endif
                                         @endforeach
                                         </tbody>
                                     </table>
@@ -239,118 +286,224 @@
     </div>
 
  <!-- container -->
-
-<div id="add-subscription-plan" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addSubscriptionPlan_Label" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-bottom">
-                <h4 class="modal-title">{{ __('Add Plan') }}</h4>
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-            </div>
-            <form id="user_subscription_form" method="post" enctype="multipart/form-data" action="{{ route('subscription.plan.save.driver') }}">
-                @csrf
-                <div class="modal-body" >
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="row mb-2">
-                                <div class="col-md-12">
-                                    <label>{{ __('Upload Image') }}</label>
-                                    <input type="file" accept="image/*" data-plugins="dropify" name="image" class="dropify" data-default-file="" />
-                                    <label class="logo-size text-right w-100">{{ __('Image Size') }} 120x120</label>
+@if($preference->driver_subscription)
+    <div id="add-subscription-plan" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addSubscriptionPlan_Label" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h4 class="modal-title">{{ __('Add Plan') }}</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                </div>
+                <form id="user_subscription_form" method="post" enctype="multipart/form-data" action="{{ route('subscription.plan.save.driver') }}">
+                    @csrf
+                    <div class="modal-body" >
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="row mb-2">
+                                    <div class="col-md-12">
+                                        <label>{{ __('Upload Image') }}</label>
+                                        <input type="file" accept="image/*" data-plugins="dropify" name="image" class="dropify" data-default-file="" />
+                                        <label class="logo-size text-right w-100">{{ __('Image Size') }} 120x120</label>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="form-group position-relative mb-2">
-                                        <div class="custom-switch redio-all">
-                                            <input type="checkbox" name="status" class="custom-control-input" id="status" value="1" checked>
-                                            <label class="custom-control-label" for="status">Enable</label>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group position-relative mb-2">
+                                            <div class="custom-switch redio-all">
+                                                <input type="checkbox" name="status" class="custom-control-input" id="status" value="1" checked>
+                                                <label class="custom-control-label" for="status">Enable</label>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group" id="nameInput">
-                                        {!! Form::label('title', __('Title'),['class' => 'control-label']) !!}
-                                        {!! Form::text('title', null, ['class'=>'form-control', 'required'=>'required']) !!}
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong></strong>
-                                        </span>
+                                    <div class="col-md-6">
+                                        <div class="form-group" id="nameInput">
+                                            {!! Form::label('title', __('Title'),['class' => 'control-label']) !!}
+                                            {!! Form::text('title', null, ['class'=>'form-control', 'required'=>'required']) !!}
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong></strong>
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="">{{ __(getAgentNomenclature()." Type") }}</label>
-                                        <select class="selectpicker" data-style="btn-light" name="driver_type" id="driver_type">
-                                            <option value="Employee">{{__("Employee")}}</option>
-                                            <option value="Freelancer">{{__("Freelancer")}}</option>
-                                        </select>
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong></strong>
-                                        </span>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="">{{ __(getAgentNomenclature()." Type") }}</label>
+                                            <select class="selectpicker" data-style="btn-light" name="driver_type" id="driver_type">
+                                                <option value="Employee">{{__("Employee")}}</option>
+                                                <option value="Freelancer">{{__("Freelancer")}}</option>
+                                            </select>
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong></strong>
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                                {{-- <div class="col-md-6 features_wrapper">
-                                    <div class="form-group">
-                                        <label for="">{{ __("Features") }}</label>
-                                        <select class="form-control select2-multiple subscription_features" name="features[]" data-toggle="select2" multiple="multiple" data-placeholder="Choose ..." required="required">
-                                            @foreach($features as $feature)
-                                                <option value="{{$feature->id}}"> {{$feature->title}} </option>
-                                            @endforeach
-                                        </select>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="">{{ __('Price') }}</label>
+                                            <input class="form-control" type="number" name="price" min="0" required="required">
+                                        </div>
                                     </div>
-                                </div> --}}
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="">{{ __('Price') }}</label>
-                                        <input class="form-control" type="number" name="price" min="0" required="required">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="">{{ __("Frequency") }}</label>
+                                            <select class="form-control" name="frequency" id="frequency" onchange="getTimePeriod()" required="required">
+                                                <option disabled    selected>Select Frequency</option>
+                                                <option value="day">{{ __("Day") }}</option>
+                                                <option value="week">{{ __("Week") }}</option>
+                                                <option value="month">{{ __("Month") }}</option>
+                                                <option value="year">{{ __("Year") }}</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="">{{ __("Frequency") }}</label>
-                                        <select class="form-control" name="frequency" required="required">
-                                            <option value="weekly">{{ __("Weekly") }}</option>
-                                            <option value="monthly">{{ __("Monthly") }}</option>
-                                            <option value="yearly">{{ __("Yearly") }}</option>
-                                        </select>
+                                    <div class="col-md-6 no_of_validity" style="display:none">
+                                        <div class="form-group">
+                                            <label for="no_of_validity" id="period_of_validity_label"></label>
+                                            <input class="form-control" type="number" id="period_of_validity" name="period_of_validity" min="0" placeholder="plan validity in days" value="0">
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="commission_fixed">{{ __('Fixed Commission') }}</label>
-                                        <input class="form-control" type="number" id="commission_fixed" name="commission_fixed" min="0" placeholder="Commission in fixed amount" value="0">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="period">{{ __('No Of Rides') }}</label>
+                                            <input class="form-control" type="number" id="no_of_rides" name="no_of_rides" min="0" placeholder="Number Of Rides
+                                            " value="0">
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="commission_percentage">{{ __('Percentage Commission') }}</label>
-                                        <input class="form-control" type="number" id="commission_percentage" name="commission_percentage" min="0" placeholder="Commission in percentage" value="0" onKeyPress="if(this.value.length==6) return false;">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="period">{{ __('Type Of Subscription') }}</label>
+                                            <input class="form-control" type="text" id="type_of_sub" name="type_of_sub"  placeholder="e.g Regular, Premium, Diamond" >
+                                        </div>
                                     </div>
-                                </div>
-                                <?php /* ?><div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="">Sort Order</label>
-                                        <input class="form-control" type="number" name="sort_order" min="1" required="required">
-                                    </div>
-                                </div><?php */ ?>
-                                <div class="col-md-12">
-                                    <div class="form-group" id="descInput">
-                                        {!! Form::label('title', __('Description'),['class' => 'control-label']) !!}
-                                        {!! Form::textarea('description', null, ['class' => 'form-control', 'rows' => '3']) !!}
+                                    <div class="col-md-12">
+                                        <div class="form-group" id="descInput">
+                                            {!! Form::label('title', __('Description'),['class' => 'control-label']) !!}
+                                            {!! Form::textarea('description', null, ['class' => 'form-control', 'rows' => '3']) !!}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-info waves-effect waves-light submitAddSubscriptionForm">{{ __("Submit") }}</button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-info waves-effect waves-light submitAddSubscriptionForm">{{ __("Submit") }}</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
+@else
+    <div id="add-subscription-plan" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addSubscriptionPlan_Label" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h4 class="modal-title">{{ __('Add Plan') }}</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                </div>
+                <form id="user_subscription_form" method="post" enctype="multipart/form-data" action="{{ route('subscription.plan.save.driver') }}">
+                    @csrf
+                    <div class="modal-body" >
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="row mb-2">
+                                    <div class="col-md-12">
+                                        <label>{{ __('Upload Image') }}</label>
+                                        <input type="file" accept="image/*" data-plugins="dropify" name="image" class="dropify" data-default-file="" />
+                                        <label class="logo-size text-right w-100">{{ __('Image Size') }} 120x120</label>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group position-relative mb-2">
+                                            <div class="custom-switch redio-all">
+                                                <input type="checkbox" name="status" class="custom-control-input" id="status" value="1" checked>
+                                                <label class="custom-control-label" for="status">Enable</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group" id="nameInput">
+                                            {!! Form::label('title', __('Title'),['class' => 'control-label']) !!}
+                                            {!! Form::text('title', null, ['class'=>'form-control', 'required'=>'required']) !!}
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong></strong>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="">{{ __(getAgentNomenclature()." Type") }}</label>
+                                            <select class="selectpicker" data-style="btn-light" name="driver_type" id="driver_type">
+                                                <option value="Employee">{{__("Employee")}}</option>
+                                                <option value="Freelancer">{{__("Freelancer")}}</option>
+                                            </select>
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong></strong>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {{-- <div class="col-md-6 features_wrapper">
+                                        <div class="form-group">
+                                            <label for="">{{ __("Features") }}</label>
+                                            <select class="form-control select2-multiple subscription_features" name="features[]" data-toggle="select2" multiple="multiple" data-placeholder="Choose ..." required="required">
+                                                @foreach($features as $feature)
+                                                    <option value="{{$feature->id}}"> {{$feature->title}} </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div> --}}
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="">{{ __('Price') }}</label>
+                                            <input class="form-control" type="number" name="price" min="0" required="required">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="">{{ __("Frequency") }}</label>
+                                            <select class="form-control" name="frequency" required="required">
+                                                <option value="weekly">{{ __("Weekly") }}</option>
+                                                <option value="monthly">{{ __("Monthly") }}</option>
+                                                <option value="yearly">{{ __("Yearly") }}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="commission_fixed">{{ __('Fixed Commission') }}</label>
+                                            <input class="form-control" type="number" id="commission_fixed" name="commission_fixed" min="0" placeholder="Commission in fixed amount" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="commission_percentage">{{ __('Percentage Commission') }}</label>
+                                            <input class="form-control" type="number" id="commission_percentage" name="commission_percentage" min="0" placeholder="Commission in percentage" value="0" onKeyPress="if(this.value.length==6) return false;">
+                                        </div>
+                                    </div>
+                                    <?php /* ?><div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="">Sort Order</label>
+                                            <input class="form-control" type="number" name="sort_order" min="1" required="required">
+                                        </div>
+                                    </div><?php */ ?>
+                                    <div class="col-md-12">
+                                        <div class="form-group" id="descInput">
+                                            {!! Form::label('title', __('Description'),['class' => 'control-label']) !!}
+                                            {!! Form::textarea('description', null, ['class' => 'form-control', 'rows' => '3']) !!}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-info waves-effect waves-light submitAddSubscriptionForm">{{ __("Submit") }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endif
 
 <div id="edit-subscription-plan" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editUserSubscription_Label" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
@@ -450,6 +603,30 @@
             $(this).val(0);
         }
     });
+    function getTimePeriod() {
+        var selected_frequency = $("#frequency").val();
+        var label = "";
+
+        switch(selected_frequency) {
+            case "day":
+                label = "Plan validity in Days";
+                break;
+            case "week":
+                label = "Plan validity in Weeks";
+                break;
+            case "month":
+                label = "Plan validity in Months";
+                break;
+            case "year":
+                label = "Plan validity in Years";
+                break;
+            default:
+                label = "Plan validity";
+        }
+
+        $("#period_of_validity_label").text(label);
+        $(".no_of_validity").css("display", "block");
+    }
 
 </script>
 

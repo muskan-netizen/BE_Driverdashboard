@@ -149,22 +149,38 @@
                                 <div class="col-md-7">
                                     <div class="row d-flex align-items-start mb-3">
                                         <div class="col-md-4 upload_box">
+                                        @if(is_azureEnable())
+                                            <input type="file" data-plugins="dropify" name="logo" data-default-file="{{isset(Auth::user()->logo) ? getAzureUrl().Auth::user()->logo : ''}}" />
+                                        @else
                                             <input type="file" data-plugins="dropify" name="logo" data-default-file="{{isset(Auth::user()->logo) ? Storage::disk('s3')->url(Auth::user()->logo) : ''}}" />
+                                        @endif
                                             <p class="text-muted text-center mt-2 mb-0">{{__("Upload Light Logo")}} </p>
                                         </div>
                                         <div class="col-md-4 upload_box">
+                                        @if(is_azureEnable())
+                                            <input type="file" data-plugins="dropify" name="dark_logo" data-default-file="{{isset(Auth::user()->dark_logo) ? getAzureUrl().Auth::user()->dark_logo : ''}}" />
+                                        @else
                                             <input type="file" data-plugins="dropify" name="dark_logo" data-default-file="{{isset(Auth::user()->dark_logo) ? Storage::disk('s3')->url(Auth::user()->dark_logo) : ''}}" />
+                                        @endif
                                             <p class="text-muted text-center mt-2 mb-0">{{__("Upload Dark Logo")}} </p>
                                         </div>
                                         <div class="col-md-4 upload_box">
                                             <div id="favicon_container">
-                                                <input type="file" class="dropify" data-plugins="dropify" name="favicon" data-default-file="{{ isset($preference->favicon) ? Storage::disk('s3')->url($preference->favicon) : '' }}" />
+                                            @if(is_azureEnable())
+                                                <input type="file" class="dropify" data-plugins="dropify" name="favicon" data-default-file="{{ isset($preference->favicon) ? getAzureUrl().$preference->favicon : '' }}" />
+                                            @else
+                                             <input type="file" class="dropify" data-plugins="dropify" name="favicon" data-default-file="{{ isset($preference->favicon) ? Storage::disk('s3')->url($preference->favicon) : '' }}" />
+                                            @endif   
                                                 <p class="text-muted text-center mt-2 mb-0">{{__("Upload favicon")}} </p>
                                             </div>
                                         </div>
                                         <div class="col-md-4 upload_box">
                                             <div id="favicon_container">
+                                            @if(is_azureEnable())
+                                                <input type="file" class="dropify" data-plugins="dropify" name="admin_signin_image" data-default-file="{{ isset($client->admin_signin_image) ? getAzureUrl().$client->admin_signin_image : '' }}" />
+                                            @else
                                                 <input type="file" class="dropify" data-plugins="dropify" name="admin_signin_image" data-default-file="{{ isset($client->admin_signin_image) ? Storage::disk('s3')->url($client->admin_signin_image) : '' }}" />
+                                            @endif
                                                 <p class="text-muted text-center mt-2 mb-0">{{__("Upload Admin Signin Image")}} (1920x1080)</p>
                                             </div>
                                         </div>

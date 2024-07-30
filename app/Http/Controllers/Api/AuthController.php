@@ -487,9 +487,14 @@ class AuthController extends BaseController
             $folder = str_pad($shortcode, 8, '0', STR_PAD_LEFT);
             $folder = 'client_' . $folder;
             $file = $request->file('profile_picture');
+            if(is_azureEnable())
+            {
+                $path = uploadAzureImage($file);
+            }else{
             $file_name = uniqid() . '.' .  $file->getClientOriginalExtension();
             $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
             $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+            }
             $getFileName = $path;
         }
 
@@ -558,9 +563,14 @@ class AuthController extends BaseController
                 $folder = 'client_' . $folder;
                 $path = [];
                 if (gettype($f) != "string") {
+                    if(is_azureEnable())
+                    {
+                        $path = uploadAzureImage($f);
+                    }else{
                     $file_name = uniqid() . '.' . $f->getClientOriginalExtension();
                     $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
                     $path = Storage::disk('s3')->put($s3filePath, $f, 'public');
+                    }
                 }
                 foreach ($request->other as $k => $o) {
                     $files[$k] = [

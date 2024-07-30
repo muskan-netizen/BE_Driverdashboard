@@ -47,7 +47,7 @@
                             array_push($allowed,'99999');
                         }
 
-                      
+
                         ?>
 
         <!--- Sidemenu -->
@@ -102,7 +102,7 @@
                     </a>
                 </li>
                 @endif
-               
+
                 @if($warehouse_mode['show_category_module'] == 1)
                 <li>
                     <a href="{{route('category.index')}}">
@@ -118,7 +118,7 @@
                         <span> {{__('Order Panel')}} </span>
                     </a>
                 </li>
-                </li> 
+                </li>
                 @endif
                 @if($warehouse_mode['show_inventory_module'] == 1)
                 <li>
@@ -126,17 +126,17 @@
                         <i class="fe-users"></i>
                         <span> {{__('Inventory Panel')}} </span>
                     </a>
-                </li> 
+                </li>
                 @endif
                 <li class="menu-title mt-2">{{__('Agent')}}</li>
                 @if(in_array('Teams',$allowed) || Auth::user()->is_superadmin == 1)
                 <li>
                     <a href="{{route('team.index')}}">
-                        <i class="fe-users"></i>  
+                        <i class="fe-users"></i>
                         <span> {{__('Teams')}} </span>
                     </a>
                 </li>
-
+                @endif
                 @if(in_array('Agents',$allowed) || Auth::user()->is_superadmin == 1)
                 <li>
                     <a href="{{route('agent.index')}}">
@@ -144,7 +144,7 @@
                         <span> {{ __(getAgentNomenclature()) }}</span>
                     </a>
                 </li>
-
+                @endif
                 @if(getClientPreferenceDetail()->manage_fleet == 1)
                     <li>
                         <a href="{{route('fleet.index')}}">
@@ -152,9 +152,6 @@
                             <span> {{ __('Agent Fleets') }}</span>
                         </a>
                     </li>
-                @endif
-
-                @endif
 
                 @endif
 
@@ -177,9 +174,9 @@
                     </a>
                 </li>
                 @endif
-                        
-               
-                
+
+
+
 
                 <!-- @if(in_array('ACL',$allowed) || Auth::user()->is_superadmin == 1)
                 <li class="menu-title mt-2">{{__('Managers')}}</li>
@@ -194,9 +191,9 @@
                     </a>
                 </li>
                 @endif
-               
-             
-               
+
+
+
 
                 @if($hide_subscription_module != 1 && (in_array('Subscription',$allowed) || Auth::user()->is_superadmin == 1) )
                 <li>

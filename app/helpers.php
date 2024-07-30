@@ -13,6 +13,9 @@ use App\Model\ClientPreferenceAdditional;
 use App\Model\Order;
 use GuzzleHttp\Client;
 use Kawankoding\Fcm\Fcm;
+use App\Services\FirebaseService;
+use Google\Auth\Credentials\ServiceAccountCredentials;
+use Illuminate\Support\Facades\Storage;
 
 if (!function_exists('setUserCode')) {
     function setUserCode()
@@ -24,6 +27,53 @@ if (!function_exists('setUserCode')) {
         }
     }
 }
+
+
+
+    if (!function_exists('getFcmOauthToken')) {
+        function getFcmOauthToken($url = null) {
+            try {
+                $preference = ClientPreferenceAdditional::where('key_name', 'firebase_account_json_file')->first();
+                $fileName = $preference->key_value ?? null;
+                $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+                if ($fileName) {
+                    // Generate a temporary URL with the Content-Disposition header set to attachment
+                    $url = Storage::disk('s3')->url($fileName);
+                }
+
+                // If the URL is null, use the local file path
+                $serviceAccountPath = $url ?? "voltaic-e59be-c73103aa2b73.json";
+        
+            
+                // Determine if the file is local or on S3 based on the URL scheme
+                if (filter_var($serviceAccountPath, FILTER_VALIDATE_URL)) {
+                    // Fetch the content from the URL and save it temporarily
+                    $serviceAccountContent = file_get_contents($serviceAccountPath);
+                    if ($serviceAccountContent === false) {
+                        throw new \Exception('Failed to fetch the service account JSON file from S3.');
+                    }
+
+                    // Save the content to a temporary file
+                    $tempFilePath = tempnam(sys_get_temp_dir(), 'service_account');
+                    file_put_contents($tempFilePath, $serviceAccountContent);
+                    // Use the temporary file path for credentials
+                    $credentials = new ServiceAccountCredentials($scopes, $tempFilePath);
+                } else {
+                    // Use the local file path for credentials
+                    $credentials = new ServiceAccountCredentials($scopes, $serviceAccountPath);
+                }
+
+                $accessToken = $credentials->fetchAuthToken();
+                
+
+                return $accessToken['access_token'] ?? "N/A";
+            } catch (\Exception $e) {
+                Log::error('Error fetching FCM OAuth token: ' . $e->getMessage());
+                return null;
+            }
+        }
+    }
+
 
 // Returns the values of the additional preferences.
 if (!function_exists('checkColumnExists')) {
@@ -470,6 +520,102 @@ if (!function_exists('sendnotification')) {
                     'body' => $data['notification']['body'],
                 ])
                 ->send();
+        }
+    }
+    if (!function_exists('sendFcmCurlRequest2')) {
+        function sendFcmCurlRequest2($data)
+        { 
+            
+            \Log::info('come sin notification');
+            $response = FirebaseService::sendNotification($data);
+            \Log::info($response);
+            return $response;
+    
+    
+    
+            // Fetch FCM project ID from database
+            $preference = ClientPreference::select('fcm_project_id')->first();
+            if (!$preference) {
+                \Log::error('FCM Send Error: FCM project ID not found in database.');
+                return false;
+            }
+    
+            $project_id = $preference->fcm_project_id;
+    
+            // Get OAuth Token
+            $accessToken = getFcmOauthToken();
+             \Log::info('curl fcm data');
+            \Log::info($data);
+             \Log::info('accessToken data');
+            \Log::info($accessToken);
+            if ($accessToken) {
+                $headers = [
+                    'Authorization: Bearer ' . $accessToken,
+                    'Content-Type: application/json',
+                ];
+                $deviceTokens = $data['registration_ids'] ?? [];
+    
+    
+                \Log::info('deviceTokens data');
+                \Log::info($deviceTokens);
+                // try{
+     
+                if(!empty($deviceTokens)){
+                    \Log::info('in data');
+    
+                    foreach($deviceTokens as $token)
+                    {
+    
+                        $ch = curl_init();
+                        curl_setopt($ch, CURLOPT_URL, "https://fcm.googleapis.com/v1/projects/{$project_id}/messages:send");
+                        curl_setopt($ch, CURLOPT_POST, true);
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+             
+            
+                    
+                        // Transform data to FCM v1 format
+                        $transformedData = transformToFcmV1Format($data,$token);
+                        
+            
+                        
+                        if (!$transformedData) {
+                            \Log::error('FCM Send Error: Failed to transform data to FCM v1 format.');
+                            return false;
+                        }
+            
+                        $payload = ['message' => $transformedData];
+            
+                        \Log::info('payload data');
+                        \Log::info($payload);
+                        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+                        $result = curl_exec($ch);
+             
+    
+                        \Log::info('result');
+                        \Log::info($result);
+                        if ($result === FALSE) {
+                            \Log::error('FCM Send Error: ' . curl_error($ch));
+                        }
+            
+                        curl_close($ch);
+                        return $result;
+                    }
+    
+                }
+            // }
+    
+            // catch(\Exception $e)
+            // {
+            //     \Log::info('error',$e->getMessage());
+            //     return false;
+            // }
+               
+            } else {
+                \Log::error('FCM Send Error: Unable to fetch OAuth token.');
+                return false;
+            }
         }
     }
 }

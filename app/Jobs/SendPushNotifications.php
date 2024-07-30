@@ -128,6 +128,6 @@ class SendPushNotifications implements ShouldQueue
     public function failed(\Throwable $exception)
     {
         // Log failure
-        Log::info($exception);
+        \Log::info($exception);
     }
 }

@@ -92,14 +92,14 @@ class ClientController extends Controller
             // Handle File Upload
             if ($request->hasFile('logo')) {
                 $file = $request->file('logo');
-                if(is_azureEnable())
-                {
-                    $path = uploadAzureImage($file);
-                }else{
+                // if(is_azureEnable())
+                // {
+                //     $path = uploadAzureImage($file);
+                // }else{
                 $file_name = uniqid() .'.'.  $file->getClientOriginalExtension();
                 $s3filePath = '/assets/Clientlogo/' . $file_name;
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
-                }
+                // }
                 $getFileName = $path;
             }
 
@@ -252,14 +252,14 @@ class ClientController extends Controller
             // Handle File Upload
             if ($request->hasFile('logo')) {
                 $file = $request->file('logo');
-                if(is_azureEnable())
-                {
-                    $path = uploadAzureImage($file);
-                }else{
+                // if(is_azureEnable())
+                // {
+                //     $path = uploadAzureImage($file);
+                // }else{
                 $file_name = uniqid() .'.'.  $file->getClientOriginalExtension();
                 $s3filePath = '/assets/Clientlogo/' . $file_name;
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
-                }
+                // }
                 $getFileName = $path;
             }
         

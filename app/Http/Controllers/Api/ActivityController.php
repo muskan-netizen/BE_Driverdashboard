@@ -439,15 +439,17 @@ class ActivityController extends BaseController
         }
 
         $agents    = $agent; //Agent::where('id', $id)->with('team')->first();
-        $taskProof = TaskProof::all();
-
-        $payment_codes = ['stripe'];
+        $taskProof = TaskProof::all(); 
+        $payment_codes = ['stripe','flutterwave'];
         $payment_creds = PaymentOption::select('code', 'credentials')->whereIn('code', $payment_codes)->where('status', 1)->get();
         if ($payment_creds) {
             foreach ($payment_creds as $creds) {
                 $creds_arr = json_decode($creds->credentials);
                 if ($creds->code == 'stripe') {
                     $preferences->stripe_publishable_key = (isset($creds_arr->publishable_key) && (!empty($creds_arr->publishable_key))) ? $creds_arr->publishable_key : '';
+                }
+                if($creds->code == 'flutterwave'){
+                    $preferences->flutterwave_public_key = (isset($creds_arr->client_id) && (!empty($creds_arr->client_id))) ? $creds_arr->client_id : '';
                 }
             }
         }

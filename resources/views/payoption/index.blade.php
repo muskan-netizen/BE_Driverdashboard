@@ -69,6 +69,7 @@
                 $location_id= (isset($creds->location_id)) ? $creds->location_id : '';
                 $application_id = (isset($creds->application_id)) ? $creds->application_id : '';
                 $api_access_token = (isset($creds->api_access_token)) ? $creds->api_access_token : '';
+                $client_id = (isset($creds->client_id)) ? $creds->client_id : '';
                 $api_secret_key = (isset($creds->api_secret_key)) ? $creds->api_secret_key : '';
                 $publishable_key = (isset($creds->publishable_key)) ? $creds->publishable_key : '';
                 $secret_key = (isset($creds->secret_key)) ? $creds->secret_key : '';
@@ -573,6 +574,42 @@
 								</div>
 							</div>
 						</div>
+					</div>
+                    @endif
+                    @if ( (strtolower($opt->code) == 'flutterwave') )
+                    <div class="mt-2" id="flutterwave_fields_wrapper" @if($opt->status != 1) style="display:none" @endif>
+                        <div class="row">
+						<div class="col-12">
+                            <div class="form-group mb-2">
+                                <label for="flutterwave_client_id" class="mr-3">{{ __("Public
+                                    Key") }}</label> <input type="text"
+                                    name="flutterwave_client_id" id="flutterwave_client_id"
+                                    class="form-control" value="{{$client_id}}" @if($opt->status
+                                == 1) required @endif>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-group mb-2">
+                                <label for="flutterwave_secret_key" class="mr-3">{{ __("Secret
+                                    Key") }}</label> <input type="password"
+                                    name="flutterwave_secret_key" id="flutterwave_secret_key"
+                                    class="form-control" value="{{$secret_key}}" @if($opt->status
+                                == 1) required @endif>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-group mb-2">
+                                <label for="flutterwave_enc_key" class="mr-3">{{ __("Encryption
+                                    Key") }}</label> <input type="password"
+                                    name="flutterwave_enc_key" id="flutterwave_enc_key"
+                                    class="form-control" value="{{$enc_key}}" @if($opt->status ==
+                                1) required @endif>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
 					</div>
                     @endif
 

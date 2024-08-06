@@ -28,7 +28,7 @@ class PaymentOptionController extends BaseController
      */
     public function index()
     {
-        $payment_codes = array('razorpay', 'stripe','vnpay','ccavenue', 'khalti','obo','paystack','livee', 'mastercard');
+        $payment_codes = array('razorpay', 'stripe','vnpay','ccavenue', 'khalti','obo','paystack','livee', 'mastercard','flutterwave');
         $payout_codes = array('cash', 'stripe', 'bank_account_m_india','razorpay','obo','livee');
         $payOption = PaymentOption::whereIn('code', $payment_codes)->get();
         $payoutOption = PayoutOption::whereIn('code', $payout_codes)->get();
@@ -291,6 +291,18 @@ class PaymentOptionController extends BaseController
                     $json_creds = json_encode(array(
                         'company_token' => $request->company_token,
                         'service_type' => $request->service_type,
+                    ));
+                }
+                else if((isset($method_name_arr[$key])) && (strtolower($method_name_arr[$key]) == 'flutterwave')){
+                   $request->validate([
+                        'flutterwave_client_id' => 'required',
+                        'flutterwave_secret_key' => 'required',
+                        'flutterwave_enc_key' => 'required'
+                    ]);
+                    $json_creds = json_encode(array(
+                        'client_id' => $request->flutterwave_client_id,
+                        'secret_key' => $request->flutterwave_secret_key,
+                        'enc_key' => $request->flutterwave_enc_key
                     ));
                 }
             }

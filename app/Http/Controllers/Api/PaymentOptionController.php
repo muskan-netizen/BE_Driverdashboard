@@ -11,7 +11,9 @@ use Illuminate\Http\Request;
 use App\Traits\ApiResponser;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Api\{BaseController, RazorpayGatewayController,VnpayController,CcavenueController, KhaltiGatewayController,OboPaymentController};
+use App\Http\Controllers\WalletController;
 use App\Model\{Client, ClientPreference, Agent, PaymentOption};
+use Exception;
 
 class PaymentOptionController extends BaseController{
     use ApiResponser;
@@ -144,5 +146,52 @@ class PaymentOptionController extends BaseController{
         $gateway = new DpoController();
         return $gateway->createAppTocken($request);
     }
+
+
+
+
+    public function sdkResponsePayment(Request $request, $gateway = '')
+    {
+        if (!empty($gateway)) {
+            $function = 'sdkPaymentVia_' . $gateway;
+            if (method_exists($this, $function)) {
+                if (!empty($request->action)) {
+                    $response = $this->$function($request); // call related gateway for payment processing
+                    return $response;
+                }
+            } else {
+                return $this->error("Invalid Gateway Request", 400);
+            }
+        } else {
+            return $this->error("Invalid Gateway Request", 400);
+        }
+    }
+
+    public function sdkPaymentVia_flutterwave(Request $request)
+    {
+        try {
+            $transaction_id = $request->transaction_id;
+            $amount = $request->amount;
+           
+            
+            if ($request->action == 'wallet') {
+                $request->request->add(['wallet_amount' => $amount, 'transaction_id' => $transaction_id]);
+                        $walletController = new WalletController();
+                        $walletController->creditAgentWallet($request);
+                        return $this->success('Payment Success', 200);
+            } 
+        } catch (Exception $ex) {
+            return $this->error($ex->getMessage(), 400);
+        }
+    }
+    public function sdkFailedPayment(Request $request)
+    {
+        try {
+            return $this->error(__('Payment failed'), 400);
+        } catch (Exception $ex) {
+            return $this->error($ex->getMessage(), 400);
+        }
+    }
+
 
 }

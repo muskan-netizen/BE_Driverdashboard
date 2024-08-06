@@ -86,6 +86,7 @@ class ShortcodeController extends BaseController
                 'hold_to_complete',
             ]);
             if(!empty($client_db_data)){
+
                 $client->client_db_id = $client_db_data->id;
                 $client->client_db_code = $client_db_data->code;
                 $client->is_driver_slot = !empty($client_db_data->getPreference) && isset($client_db_data->getPreference->is_driver_slot) ? $client_db_data->getPreference->is_driver_slot : 0;
@@ -95,6 +96,7 @@ class ShortcodeController extends BaseController
                 $Currency = Currency::where('id', $client_db_data->getPreference->currency_id)->first();
                 $client['currencyCode'] = $Currency->symbol??null;
                 $client['distanceUnit'] = $client_db_data->getPreference->distance_unit??null;
+                
                 
             }
         }

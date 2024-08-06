@@ -205,6 +205,10 @@ Route::group(['middleware' => ['dbCheck', 'AppAuth','apiLocalization']], functio
     Route::post('before-payment/obo','Api\OboPaymentController@beforePayment')->name('obo.pay');
     Route::get('after-payment/obo','Api\OboPaymentController@afterPayment')->name('after.obo.payment');
 
+    //flutterwave payment gateway
+        Route::post('payment/sdk_complete/{gateway?}','Api\PaymentOptionController@sdkResponsePayment');
+        Route::post('payment/sdk_failed/{gateway?}','Api\PaymentOptionController@sdkFailedPayment');
+
     // driver with product pricing  agent/category_with_product
     Route::group(['prefix' => 'agent'], function () {
         Route::get('category_with_product_with_price', 'Api\SalerController@CategoryWithProductWithPrice');

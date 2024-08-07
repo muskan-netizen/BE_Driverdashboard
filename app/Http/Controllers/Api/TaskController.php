@@ -928,6 +928,7 @@ class TaskController extends BaseController
             'is_dispatcher_allocation',
         ]);
         $percentage = 0;
+        $order_cost = 0;
         $agent_id =  $request->driver_id  ? $request->driver_id : null;
         $driver   = Agent::where('id', $agent_id)->first();
         $call_web_hook = '';
@@ -1032,9 +1033,13 @@ class TaskController extends BaseController
                     if ($task_id->driver_cost <= 0.00) {
                         $agent_details = Agent::where('id', $agent_id)->first();
                         if ($agent_details->type == 'Employee') {
-                            $percentage = $agent_commission_fixed + (($task_id->order_cost / 100) * $agent_commission_percentage);
+                            $order_cost = $task_id->order_cost - $orderdata->toll_fee;
+                            $percentages = $agent_commission_fixed + (($order_cost / 100) * $agent_commission_percentage);
+                            $percentage = $percentages + $orderdata->toll_fee ;
                         } else {
-                            $percentage = $freelancer_commission_fixed + (($task_id->order_cost / 100) * $freelancer_commission_percentage);
+                            $order_cost = $task_id->order_cost - $orderdata->toll_fee;
+                            $percentages = $freelancer_commission_fixed + (($order_cost / 100) * $freelancer_commission_percentage);
+                            $percentage = $percentages + $orderdata->toll_fee ;
                         }
                     } else {
                         $percentage = $task_id->driver_cost;
@@ -1106,9 +1111,13 @@ class TaskController extends BaseController
                 if ($task_id->driver_cost <= 0.00) {
                     $agent_details = Agent::where('id', $agent_id)->first();
                     if ($agent_details->type == 'Employee') {
-                        $percentage = $agent_commission_fixed + (($task_id->order_cost / 100) * $agent_commission_percentage);
+                        $order_cost = $task_id->order_cost - $orderdata->toll_fee;
+                        $percentages = $agent_commission_fixed + (($order_cost / 100) * $agent_commission_percentage);
+                        $percentage = $percentages + $orderdata->toll_fee ;
                     } else {
-                        $percentage = $freelancer_commission_fixed + (($task_id->order_cost / 100) * $freelancer_commission_percentage);
+                        $order_cost = $task_id->order_cost - $orderdata->toll_fee;
+                        $percentages = $freelancer_commission_fixed + (($order_cost / 100) * $freelancer_commission_percentage);
+                        $percentage = $percentages + $orderdata->toll_fee ;
                     }
                 } else {
                     $percentage = $task_id->driver_cost;

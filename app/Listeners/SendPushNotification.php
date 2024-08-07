@@ -34,7 +34,7 @@ class SendPushNotification
      */
     public function handle(PushNotification $event)
     {
-        \Log::info('inside send push listener handle function ');
+      
         $date =  Carbon::now()->toDateTimeString();
         try {
             $schemaName = 'royodelivery_db';
@@ -64,7 +64,7 @@ class SendPushNotification
 
     public function getData()
     {        
-        \Log::info('inside send push listener data function ');
+        
         $schemaName       = 'royodelivery_db';
         $date             =  Carbon::now()->toDateTimeString();
       

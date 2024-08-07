@@ -3902,8 +3902,7 @@ class TaskController extends BaseController
             $paid_duration = $paid_duration < 0 ? 0 : $paid_duration;
             $paid_distance = $paid_distance < 0 ? 0 : $paid_distance;
             $total = $pricingRule->base_price + ($paid_distance * $pricingRule->distance_fee) + ($paid_duration * $pricingRule->duration_price);
-            \Log::info($total);
-            \Log::info($pricingRule->agent_commission_percentage);
+          
 
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
@@ -4290,7 +4289,8 @@ class TaskController extends BaseController
             $paid_duration = $paid_duration < 0 ? 0 : $paid_duration;
             $paid_distance = $paid_distance < 0 ? 0 : $paid_distance;
             $total = $pricingRule->base_price + ($paid_distance * $pricingRule->distance_fee) + ($paid_duration * $pricingRule->duration_price);
-
+            \Log::info($total);
+            \Log::info($pricingRule->agent_commission_percentage);
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
                 if ($agent_details->type == 'Employee') {
@@ -4483,6 +4483,8 @@ class TaskController extends BaseController
                 $total = ($total / $orders->available_seats) * $orders->no_seats_for_pooling;
                 $toll_amount = ($toll_amount / $orders->available_seats) * $orders->no_seats_for_pooling;
             }
+            \Log::info($total);
+            \Log::info($pricingRule->agent_commission_percentage);
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
                 if ($agent_details->type == 'Employee') {

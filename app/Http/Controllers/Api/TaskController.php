@@ -3902,6 +3902,8 @@ class TaskController extends BaseController
             $paid_duration = $paid_duration < 0 ? 0 : $paid_duration;
             $paid_distance = $paid_distance < 0 ? 0 : $paid_distance;
             $total = $pricingRule->base_price + ($paid_distance * $pricingRule->distance_fee) + ($paid_duration * $pricingRule->duration_price);
+            \Log::info($total);
+            \Log::info($pricingRule->agent_commission_percentage);
 
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();

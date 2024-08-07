@@ -23,7 +23,7 @@ class SendPushNotification
      */
     public function __construct()
     {
-        \Log::info('inside send push listener construct ');
+        
         
     }
     /**

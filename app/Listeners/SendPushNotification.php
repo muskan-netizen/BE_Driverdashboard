@@ -78,12 +78,12 @@ class SendPushNotification
         'roster_details.short_name','roster_details.address','roster_details.lat','roster_details.long','roster_details.task_count');
         $get              = $get->get();
 
-        \Log::info('notification get data');
-        \Log::info([$get]);
+        // \Log::info('notification get data');
+        // \Log::info([$get]);
 
         $getids           = $get->pluck('id')->toArray();
-        \Log::info('notification get data ids ');
-        \Log::info([$getids]);
+        // \Log::info('notification get data ids ');
+        // \Log::info([$getids]);
 
         DB::connection($schemaName)->table('rosters')->where('status',10)->delete();
                         
@@ -100,8 +100,8 @@ class SendPushNotification
     public function sendnotification($recipients)
     { 
 
-        \Log::info('notification recipients ');
-        \Log::info([$recipients]);
+        // \Log::info('notification recipients ');
+        // \Log::info([$recipients]);
         try {        
             $array = json_decode(json_encode($recipients), true);
             foreach($array as $item){            
@@ -135,8 +135,8 @@ class SendPushNotification
                                             'show_in_foreground' => true,
                                         ])
                                 ->send();
-                               \Log::info( "fcm" );                            
-                               \Log::info( $fcm_store );
+                            //    \Log::info( "fcm" );                            
+                            //    \Log::info( $fcm_store );
                             }else{
                                 $fcm_store =   $fcmObj
                                 ->to([$item['device_token']])

@@ -4301,6 +4301,8 @@ class TaskController extends BaseController
             }
 
             // update order with order cost details
+            \Log::info($total);
+            \Log::info($pricingRule->agent_commission_percentage);
 
             $updateorder = [
                 'base_price' => $pricingRule->base_price,
@@ -4483,8 +4485,7 @@ class TaskController extends BaseController
                 $total = ($total / $orders->available_seats) * $orders->no_seats_for_pooling;
                 $toll_amount = ($toll_amount / $orders->available_seats) * $orders->no_seats_for_pooling;
             }
-            \Log::info($total);
-            \Log::info($pricingRule->agent_commission_percentage);
+          
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
                 if ($agent_details->type == 'Employee') {

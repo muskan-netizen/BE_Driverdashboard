@@ -1693,8 +1693,7 @@ class TaskController extends BaseController
                 $toll_amount = ($toll_amount / $orders->available_seats) * $orders->no_seats_for_pooling;
             }
 
-            \Log::info($total);
-            \Log::info($pricingRule->agent_commission_percentage);
+   
             
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
@@ -1704,6 +1703,9 @@ class TaskController extends BaseController
                     $percentage = $pricingRule->freelancer_commission_fixed + (($total / 100) * $pricingRule->freelancer_commission_percentage);
                 }
             }
+
+
+            \Log::info($percentage);
 
             // update order with order cost details
 

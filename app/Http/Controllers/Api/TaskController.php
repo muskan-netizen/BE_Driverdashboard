@@ -945,6 +945,7 @@ class TaskController extends BaseController
             'is_dispatcher_allocation',
         ]);
         $percentage = 0;
+        $order_cost = 0;
         $agent_id =  $request->driver_id  ? $request->driver_id : null;
         $driver   = Agent::where('id', $agent_id)->first();
         $call_web_hook = '';
@@ -1054,9 +1055,13 @@ class TaskController extends BaseController
                     if ($task_id->driver_cost <= 0.00) {
                         $agent_details = Agent::where('id', $agent_id)->first();
                         if ($agent_details->type == 'Employee') {
-                            $percentage = $agent_commission_fixed + (($task_id->order_cost / 100) * $agent_commission_percentage);
+                            $order_cost = $task_id->order_cost - $orderdata->toll_fee;
+                            $percentages = $agent_commission_fixed + (($order_cost / 100) * $agent_commission_percentage);
+                            $percentage = $percentages + $orderdata->toll_fee ;
                         } else {
-                            $percentage = $freelancer_commission_fixed + (($task_id->order_cost / 100) * $freelancer_commission_percentage);
+                            $order_cost = $task_id->order_cost - $orderdata->toll_fee;
+                            $percentages = $freelancer_commission_fixed + (($order_cost / 100) * $freelancer_commission_percentage);
+                            $percentage = $percentages + $orderdata->toll_fee ;
                         }
                     } else {
                         $percentage = $task_id->driver_cost;
@@ -1128,9 +1133,13 @@ class TaskController extends BaseController
                 if ($task_id->driver_cost <= 0.00) {
                     $agent_details = Agent::where('id', $agent_id)->first();
                     if ($agent_details->type == 'Employee') {
-                        $percentage = $agent_commission_fixed + (($task_id->order_cost / 100) * $agent_commission_percentage);
+                        $order_cost = $task_id->order_cost - $orderdata->toll_fee;
+                        $percentages = $agent_commission_fixed + (($order_cost / 100) * $agent_commission_percentage);
+                        $percentage = $percentages + $orderdata->toll_fee ;
                     } else {
-                        $percentage = $freelancer_commission_fixed + (($task_id->order_cost / 100) * $freelancer_commission_percentage);
+                        $order_cost = $task_id->order_cost - $orderdata->toll_fee;
+                        $percentages = $freelancer_commission_fixed + (($order_cost / 100) * $freelancer_commission_percentage);
+                        $percentage = $percentages + $orderdata->toll_fee ;
                     }
                 } else {
                     $percentage = $task_id->driver_cost;
@@ -1721,6 +1730,9 @@ class TaskController extends BaseController
                 $total       = ($total / $orders->available_seats) * $orders->no_seats_for_pooling;
                 $toll_amount = ($toll_amount / $orders->available_seats) * $orders->no_seats_for_pooling;
             }
+
+   
+            
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
                 if ($agent_details->type == 'Employee') {
@@ -1729,6 +1741,9 @@ class TaskController extends BaseController
                     $percentage = $pricingRule->freelancer_commission_fixed + (($total / 100) * $pricingRule->freelancer_commission_percentage);
                 }
             }
+
+
+            \Log::info($percentage);
 
             // update order with order cost details
 
@@ -1943,7 +1958,7 @@ class TaskController extends BaseController
                         $this->OneByOne($geo, $notification_time, $agent_id, $orders->id, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, $is_one_push_booking);
                         break;
                     case 'send_to_all':
-                        \Log::info('in send to all ');
+                       
                         
                         //this is called when allocation type is send to all
                         $this->SendToAll($geo, $notification_time, $agent_id, $orders->id, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, $is_one_push_booking);
@@ -2624,7 +2639,7 @@ class TaskController extends BaseController
     public function SendToAll($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $header, $allocation, $is_cab_pooling, $agent_tag = '', $is_order_updated, $is_one_push_booking = 0,$particular_driver_id = 0)
     {
 
-        \Log::info(' inside send to all');
+       
         
         $allcation_type    = 'AR';
         $date              = \Carbon\Carbon::today();
@@ -2642,10 +2657,7 @@ class TaskController extends BaseController
         $randem            = rand(11111111, 99999999);
         $data = [];
 
-        \Log::info(' geo ');
-        \Log::info([$geo]);
-        \Log::info(' agent_id ');
-        \Log::info([$agent_id]);
+ 
 
         if ($type == 'acceptreject') {
             $allcation_type = 'AR';
@@ -2693,7 +2705,8 @@ class TaskController extends BaseController
             }
         } else {
             $geoagents = $this->getGeoBasedAgentsData($geo, $is_cab_pooling, $agent_tag, $date, $cash_at_hand,$orders_id,$particular_driver_id);
-            // \Log::info("geoagents",[$geoagents]);
+
+          
             if(count($geoagents) > 0){
                 for ($i = 1; $i <= $try; $i++) {
                     foreach ($geoagents as $key =>  $geoitem) {
@@ -2728,8 +2741,7 @@ class TaskController extends BaseController
             }
            if(!empty($data))
 
-           \Log::info(' notification roster data ');
-           \Log::info([$data]);
+         
             $this->dispatch(new RosterCreate($data, $extraData));
         }
     }
@@ -3982,10 +3994,12 @@ class TaskController extends BaseController
             $paid_duration = $paid_duration < 0 ? 0 : $paid_duration;
             $paid_distance = $paid_distance < 0 ? 0 : $paid_distance;
             $total = $pricingRule->base_price + ($paid_distance * $pricingRule->distance_fee) + ($paid_duration * $pricingRule->duration_price);
+          
 
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
                 if ($agent_details->type == 'Employee') {
+                   
                     $percentage = $pricingRule->agent_commission_fixed + (($total / 100) * $pricingRule->agent_commission_percentage);
                 } else {
                     $percentage = $pricingRule->freelancer_commission_percentage + (($total / 100) * $pricingRule->freelancer_commission_fixed);
@@ -4367,7 +4381,8 @@ class TaskController extends BaseController
             $paid_duration = $paid_duration < 0 ? 0 : $paid_duration;
             $paid_distance = $paid_distance < 0 ? 0 : $paid_distance;
             $total = $pricingRule->base_price + ($paid_distance * $pricingRule->distance_fee) + ($paid_duration * $pricingRule->duration_price);
-
+            \Log::info($total);
+            \Log::info($pricingRule->agent_commission_percentage);
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
                 if ($agent_details->type == 'Employee') {
@@ -4378,6 +4393,7 @@ class TaskController extends BaseController
             }
 
             // update order with order cost details
+       
 
             $updateorder = [
                 'base_price' => $pricingRule->base_price,
@@ -4560,6 +4576,7 @@ class TaskController extends BaseController
                 $total = ($total / $orders->available_seats) * $orders->no_seats_for_pooling;
                 $toll_amount = ($toll_amount / $orders->available_seats) * $orders->no_seats_for_pooling;
             }
+          
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
                 if ($agent_details->type == 'Employee') {

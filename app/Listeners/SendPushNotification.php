@@ -24,7 +24,7 @@ class SendPushNotification
      */
     public function __construct()
     {
-        \Log::info('inside send push listener construct ');
+        
         
     }
     /**
@@ -35,6 +35,7 @@ class SendPushNotification
      */
     public function handle(PushNotification $event)
     {
+      
         $date =  Carbon::now()->toDateTimeString();
         try {
             $schemaName = 'royodelivery_db';
@@ -63,7 +64,8 @@ class SendPushNotification
     }
 
     public function getData()
-    {
+    {        
+        
         $schemaName       = 'royodelivery_db';
         $date             =  Carbon::now()->toDateTimeString();
 
@@ -77,12 +79,12 @@ class SendPushNotification
         'roster_details.short_name','roster_details.address','roster_details.lat','roster_details.long','roster_details.task_count');
         $get              = $get->get();
 
-        \Log::info('notification get data');
-        \Log::info([$get]);
+        // \Log::info('notification get data');
+        // \Log::info([$get]);
 
         $getids           = $get->pluck('id')->toArray();
-        \Log::info('notification get data ids ');
-        \Log::info([$getids]);
+        // \Log::info('notification get data ids ');
+        // \Log::info([$getids]);
 
         DB::connection($schemaName)->table('rosters')->where('status',10)->delete();
 
@@ -99,7 +101,9 @@ class SendPushNotification
     public function sendnotification($recipients)
     {
 
-        try {
+        // \Log::info('notification recipients ');
+        // \Log::info([$recipients]);
+        try {        
             $array = json_decode(json_encode($recipients), true);
             $counter = 1;
             foreach($array as $item){
@@ -124,38 +128,24 @@ class SendPushNotification
 
                     if(isset($new)){
                         try{
-                            // $fcm_server_key = !empty($client_preferences->fcm_server_key)? $client_preferences->fcm_server_key : 'null';
-                            // $fcmObj = new Fcm($fcm_server_key);
-                            if(@$item['is_particular_driver'] != 2 ){
-                                $data = [
-                                    // "registration_ids" => is_array($item['device_token']) ? $item['device_token'] : array($item['device_token']),//$item['device_token'],
-                                    "token" => $item['device_token'],
-                                    "notification" => [
-                                        'title' => 'Pickup Request',
-                                        'body' => 'Check All Details For This Request In App',
-                                        'sound' => 'notification.mp3',
-                                        "android_channel_id" => "Royo-Delivery",
-                                    ],
-                                    // "data" => json_encode($item),
-                                    "priority" => "high"
-                                ];
-                                $response = FirebaseService::sendSingleNotification($data,$item);
-                                $counter++;
-                                // $fcm_store = $fcmObj->to([$item['device_token']]) // $recipients must an array
-                                //         ->priority('high')
-                                //         ->timeToLive(0)
-                                //         ->data($item)
-                                //         ->notification([
-                                //             'title'              => 'Pickup Request',
-                                //             'body'               => 'Check All Details For This Request In App',
-                                //             'sound'              => 'notification.mp3',
-                                //             'android_channel_id' => 'Royo-Delivery',
-                                //             'soundPlay'          => true,
-                                //             'show_in_foreground' => true,
-                                //         ])
-                                // ->send();
-                               //\Log::info( "fcm" );
-                               //\Log::info( $fcm_store );
+                            $fcm_server_key = !empty($client_preferences->fcm_server_key)? $client_preferences->fcm_server_key : 'null';
+                            $fcmObj = new Fcm($fcm_server_key);
+                            if($item['is_particular_driver'] != 2 ){
+                                $fcm_store = $fcmObj->to([$item['device_token']]) // $recipients must an array
+                                        ->priority('high')
+                                        ->timeToLive(0)
+                                        ->data($item)
+                                        ->notification([
+                                            'title'              => 'Pickup Request',
+                                            'body'               => 'Check All Details For This Request In App',
+                                            'sound'              => 'notification.mp3',
+                                            'android_channel_id' => 'Royo-Delivery',
+                                            'soundPlay'          => true,
+                                            'show_in_foreground' => true,
+                                        ])
+                                ->send();
+                            //    \Log::info( "fcm" );                            
+                            //    \Log::info( $fcm_store );
                             }else{
                                 $data = [
                                     "registration_ids" => is_array($item['device_token']) ? $item['device_token'] : array($item['device_token']),//$item['device_token'],

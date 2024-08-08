@@ -1248,9 +1248,13 @@ class TaskController extends BaseController
                         $freelancer_commission_percentage = $order->freelancer_commission_percentage;
 
                         if ($agent_details->type == 'Employee') {
-                            $percentage = $agent_commission_fixed + (($order->order_cost / 100) * $agent_commission_percentage);
+                            $order_cost = $order->order_cost - $order->toll_fee ;
+                            $percentages = $agent_commission_fixed + (($order_cost / 100) * $agent_commission_percentage);
+                            $percentage  = $percentages + $order->toll_fee ;
                         } else {
-                            $percentage = $freelancer_commission_fixed + (($order->order_cost / 100) * $freelancer_commission_percentage);
+                            $order_cost = $order->order_cost - $order->toll_fee ;
+                            $percentages = $freelancer_commission_fixed + (($order_cost / 100) * $freelancer_commission_percentage);
+                            $percentage  = $percentages + $order->toll_fee ;
                         }
 
                         $now = Carbon::now()->toDateString();
@@ -1342,9 +1346,13 @@ class TaskController extends BaseController
                         $freelancer_commission_percentage = $task_id->freelancer_commission_percentage;
 
                         if ($agent_details->type == 'Employee') {
-                            $percentage = $task_id->agent_commission_fixed + (($task_id->order_cost / 100) * $task_id->agent_commission_percentage);
+                            $order_cost = $task_id->order_cost - $task_id->toll_fee ;
+                            $percentages = $task_id->agent_commission_fixed + (($task_id->order_cost / 100) * $task_id->agent_commission_percentage);
+                            $percentage = $percentages + $task_id->toll_fee;
                         } else {
-                            $percentage = $task_id->freelancer_commission_fixed + (($task_id->order_cost / 100) * $task_id->freelancer_commission_percentage);
+                            $order_cost = $task_id->order_cost - $task_id->toll_fee ;
+                            $percentages = $task_id->freelancer_commission_fixed + (($task_id->order_cost / 100) * $task_id->freelancer_commission_percentage);
+                            $percentage = $percentages + $task_id->toll_fee;
                         }
 
                         $now = Carbon::now()->toDateString();

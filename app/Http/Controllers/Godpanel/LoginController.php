@@ -50,9 +50,11 @@ class LoginController extends Controller
             'email'           => 'required|max:255|email',
             'password'        => 'required',
         ]);
+      
     
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $details = Auth::guard()->user();
+            
             $user = $details['original'];
             return redirect()->route('god.dashboard');
         } else {

@@ -46,14 +46,14 @@
                            
                             <div class="row mb-2">
                                 <div class="col-md-4">
-                                @if(is_azureEnable())
+                                {{-- @if(is_azureEnable())
                                     
                                     <input type="file" data-plugins="dropify" name="logo" data-default-file="{{isset($client->logo) ? getAzureUrl().$client->logo : ''}}" />
 
-                                @else
+                                @else --}}
                                 <input type="file" data-plugins="dropify" name="logo" data-default-file="{{isset($client->logo) ? Storage::disk('s3')->url($client->logo) : ''}}" />
                                     
-                                @endif
+                                {{-- @endif --}}
                                     <p class="text-muted text-center mt-2 mb-0">Upload Logo</p>
                                 </div>
                             </div>

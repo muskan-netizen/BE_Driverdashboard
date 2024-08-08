@@ -676,6 +676,7 @@ if (!function_exists('is_azureEnable'))
 {
     function is_azureEnable()
     {
+        
         $storageType =ClientPreferenceAdditional::where('key_name','is_azureUpload')->first();
         $storageType = $storageType->key_value ?? "";
         return $storageType;

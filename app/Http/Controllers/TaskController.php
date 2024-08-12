@@ -1197,7 +1197,7 @@ class TaskController extends BaseController
                             break;
                         case 'send_to_all':
                             // this is called when allocation type is send to all
-                            Log::info('send_to_all taskController');
+                            // Log::info('send_to_all taskController');
                             $this->SendToAll($geo, $notification_time, $agent_id, $orders->id, $customer, $finalLocation, $taskcount, $allocation,$agent_tag);
                             break;
                         case 'round_robin':

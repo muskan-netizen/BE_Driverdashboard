@@ -1293,7 +1293,7 @@ class TaskController extends BaseController
                         $header['client'][0] = $client->database_name;
                     }
                     $ordersId = Order::where('sync_order_id',$request->order_id)->value('id');
-                    \Log::info('Notification send successfully');
+                    // \Log::info('Notification send successfully');
                     $this->addRosterNotification($ordersId,$header);
             }else{
                 \Log::info('Notification send by Lumen');
@@ -1360,8 +1360,8 @@ class TaskController extends BaseController
     public function CreateTask(CreateTaskRequest $request)
     {
 
-        \Log::info(' create task request data');
-        \Log::info($request->all());
+        // \Log::info(' create task request data');
+        // \Log::info($request->all());
 
         try {
             $auth = $client = Client::with([
@@ -1743,7 +1743,7 @@ class TaskController extends BaseController
             }
 
 
-            \Log::info($percentage);
+          
 
             // update order with order cost details
 
@@ -4381,8 +4381,6 @@ class TaskController extends BaseController
             $paid_duration = $paid_duration < 0 ? 0 : $paid_duration;
             $paid_distance = $paid_distance < 0 ? 0 : $paid_distance;
             $total = $pricingRule->base_price + ($paid_distance * $pricingRule->distance_fee) + ($paid_duration * $pricingRule->duration_price);
-            \Log::info($total);
-            \Log::info($pricingRule->agent_commission_percentage);
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
                 if ($agent_details->type == 'Employee') {

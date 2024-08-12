@@ -94,7 +94,7 @@ trait GlobalFunction{
                         });
                     })->get();
                     if($geoagents_data){
-                        \Log::info("got Subscribed Agent Data");
+                
                         foreach($geoagents_data as $id => $data) {
                             $available_rides = $data->agent->subscriptionPlan->available_rides;
                             $startDate = Carbon::parse($data->agent->subscriptionPlan->start_date)->format('Y-m-d H:i:s');
@@ -103,11 +103,10 @@ trait GlobalFunction{
                             $orderCount = Order::where('driver_id', $data->driver_id)
                                 ->whereBetween('created_at',[$startDate,$endDate])
                                 ->count();
-                            \Log::info("orderCount",[$orderCount]);
-                            \Log::info("driver_id",[$data->driver_id]);
+                 
 
                             $remaining_rides = $available_rides - $orderCount;
-                            \Log::info("remaining_rides",[$remaining_rides]);
+                        
                             if ( $remaining_rides > 0) {
                                 $agentids[] = $data->driver_id;
                             }
@@ -119,7 +118,7 @@ trait GlobalFunction{
                             }
                         }
                     }
-                    \Log::info("agentids",[$agentids]);
+                   
                 $geoagents_ids=$geoagents_ids->whereIn('driver_id',$agentids);
             }
             else{
@@ -154,17 +153,16 @@ trait GlobalFunction{
                     });
                 }
             }
-            \Log::info("date",[$date]);
-            \Log::info("geoagents_ids",[$geoagents_ids]);
+     
             $geoagents_ids =  $geoagents_ids->pluck('driver_id');
-            \Log::info("gwo",[$geoagents_ids]);
+         
             $geoagents = Agent::whereIn('id',  $geoagents_ids)
             ->with(['logs',
             'order'=> function ($f) use ($date) {
                 $f->whereDate('order_time', $date)->with('task');
             }
         ]);
-            \Log::info("dd",[$geoagents]);
+           
             if($particular_driver_id){
                 $geoagents = $geoagents->where('id','!=',$particular_driver_id);
             }

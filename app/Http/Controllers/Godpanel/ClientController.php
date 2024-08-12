@@ -375,16 +375,14 @@ class ClientController extends Controller
         // try {
 
 
-            \Log::info('request data');
-            \Log::info($request->all());
+   
         $client = Client::where('database_name', $databaseName)->first(['name', 'email', 'password', 'phone_number', 'password', 'database_path', 'database_name', 'database_username', 'database_password', 'logo', 'dark_logo', 'company_name', 'company_address', 'custom_domain', 'status', 'code','sub_domain','database_host'])->toarray();
         $check_if_already = 0;
         $stage = $request->dump_into??'PROD';
         $data = $request->all();
 
 
-        \Log::info('client data');
-        \Log::info([$client]);
+
         if($client){
             
             $check_if_already = Client::on($stage)->where(['database_name' => $client['database_name']])->where(['sub_domain' => $client['sub_domain']])->count();
@@ -404,8 +402,7 @@ class ClientController extends Controller
                     }
 
                     
-                    \Log::info('clientData');
-                    \Log::info([$clientData]);
+                 
                     
                 }
                 try {
@@ -478,13 +475,13 @@ class ClientController extends Controller
     ];
 
     
-   \Log::info('data');
-   \Log::info($data);
+//    \Log::info('data');
+//    \Log::info($data);
     if (isset($api_domain)) {
      
         $response = Http::withHeaders($headers)->post($api_domain->lumen_domain_url . '/api/v1/createLumenClient', $data);
-        \Log::info('response');
-        \Log::info($response->json());
+        // \Log::info('response');
+        // \Log::info($response->json());
         if ($response->status() === 200) {
             $responseData = $response->json();
             
@@ -520,8 +517,8 @@ public function enableNotificationService(Request $request)
         'code' => $client->code
     ];
 
-    \Log::info('post data');
-    \Log::info($data);
+    // \Log::info('post data');
+    // \Log::info($data);
 
     $headers = [
         'Content-Type' => 'application/json',
@@ -531,8 +528,8 @@ public function enableNotificationService(Request $request)
 
 
     if (isset($api_domain)) {
-        \Log::info('api domain');
-        \Log::info($api_domain->key_value);
+        // \Log::info('api domain');
+        // \Log::info($api_domain->key_value);
 
         $response = Http::withHeaders($headers)->post($api_domain->lumen_domain_url . '/api/v1/createLumenClient', $data);
 

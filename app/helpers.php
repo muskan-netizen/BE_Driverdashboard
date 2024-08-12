@@ -529,9 +529,9 @@ if (!function_exists('sendnotification')) {
         function sendFcmCurlRequest2($data)
         { 
             
-            \Log::info('come sin notification');
+            // \Log::info('come sin notification');
             $response = FirebaseService::sendNotification($data);
-            \Log::info($response);
+            // \Log::info($response);
             return $response;
     
     
@@ -547,10 +547,10 @@ if (!function_exists('sendnotification')) {
     
             // Get OAuth Token
             $accessToken = getFcmOauthToken();
-             \Log::info('curl fcm data');
-            \Log::info($data);
-             \Log::info('accessToken data');
-            \Log::info($accessToken);
+            //  \Log::info('curl fcm data');
+            // \Log::info($data);
+            //  \Log::info('accessToken data');
+            // \Log::info($accessToken);
             if ($accessToken) {
                 $headers = [
                     'Authorization: Bearer ' . $accessToken,
@@ -559,12 +559,12 @@ if (!function_exists('sendnotification')) {
                 $deviceTokens = $data['registration_ids'] ?? [];
     
     
-                \Log::info('deviceTokens data');
-                \Log::info($deviceTokens);
+                // \Log::info('deviceTokens data');
+                // \Log::info($deviceTokens);
                 // try{
      
                 if(!empty($deviceTokens)){
-                    \Log::info('in data');
+                    // \Log::info('in data');
     
                     foreach($deviceTokens as $token)
                     {

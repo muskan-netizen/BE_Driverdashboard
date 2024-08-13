@@ -6,6 +6,8 @@ use App\Model\ClientPreference as ModelClientPreference;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use App\Models\{ClientPreference, Order};
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 class FirebaseService
 {
@@ -67,7 +69,7 @@ class FirebaseService
         $connectionName = (new ModelClientPreference())->getConnectionName();
         $preference = ModelClientPreference::select('fcm_project_id')->first();
         if (!$preference) {
-            \Log::error('FCM Send Error: FCM project ID not found in database.');
+            Log::error('FCM Send Error: FCM project ID not found in database.', ['location' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0]]);
             return false;
         }
 
@@ -105,6 +107,13 @@ class FirebaseService
                         'channel_id' => $data['notification']['android_channel_id'] ?? '',
                     ],
                 ];
+
+                Arr::set($message, 'apns.payload.aps', [
+                    'icon'         => Arr::get($data, 'notification.icon', ''),
+                    'sound'        => Arr::get($data, 'notification.sound', 'notification.mp3'),
+                    'click_action' => Arr::get($data, 'click_action', ''),
+                    'channel_id'   => Arr::get($data, 'notification.android_channel_id', ''),
+                ]);
 
 
                 if(empty($item))
@@ -151,8 +160,9 @@ class FirebaseService
                         'status' => 'rejected',
                         'reason' => $e->getMessage()
                     ];
-                    \Log::info('firebase error');
-                    \Log::info($results);
+                    Log::error($e);
+                    /*\Log::info('firebase error');*/
+                    /*\Log::info($results);*/
                 }
             }
 
@@ -161,6 +171,7 @@ class FirebaseService
 
         } catch (RequestException $e) {
             // Handle the error appropriately
+            Log::error($e);
             return ['error' => $e->getMessage()];
         }
     }
@@ -173,7 +184,7 @@ class FirebaseService
         $databaseName = $query->getConnection()->getDatabaseName();
         $preference = ModelClientPreference::select('fcm_project_id')->first();
         if (!$preference) {
-            \Log::error('FCM Send Error: FCM project ID not found in database.');
+            Log::error('FCM Send Error: FCM project ID not found in database.', ['location' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0]]);
             return false;
         }
 
@@ -207,6 +218,13 @@ class FirebaseService
                         'channel_id' => $data['notification']['android_channel_id'] ?? '',
                     ],
                 ];
+
+                Arr::set($message, 'apns.payload.aps', [
+                    'icon'         => Arr::get($data, 'notification.icon', ''),
+                    'sound'        => Arr::get($data, 'notification.sound', 'notification.mp3'),
+                    'click_action' => Arr::get($data, 'click_action', ''),
+                    'channel_id'   => Arr::get($data, 'notification.android_channel_id', ''),
+                ]);
 
                 // Process the data section, converting specific fields to strings
                 //$newData['data'] = [];
@@ -244,8 +262,9 @@ class FirebaseService
                         'status' => 'rejected',
                         'reason' => $e->getMessage()
                     ];
-                    \Log::info('firebase error');
-                    \Log::info($results);
+                    Log::error($e);
+                    /*\Log::info('firebase error');*/
+                    /*\Log::info($results);*/
                 }
 
 
@@ -253,6 +272,7 @@ class FirebaseService
 
         } catch (RequestException $e) {
             // Handle the error appropriately
+            Log::error($e);
             return ['error' => $e->getMessage()];
         }
     }

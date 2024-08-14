@@ -12,7 +12,7 @@
 <footer class="footer">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-12 text-center">
                 <script>document.write(new Date().getFullYear())</script> &copy;  <a href="#" target="_blank" class="black">{{$image->name??'Royo'}} Apps</a> 
             </div>
             <!-- <div class="col-md-6">

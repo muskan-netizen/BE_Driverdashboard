@@ -3004,7 +3004,7 @@ button.view_route-btn:focus,button.view_route-btn:hover{
     color:#40b323
 }
 .left-side-menu{
-    height:92%!important
+    height:100%!important
 }
 /* div#scrollbar{
     padding-bottom:70px!important
@@ -3256,7 +3256,7 @@ button.view_route-btn:focus,button.view_route-btn:hover{
     margin: 4px 0;
 }
 html, body{overflow-x: hidden;}
-body .left-side-menu{top:60px !important;}
+body .left-side-menu{top:60px !important;z-index:9;}
 body #sidebar-menu>ul>li>a {
     padding: 12px 20px;
     font-family:sans-serif;

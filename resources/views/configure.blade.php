@@ -33,7 +33,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
             </div>
         </div>
         <!-- end page title -->
-        <div class="row configure_responsive">
+        <div class="row configure_responsive ff">
             <div class="col-md-4 mb-3">
                 <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
                     @csrf
@@ -539,7 +539,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                 </form>
             </div>
         </div>
-
+        <div class="container-fluid">
         <div class="row maps-configure-mobile">
             <div class="col-12">
                 <div class="page-title-box">
@@ -547,6 +547,8 @@ $sms_crendential = json_decode($preference->sms_credentials);
                 </div>
             </div>
         </div>
+        </div>
+        <div class="container-fluid">
         <div class="row configure_responsive">
             <div class="col-md-4 mb-3">
                 <form method="POST" class="h-100" action="{{ route('preference', Auth::user()->code) }}">
@@ -674,7 +676,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                 </form>
             </div>
         </div>
-
+        </div>
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box">
@@ -1007,7 +1009,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
             @include('rating.rating')
             @include('rating.ratingAttribute')
         </div>
-
+        <div class="container-fluid">
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box">
@@ -1015,7 +1017,8 @@ $sms_crendential = json_decode($preference->sms_credentials);
                 </div>
             </div>
         </div>
-
+        </div>
+        <div class="container-fluid">
         <div class="row configure_responsive">
             <div class="col-md-4 mb-3 dashboard-custom-temp">
                 <div class="card">
@@ -1551,7 +1554,7 @@ $sms_crendential = json_decode($preference->sms_credentials);
                 </form>
             </div>
         </div>
-
+        </div>
         <div style="display:none;">
             <form method="POST" action="{{ route('preference', Auth::user()->code) }}">
                 @csrf

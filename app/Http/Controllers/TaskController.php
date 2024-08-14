@@ -1246,8 +1246,7 @@ class TaskController extends BaseController
                         $agent_commission_percentage = $order->agent_commission_percentage;
                         $freelancer_commission_fixed = $order->freelancer_commission_fixed;
                         $freelancer_commission_percentage = $order->freelancer_commission_percentage;
-                          \Log::info($order->order_cost);
-                          \Log::info($agent_commission_percentage);
+                         
                         if ($agent_details->type == 'Employee') {
                             $order_cost = $order->order_cost - $order->toll_fee ;
                             $percentages = $agent_commission_fixed + (($order_cost / 100) * $agent_commission_percentage);
@@ -1258,7 +1257,7 @@ class TaskController extends BaseController
                             $percentage  = $percentages + $order->toll_fee ;
                         }
 
-                        \Log::info($percentage);
+                       
                                     
                         $now = Carbon::now()->toDateString();
                         $driver_subscription = SubscriptionInvoicesDriver::where('driver_id', $agent_id)->where('end_date', '>', $now)

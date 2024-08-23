@@ -12,6 +12,7 @@ use App\Services\FirebaseService;
 use Config;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Arr;
 use Kawankoding\Fcm\Fcm;
 use Illuminate\Support\Facades\Log;
 
@@ -101,8 +102,8 @@ class SendPushNotification
     public function sendnotification($recipients)
     {
 
-        Log::info('notification recipients ');
-        Log::info([$recipients]);
+        /*Log::info('notification recipients ');*/
+        /*Log::info([$recipients]);*/
         try {
             $array = json_decode(json_encode($recipients), true);
             $counter = 1;
@@ -128,23 +129,36 @@ class SendPushNotification
 
                     if(isset($new)){
                         try{
-                            $fcm_server_key = !empty($client_preferences->fcm_server_key)? $client_preferences->fcm_server_key : 'null';
-                            $fcmObj = new Fcm($fcm_server_key);
+                            /*$fcm_server_key = !empty($client_preferences->fcm_server_key)? $client_preferences->fcm_server_key : 'null';*/
+                            /*$fcmObj = new Fcm($fcm_server_key);*/
                             if($item['is_particular_driver'] != 2 ){
-                                $fcm_store = $fcmObj->to([$item['device_token']]) // $recipients must an array
-                                        ->priority('high')
-                                        ->timeToLive(0)
-                                        ->data($item)
-                                        ->notification([
-                                            'title'              => 'Pickup Request',
-                                            'body'               => 'Check All Details For This Request In App',
-                                            'sound'              => 'notification.mp3',
-                                            'android_channel_id' => 'Royo-Delivery',
-                                            'soundPlay'          => true,
-                                            'show_in_foreground' => true,
-                                        ])
-                                ->send();
-                                Log::info($fcm_store, ['location' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0]]);
+                                /*$fcm_store = $fcmObj->to([$item['device_token']]) // $recipients must an array*/
+                                /*        ->priority('high')*/
+                                /*        ->timeToLive(0)*/
+                                /*        ->data($item)*/
+                                /*        ->notification([*/
+                                /*            'title'              => 'Pickup Request',*/
+                                /*            'body'               => 'Check All Details For This Request In App',*/
+                                /*            'sound'              => 'notification.mp3',*/
+                                /*            'android_channel_id' => 'Royo-Delivery',*/
+                                /*            'soundPlay'          => true,*/
+                                /*            'show_in_foreground' => true,*/
+                                /*        ])*/
+                                /*->send();*/
+                                /*Log::info($fcm_store, ['location' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0]]);*/
+                                $data = [
+                                    'token' => $item['device_token'],
+                                    'notification' => [
+                                        'title' => 'Pickup Request',
+                                        'body' => 'Check all details for this in app.',
+                                        'sound' => 'notification.mp3',
+                                        'android_channel_id' => 'Royo-Delivery',
+                                    ],
+                                    'priority' => 'high',
+                                ];
+
+                                $response = FirebaseService::sendSingleNotification($data, $item);
+                                Log::info($response, ['location' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0], 'is_particular_driver' => Arr::get($item, 'is_particular_driver')]);
                             //    \Log::info( "fcm" );
                             //    \Log::info( $fcm_store );
                             }else{
@@ -161,7 +175,7 @@ class SendPushNotification
                                     "priority" => "high"
                                 ];
 				                $response = FirebaseService::sendSingleNotification($data,$item);
-                                Log::info($response, ['location' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0]]);
+                                Log::info($response, ['location' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0], 'is_particular_driver' => Arr::get($item, 'is_particular_driver')]);
                                 // $fcm_store =   $fcmObj
                                 // ->to([$item['device_token']])
                                 // ->priority('high')

@@ -79,12 +79,12 @@ class SendPushNotification
         'roster_details.short_name','roster_details.address','roster_details.lat','roster_details.long','roster_details.task_count');
         $get              = $get->get();
 
-        Log::info('notification get data');
-        Log::info([$get]);
+        // Log::info('notification get data');
+        // Log::info([$get]);
 
         $getids           = $get->pluck('id')->toArray();
-        Log::info('notification get data ids ');
-        Log::info([$getids]);
+        // Log::info('notification get data ids ');
+        // Log::info([$getids]);
 
         DB::connection($schemaName)->table('rosters')->where('status',10)->delete();
 

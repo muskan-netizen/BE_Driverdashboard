@@ -44,15 +44,15 @@ class NotifyDriverBeforePickupJob implements ShouldQueue
     public function handle()
     {
         $orders = $this->orders;
-        Log::warning(['orders===' => $orders]);
+        // Log::warning(['orders===' => $orders]);
 
         foreach ($orders as $order) {
 
             $agent = Agent::find($order->driver_id);
-            Log::error(['agent===' => $this->client_preferences]);
+            // Log::error(['agent===' => $this->client_preferences]);
 
             if (!empty($this->client_preferences->fcm_server_key)) {
-            Log::error(['fcm_server_key' => $this->client_preferences->fcm_server_key]);
+            // Log::error(['fcm_server_key' => $this->client_preferences->fcm_server_key]);
               
          
                 $this->sendnotification($order,$this->client_preferences->client_id);
@@ -66,7 +66,7 @@ class NotifyDriverBeforePickupJob implements ShouldQueue
     public function sendnotification($order,$code)
     {
         try {
-            Log::warning(['$order->agent' => $order->agent]);
+            // Log::warning(['$order->agent' => $order->agent]);
             if(isset($order->agent->device_token)){
 
                 $item['title']     = 'Pickup Request';
@@ -102,7 +102,7 @@ class NotifyDriverBeforePickupJob implements ShouldQueue
                             "priority" => "high"
                         ];
                         $response = FirebaseService::sendNotification($data);
-                        Log::warning(['was' => $response]);
+                        // Log::warning(['was' => $response]);
                         // $fcm_server_key = !empty($client_preferences->fcm_server_key)? $client_preferences->fcm_server_key : 'null';
                 
                         // $fcmObj = new Fcm($fcm_server_key);

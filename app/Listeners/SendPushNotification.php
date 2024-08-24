@@ -158,7 +158,7 @@ class SendPushNotification
                                 ];
 
                                 $response = FirebaseService::sendSingleNotification($data, $item);
-                                Log::info($response, ['location' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0], 'is_particular_driver' => Arr::get($item, 'is_particular_driver')]);
+                                //Log::info($response, ['location' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0], 'is_particular_driver' => Arr::get($item, 'is_particular_driver')]);
                             //    \Log::info( "fcm" );
                             //    \Log::info( $fcm_store );
                             }else{
@@ -175,7 +175,7 @@ class SendPushNotification
                                     "priority" => "high"
                                 ];
 				                $response = FirebaseService::sendSingleNotification($data,$item);
-                                Log::info($response, ['location' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0], 'is_particular_driver' => Arr::get($item, 'is_particular_driver')]);
+                                // Log::info($response, ['location' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0], 'is_particular_driver' => Arr::get($item, 'is_particular_driver')]);
                                 // $fcm_store =   $fcmObj
                                 // ->to([$item['device_token']])
                                 // ->priority('high')

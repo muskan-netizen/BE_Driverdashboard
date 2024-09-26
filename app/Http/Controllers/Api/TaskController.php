@@ -1539,6 +1539,7 @@ class TaskController extends BaseController
                 'cash_to_be_collected' => $request->cash_to_be_collected,
                 'unique_id' => $unique_order_id,
                 'call_back_url' => $request->call_back_url ?? null,
+                'payment_mode' => $request->payment_mode ?? null,
                 'type' => $request->type ?? 0,
                 'friend_name' => $request->friend_name,
                 'friend_phone_number' => $request->friend_phone_number,

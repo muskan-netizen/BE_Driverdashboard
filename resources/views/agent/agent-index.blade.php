@@ -187,7 +187,7 @@ if (! empty($agent->agentRating())) {
                     $approve_action .= '<div class="inner-div agent_approval_button" data-agent_id="' . $agent->id . '" data-status="1" title="Approve"><i class="fas fa-user-check" style="color: green; cursor:pointer;"></i></div>';
                 }
                 $action = '' . $approve_action . '
-                               <!-- <div class="inner-div"> <a href="' . route('agent.edit', $agent->id) . '" class="action-icon editIcon" agentId="' . $agent->id . '"> <i class="mdi mdi-square-edit-outline"></i></a></div>-->
+                               <div class="inner-div"> <a href="' . route('agent.edit', $agent->id) . '" class="action-icon editIcon" agentId="' . $agent->id . '"> <i class="mdi mdi-square-edit-outline"></i></a></div>
                                     <div class="inner-div">
                                         <form id="agentdelete' . $agent->id . '" method="POST" action="' . route('agent.destroy', $agent->id) . '">
                                             <input type="hidden" name="_token" value="' . csrf_token() . '" />

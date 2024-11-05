@@ -836,11 +836,14 @@ class TaskController extends BaseController
             }
 
             $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $order_details->unique_id;
+           
             $client = new GClient([
                 'content-type' => 'application/json',
                 'User-Agent: Mozilla/5.0'
             ]);
             $url = $order_details->call_back_url;
+            $url1 = $url . '?dispatcher_status_option_id=' . $dispatcher_status_option_id . '&dispatch_traking_url=' . $dispatch_traking_url . '&task_type=' . $task_type;
+            \Log::info($url1);
             $res = $client->get($url . '?dispatcher_status_option_id=' . $dispatcher_status_option_id . '&dispatch_traking_url=' . $dispatch_traking_url . '&task_type=' . $task_type);
             $response = json_decode($res->getBody(), true);
             if ($response) {

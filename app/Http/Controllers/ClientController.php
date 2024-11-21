@@ -73,6 +73,7 @@ class ClientController extends Controller
      */
     public function storePreference(Request $request, $domain = '', $id)
     {
+        
         try {
             $this->updatePreferenceAdditional($request);
             // return redirect()->back()->with('success', 'Client settings updated successfully!');
@@ -259,6 +260,7 @@ class ClientController extends Controller
             return redirect()->back()->with('success', 'Preference updated successfully!');
         }
         if($request->has('toll_fee_enable')){
+            
             $toll_fell_enable = $request->toll_fee == 'on' ? 1 : 0;
             $data = ['toll_key'=>$request->toll_key,'toll_fee'=>$toll_fell_enable];
             ClientPreference::where('client_id', $id)->update($data);
@@ -525,8 +527,9 @@ class ClientController extends Controller
         if($request->has('address_limit_order_config')){
             $request->request->add(['show_limited_address' => ($request->has('show_limited_address') && $request->show_limited_address == 'on') ? 1 : 0]);
         }
-
+        if($request->has('toll_fee')){
         $request->request->add(['toll_fee' => ($request->has('toll_fee') && $request->toll_fee == 'on') ? 1 : 0]);
+        }
         $request->request->add(['distance_in_meter' => ($request->has('distance_in_meter') && $request->distance_in_meter > 0) ? $request->distance_in_meter : 0]);
         $request->request->add(['is_road_side_pickup' => ($request->has('is_road_side_pickup') && $request->is_road_side_pickup == 'on') ? 1 : 0]);
         $request->request->add(['unique_id_show' => ($request->has('unique_id_show') && $request->unique_id_show == 'on') ? 1 : 0]);

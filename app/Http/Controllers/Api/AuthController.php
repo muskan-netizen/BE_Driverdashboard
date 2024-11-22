@@ -596,6 +596,17 @@ class AuthController extends BaseController
                 $agent_docs = AgentDocs::create($files[$key]);
             }
         }
+        if (isset($request->files_date)) {
+            foreach ($request->files_date as $key => $f) {
+                $files[$key] = [
+                    'file_type' => $f['file_type'],
+                    'agent_id' => $agent->id,
+                    'file_name' => $f['contents'],
+                    'label_name' => $f['label_name']
+                ];
+                $agent_docs = AgentDocs::create($files[$key]);
+            }
+        }
                 
         $clientContact = Client::first();
         $emailSmtpDetail = SmtpDetail::where('id', 1)->first();
@@ -628,6 +639,7 @@ class AuthController extends BaseController
         }
 
         if (ClientPreference::value('refer_earn_driver_to_driver_toggle') == 1 && $request->refferal_code) {
+           
             $this->refferalToDriver($request,$agent->id);
         }
         
@@ -697,17 +709,22 @@ class AuthController extends BaseController
         $DriverRefferal = DriverRefferal::where('refferal_code', $request->refferal_code)->first();
         if($DriverRefferal){
             $agent = Agent::where('id',$DriverRefferal->driver_id)->first();
+           
             $client_preference_additional = ClientPreferenceAdditional::pluck('key_value','key_name');
             if ($client_preference_additional['refferel_by_agent_amount']) {
+                
                 $agent_wallet = $agent->wallet;
                 $agent_wallet->deposit((float)($client_preference_additional['refferel_by_agent_amount']) * 100, ['Referral code used by <b>' . $request->user_name . '</b>']);
                 $agent_wallet->balance;
+               
             }
             if($client_preference_additional['refferel_to_agent_amount']){
+               
                 $authAgent = Agent::where('id',$agent_id)->first();
                 $authAgent_wallet = $authAgent->wallet;
                 $authAgent_wallet->deposit((float)($client_preference_additional['refferel_to_agent_amount']) * 100, ['Referral code used of <b>' . $agent->name . '</b>']);
                 $authAgent_wallet->balance;
+               
             }
 
         }else{

@@ -34,6 +34,7 @@ class DriverSubscriptionController extends BaseController
             // ->whereNull('cancelled_at')
             ->where('driver_id', $user->id)
             ->where('end_date','>=',$now)
+            ->whereNull('cancelled_at')
             ->orderBy('end_date', 'desc')->first();
 
         return response()->json(["status"=>"Success", "data"=>['all_plans'=>$sub_plans, 'subscription'=>$active_subscription, "clientCurrency"=> $preferences->currency ?? NULL]]);

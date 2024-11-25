@@ -440,7 +440,7 @@ class AuthController extends BaseController
 
         $validator = Validator::make($request->all(), [
             'name' => 'required',
-            'phone_number' => 'required|min:6',
+            'phone_number' => 'required|min:6|unique:agents,phone_number',
             'type' => 'required',
             'otp' => 'required'
             // 'vehicle_type_id' => 'required'

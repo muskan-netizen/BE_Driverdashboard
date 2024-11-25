@@ -44,6 +44,7 @@ class DriverTransactionController extends BaseController
             $order_cost = $driver_cost;
             
             $payout = AgentPayout::where(['agent_id'=>$agent->id, 'status'=> 1])->sum('amount');
+            $refferal_balance = Transaction::where('payable_id',$agent->id)->sum('amount')/100;
             $pendingpayout = AgentPayout::where(['agent_id'=>$agent->id, 'status'=> 0])->sum('amount');
             
             $balance = agentEarningManager::getAgentEarning($agent->id, 1);
@@ -55,6 +56,7 @@ class DriverTransactionController extends BaseController
            
             $wallet_transactions = Transaction::select(DB::raw('id, "wallet" as transaction_type, NULL as order_id, NULL as dependent_task_id, NULL as task_type_id, NULL as location_id, NULL as appointment_duration, NULL as task_status, NULL as allocation_type, amount, type, meta, NULL as dr, NULL as cr, created_at'))
             ->where('payable_id', $agent->id);
+            
 
             $agent_payouts = AgentPayout::select(DB::raw('id, "payout" as transaction_type, NULL as order_id, NULL as dependent_task_id, NULL as task_type_id, NULL as location_id, NULL as appointment_duration, NULL as task_status, NULL as allocation_type, amount, NULL as type, NULL as meta, NULL as dr, NULL as cr, created_at'))
             ->where('agent_id', $agent->id)->where('status', 1);
@@ -69,7 +71,7 @@ class DriverTransactionController extends BaseController
                 ->with(['location','tasktype','order.customer'])
                 ->select(DB::raw('id, "task" as transaction_type, order_id, dependent_task_id, task_type_id, location_id, appointment_duration, task_status, allocation_type, NULL as amount, NULL as type, NULL as meta, NULL as dr, NULL as cr, created_at'))
                 ->union($payments)
-                // ->union($wallet_transactions)
+                ->union($wallet_transactions)
                 ->union($agent_payouts)
                 ->orderBy('created_at', 'DESC')
                 ->orderBy('order_id', 'DESC')
@@ -92,14 +94,15 @@ class DriverTransactionController extends BaseController
         }
         // $data['debit'] = $debit;
         // $data['credit'] = $credit;
-        
+      
         $data['order_cost'] = $order_cost ?? 0;
         $data['driver_cost'] = $driver_cost;
         $data['lifetime_earnings'] = $order_cost;
         $data['cash_to_be_collected'] = $cash;
-        $data['wallet_balance'] = $final_balance;
+        $data['wallet_balance'] = $final_balance+$refferal_balance;
         $data['payments'] = $tasks;
         $data['totalCashCollected'] = $totalCashCollected;
+        // $data['refferaltransaction'] = $wallet_transactions;
 
         return response()->json($data);
     }

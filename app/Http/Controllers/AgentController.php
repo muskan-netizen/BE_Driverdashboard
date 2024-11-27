@@ -1027,18 +1027,23 @@ class AgentController extends Controller
                     }else{
                         if($amount > abs($final_balance)){
                             return $this->error(__('Amount is greater than ' . getAgentNomenclature() . ' final balance'), 422);
+                        }else{
+                           
+                            $wallet->depositFloat($amount, [
+                                'Wallet has been <b>Credited</b>'
+                            ]);
                         }
                     }
                 } else {
                     return $this->error(__('Invalid Data'), 422);
                 }
-                $data = [
-                    'driver_id' => $request->driver_id,
-                    'cr' => $request->payment_type == 1 ? $request->amount : null,
-                    'dr' => $request->payment_type == 2 ? $request->amount : null,
-                    'payment_from' => $request->payment_from == 2 ? 1:0
-                ];
-                $agent = AgentPayment::create($data);
+                // $data = [
+                //     'driver_id' => $request->driver_id,
+                //     'cr' => $request->payment_type == 1 ? $request->amount : null,
+                //     'dr' => $request->payment_type == 2 ? $request->amount : null,
+                //     'payment_from' => $request->payment_from == 2 ? 1:0
+                // ];
+                // $agent = AgentPayment::create($data);
                 return $this->success('', __('Payment is successfully completed'), 201);
             } else {
                 return $this->error(__('Insufficient Amount'), 422);

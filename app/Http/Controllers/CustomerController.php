@@ -11,6 +11,7 @@ use DataTables;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\HeadingRowImport;
 use App\Exports\CustomerExport;
+use App\Model\Transaction;
 use Excel;
 class CustomerController extends Controller
 {
@@ -21,6 +22,7 @@ class CustomerController extends Controller
      */
     public function index()
     {
+        
         $customers         = Customer::orderBy('created_at', 'DESC')->get();
         $inActiveCustomers = count($customers->where('status', 'In-Active'));
         $activeCustomers   = count($customers->where('status', 'Active'));

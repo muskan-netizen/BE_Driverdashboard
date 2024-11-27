@@ -83,12 +83,12 @@
                             <span id="cash_collected"></span>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        {{-- <div class="col-md-6">
                             <div class="card-box dispaly-cards">
                             {!! Form::label('title', __('Final Balance'),['class' => 'control-label']) !!} <br>
                             <span id="final_balance"></span>
                             </div>
-                        </div>
+                        </div> --}}
                         <div class="col-md-6">
                             <div class="card-box dispaly-cards">
                             {!! Form::label('title', __('Wallet Balance'),['class' => 'control-label']) !!} <br>

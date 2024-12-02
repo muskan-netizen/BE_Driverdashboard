@@ -1832,6 +1832,7 @@ class TaskController extends BaseController
                 $agent = Agent::find($agentId);
                 $title = 'Scheduled New Order';
                 $body  = 'The schedule timing of order number #'.$request->order_number.' by the customer.';
+                DB::commit();
                 // $this->sendPushNotificationtoDriver($title,$body,$auth,[$agent->device_token],$dispatch_traking_url);
                 $this->OneByOneUniqueDriver($geo, $settime, $agentId, $orders, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, '',$request->notify_hour,$request->reminder_hour);
             }
@@ -1842,7 +1843,7 @@ class TaskController extends BaseController
                     if ($client->getPreference->create_batch_hours > 0) {
                         $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $orders->unique_id;
 
-                        DB::commit();
+                       
                         $orderdata = Order::select('id', 'order_time', 'status', 'driver_id')->with('agent')
                             ->where('id', $orders->id)
                             ->first();

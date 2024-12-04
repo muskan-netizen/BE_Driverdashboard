@@ -853,6 +853,7 @@ class TaskController extends BaseController
             }
 
             $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $order_details->unique_id;
+           
             $client = new GClient([
                 'content-type' => 'application/json',
                 'User-Agent: Mozilla/5.0'

@@ -483,3 +483,11 @@ body .bg-pattern button[type="submit"]:hover {  background-color: #4938d7;    bo
   text-transform: capitalize;
 }
 /* ============= hotfixp2p dispatcher 13 jan 2023  ===================== */
+.open_profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.open_profile span{
+  margin:0 !important;
+}

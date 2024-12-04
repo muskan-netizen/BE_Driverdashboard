@@ -5,18 +5,27 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
     <div class="col-md-4">
         <div class="form-group" id="profile_pictureInputEdit">
         @if(is_azureEnable())
+       
         <input type="file" id="profilePic" data-plugins="dropify" name="profile_picture" data-default-file="" showImg="{{ isset($agent->profile_picture) ?  getAzureUrl().$agent->profile_picture : '' }}" />
-
+          
 	
 @else
+
 <input type="file" id="profilePic" data-plugins="dropify" name="profile_picture" data-default-file="" showImg="{{ isset($agent->profile_picture) ? Storage::disk('s3')->url($agent->profile_picture) : '' }}" />
-      
+
  @endif
             <span class="invalid-feedback" role="alert">
                 <strong></strong>
             </span>
         </div>
-        <p class="text-muted text-center mt-2 mb-0">{{__("Profile Pic")}}</p>
+        <div class="open_profile">
+            <span class="text-muted text-center mt-2 mb-0">{{__("Profile Pic")}}</span>
+            @if(is_azureEnable())
+            <a href="{{isset($agent->profile_picture) ? Storage::disk('s3')->url($agent->profile_picture) : '' }}" download target="_blank"><i class="fa fa-eye" aria-hidden="true"></i></a>
+            @else
+            <a href="{{ isset($agent->profile_picture) ? Storage::disk('s3')->url($agent->profile_picture) : '' }}" download target="_blank"><i class="fa fa-eye" aria-hidden="true"></i></a>
+            @endif
+        </div>
     </div>
     <div class="col-md-8">
         <span>{{__('Live OTP')}}</span>

@@ -39,6 +39,7 @@ use App\Model\{
     TaskType,
     AgentLogSlab,
     AgentFleet,
+    AgentSmsTemplate,
     OrderAdditionData,
     UserBidRideRequest,
     OrderFormAttribute,
@@ -724,8 +725,15 @@ class TaskController extends BaseController
                 $sms_body = '';
             }
 
-            $sms_body = str_replace('"order_number"', $order_details->unique_id, $sms_body);
-            $sms_body = str_replace('"deliver_otp"', $otpCreate, $sms_body);
+            if ($smsTemplate = AgentSmsTemplate::firstWhere('slug', 'send-task-otp')) {
+                $sms_body = strtr($smsTemplate->content, [
+                    '{otp}'          => $otpCreate,
+                    '{order-number}' => $order_details->unique_id,
+                ]);
+            } else {
+                $sms_body = str_replace('"order_number"', $order_details->unique_id, $sms_body);
+                $sms_body = str_replace('"deliver_otp"', $otpCreate, $sms_body);
+            }
 
             // set dynamic smtp for email send
             $this->setMailDetail($client_details);

@@ -1667,7 +1667,10 @@ class TaskController extends BaseController
                         ->orderBy('id', 'desc')
 
                         ->first();
-                        $dep_id = $lastTask->id;
+
+                        if ($lastTask) {
+                            $dep_id = $lastTask->id;
+                        }
                  }
                  }
                 $data = [

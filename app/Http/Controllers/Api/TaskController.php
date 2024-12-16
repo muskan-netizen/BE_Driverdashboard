@@ -741,7 +741,7 @@ class TaskController extends BaseController
             try {
 
                 // **Send OTP to customer phone text msg */
-                if (!empty($smsProviderNumber)) {
+                /*if (!empty($smsProviderNumber)) {*/ // smsProviderNumber is only required for twillio and should not block other sms providers
                     if (!empty($customerPhoneNumber) && strlen($order_details->customer->phone_number) > 8) {
                         $this->sendSms2($order_details->customer->phone_number, $sms_body);
                     }
@@ -759,7 +759,7 @@ class TaskController extends BaseController
                     // "from" => $smsProviderNumber //form_number
                     // ]
                     // );
-                }
+                /*}*/
 
                 $mail = SmtpDetail::where('client_id', $client_details->id)->first();
                 $client_logo = Storage::disk('s3')->url($client_details->logo);

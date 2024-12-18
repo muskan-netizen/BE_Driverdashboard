@@ -19,11 +19,11 @@
                             <input type="radio" id="student"  name="payment_type" value="2">
                             <label for="student"><span class="showspan">{{__("Receive")}}</span></label>
                         </li>
-                        
+
                         </ul>
                     </div>
                 </div>
-                
+
                 <div class="modal-body px-3 py-0">
                     <div class="row">
                         <div class="col-md-12">
@@ -39,9 +39,9 @@
                                                 $id = str_pad($id, 4, '0', STR_PAD_LEFT);
                                             }
                                         @endphp
-                                        <option value="{{$item->id}}">{{ $id . ' - ' . $item->name}}</option> 
+                                        <option value="{{$item->id}}">{{ $id . ' - ' . $item->name}}</option>
                                     @endforeach
-                                
+
                                 </select>
                             </div>
                         </div>
@@ -53,7 +53,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                      <div class="row d-none" id="receive_from" >
                         <div class="col-md-12">
                             {!! Form::label('title', __('Receive From'),['class' => 'control-label']) !!} <br>
@@ -69,7 +69,7 @@
                         </ul>
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="card-box dispaly-cards">
@@ -81,6 +81,12 @@
                             <div class="card-box dispaly-cards">
                             {!! Form::label('title', __('Cash Collected'),['class' => 'control-label']) !!} <br>
                             <span id="cash_collected"></span>
+                            </div>
+                        </div>
+                        {{-- <div class="col-md-6">
+                            <div class="card-box dispaly-cards">
+                                {!! Form::label('title', __('Current Earning'), ['class' => 'control-label']) !!} <br />
+                                <span id="current_balance"></span>
                             </div>
                         </div>
                         {{-- <div class="col-md-6">
@@ -103,7 +109,7 @@
                 <div class="modal-footer border-0">
                     <button type="submit" class="btn btn-blue waves-effect waves-light">{{__("Add")}}</button>
                 </div>
-            </form>    
+            </form>
         </div>
     </div>
 </div><!-- /.modal -->

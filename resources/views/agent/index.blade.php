@@ -852,6 +852,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                   var wallet = round(data.wallet, 2);
                 $("#order_earning").text(driver_cost);
                 $("#cash_collected").text(cash);
+                $("#current_balance").text(new_final);
                 $("#final_balance").text(new_final);
                 $("#wallet_balance").text(wallet);
             },

@@ -83,7 +83,7 @@
                             <span id="cash_collected"></span>
                             </div>
                         </div>
-                        {{-- <div class="col-md-6">
+                        <div class="col-md-6">
                             <div class="card-box dispaly-cards">
                                 {!! Form::label('title', __('Current Earning'), ['class' => 'control-label']) !!} <br />
                                 <span id="current_balance"></span>

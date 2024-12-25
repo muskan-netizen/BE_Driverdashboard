@@ -390,13 +390,6 @@ class AgentController extends Controller
         ])->first();
         $client_timezone = $client->getTimezone ? $client->getTimezone->timezone : 251;
         $timezone = $tz->timezone_name($client_timezone);
-        $getAdditionalPreference = getAdditionalPreference([
-            'pickup_type',
-            'drop_type',
-            'is_attendence',
-            'idle_time'
-        ]);
-
 
         $paginationLinks = $paginatedAgents->links();
 

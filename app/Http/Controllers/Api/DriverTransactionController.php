@@ -95,6 +95,7 @@ class DriverTransactionController extends BaseController
         }
         // $data['debit'] = $debit;
         // $data['credit'] = $credit;
+
         $data['order_cost'] = $order_cost ?? 0;
         $data['driver_cost'] = $driver_cost;
         $data['lifetime_earnings'] = $order_cost;

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use DB;
@@ -391,10 +390,13 @@ class AgentController extends Controller
         $client_timezone = $client->getTimezone ? $client->getTimezone->timezone : 251;
         $timezone = $tz->timezone_name($client_timezone);
 
+
         $paginationLinks = $paginatedAgents->links();
 
         $returnHTML['html'] = view('agent/agent-index')->with(['agents' => $paginatedAgents, 'timezone' => $timezone])->render();
         $returnHTML['pagination'] = $paginationLinks->toHtml();
+
+
 
 
         // $agents = Agent::orderBy('id', 'DESC');
@@ -483,6 +485,7 @@ class AgentController extends Controller
                 $agents->where(function ($query) use ($search) {
                     $query->where('name', 'like', '%' . $search . '%');
                 });
+
             }
             if (!empty($request->get('tag_filter'))) {
                 $tag_id = $request->get('tag_filter');
@@ -612,7 +615,8 @@ class AgentController extends Controller
             $folder = str_pad(Auth::user()->code, 8, '0', STR_PAD_LEFT);
             $folder = 'client_' . $folder;
             $file = $request->file('profile_picture');
-            if (is_azureEnable()) {
+            if(is_azureEnable())
+            {
                 $getFileName = uploadAzureImage($file);
             } else {
                 $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
@@ -657,7 +661,8 @@ class AgentController extends Controller
                     $folder = str_pad(Auth::user()->code, 8, '0', STR_PAD_LEFT);
                     $folder = 'client_' . $folder;
                     $file = $request->file($name);
-                    if (is_azureEnable()) {
+                    if(is_azureEnable())
+                    {
                         $getFileName = uploadAzureImage($file);
                     } else {
                         $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
@@ -931,7 +936,8 @@ class AgentController extends Controller
                     $folder = str_pad(Auth::user()->code, 8, '0', STR_PAD_LEFT);
                     $folder = 'client_' . $folder;
                     $file = $request->file($name);
-                    if (is_azureEnable()) {
+                    if(is_azureEnable())
+                    {
                         $getFileName = uploadAzureImage($file);
                     } else {
                         $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
@@ -1219,7 +1225,8 @@ class AgentController extends Controller
                 if (isset($send->code) && $send->code != 'ok') {
                     return $this->error($send->message, 404);
                 }
-            } elseif ($client_preference->sms_provider == 6) //for Vonage (nexmo)
+            }
+            elseif($client_preference->sms_provider == 6) //for Vonage (nexmo)
             {
                 $crendentials = json_decode($client_preference->sms_credentials);
                 $send = $this->vonage_sms($to, $body, $crendentials);

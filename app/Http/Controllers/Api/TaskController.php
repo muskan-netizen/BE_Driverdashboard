@@ -39,6 +39,7 @@ use App\Model\{
     TaskType,
     AgentLogSlab,
     AgentFleet,
+    AgentSmsTemplate,
     OrderAdditionData,
     UserBidRideRequest,
     OrderFormAttribute,
@@ -724,8 +725,15 @@ class TaskController extends BaseController
                 $sms_body = '';
             }
 
-            $sms_body = str_replace('"order_number"', $order_details->unique_id, $sms_body);
-            $sms_body = str_replace('"deliver_otp"', $otpCreate, $sms_body);
+            if ($smsTemplate = AgentSmsTemplate::firstWhere('slug', 'send-task-otp')) {
+                $sms_body = strtr($smsTemplate->content, [
+                    '{otp}'          => $otpCreate,
+                    '{order-number}' => $order_details->unique_id,
+                ]);
+            } else {
+                $sms_body = str_replace('"order_number"', $order_details->unique_id, $sms_body);
+                $sms_body = str_replace('"deliver_otp"', $otpCreate, $sms_body);
+            }
 
             // set dynamic smtp for email send
             $this->setMailDetail($client_details);
@@ -733,7 +741,7 @@ class TaskController extends BaseController
             try {
 
                 // **Send OTP to customer phone text msg */
-                if (!empty($smsProviderNumber)) {
+                /*if (!empty($smsProviderNumber)) {*/ // smsProviderNumber is only required for twillio and should not block other sms providers
                     if (!empty($customerPhoneNumber) && strlen($order_details->customer->phone_number) > 8) {
                         $this->sendSms2($order_details->customer->phone_number, $sms_body);
                     }
@@ -751,7 +759,7 @@ class TaskController extends BaseController
                     // "from" => $smsProviderNumber //form_number
                     // ]
                     // );
-                }
+                /*}*/
 
                 $mail = SmtpDetail::where('client_id', $client_details->id)->first();
                 $client_logo = Storage::disk('s3')->url($client_details->logo);

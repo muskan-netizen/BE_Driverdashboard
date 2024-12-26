@@ -91,7 +91,7 @@ trait smsManager{
     public function mTalkz_sms($to,$message,$crendentials,$template_id = '')
     {
         $api_url = "http://msg.mtalkz.com/V2/http-api.php";
-        $to_number = substr($to, 1);
+        $to_number = trim($to, '+');
         $endpoint = $api_url.'?apikey='.$crendentials->api_key.'&senderid='.$crendentials->sender_id.'&number='.$to_number.'&message='.$message.'&format=json&template_id='.$template_id;
         $response=$this->getGuzzle($endpoint);
         return $response;

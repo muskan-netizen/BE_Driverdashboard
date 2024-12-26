@@ -585,6 +585,18 @@ class AuthController extends BaseController
                 }
             }
         }
+
+        if ($selectors = $request->input('selectors')) {
+            foreach ($selectors as $selector) {
+                AgentDocs::create([
+                    'file_type'  => $selector['file_type'],
+                    'agent_id'   => $agent->id,
+                    'file_name'  => $selector['value'],
+                    'label_name' => $selector['key'],
+                ]);
+            }
+        }
+
         if (isset($request->files_text)) {
             foreach ($request->files_text as $key => $f) {
                 $files[$key] = [

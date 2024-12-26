@@ -17,7 +17,7 @@ use Twilio\Rest\Client as TwilioClient;
 use App\Traits\ApiResponser;
 use App\Exports\AgentsExport;
 use Doctrine\DBAL\Driver\DrizzlePDOMySql\Driver;
-use App\Model\ {
+use App\Model\{
     Agent,
     AgentDocs,
     AgentPayment,
@@ -79,7 +79,7 @@ class AgentController extends Controller
         // echo ($new[0]);
         // pr($fcm_store);
         $data = [
-            "registration_ids" => is_array($item['device_token']) ? $item['device_token'] : array($item['device_token']),//$item['device_token'],
+            "registration_ids" => is_array($item['device_token']) ? $item['device_token'] : array($item['device_token']), //$item['device_token'],
             "notification" => [
                 'title' => 'Pickup Request',
                 'body' => 'Check All Details For This Request In App',
@@ -334,7 +334,7 @@ class AgentController extends Controller
 
         // Apply pagination to the cloned instance
         $perPage = 10;
-        $paginatedAgents = $paginatedAgents->where('is_approved',1)->paginate($perPage);
+        $paginatedAgents = $paginatedAgents->where('is_approved', 1)->paginate($perPage);
 
         $tags = TagsForAgent::all();
         $tag = [];
@@ -350,11 +350,11 @@ class AgentController extends Controller
 
 
         $teams = $teams->get();
-        $selectedDate = ! empty($request->date) ? $request->date : '';
+        $selectedDate = !empty($request->date) ? $request->date : '';
         // $tags = TagsForTeam::all();
 
         $getAdminCurrentCountry = Countries::where('id', '=', $user->country_id)->get()->first();
-        if (! empty($getAdminCurrentCountry)) {
+        if (!empty($getAdminCurrentCountry)) {
             $countryCode = $getAdminCurrentCountry->code;
         } else {
             $countryCode = '';
@@ -393,8 +393,8 @@ class AgentController extends Controller
 
         $paginationLinks = $paginatedAgents->links();
 
-        $returnHTML['html'] = view ('agent/agent-index')->with(['agents' => $paginatedAgents,'timezone' => $timezone])->render();
-        $returnHTML['pagination'] =$paginationLinks->toHtml();
+        $returnHTML['html'] = view('agent/agent-index')->with(['agents' => $paginatedAgents, 'timezone' => $timezone])->render();
+        $returnHTML['pagination'] = $paginationLinks->toHtml();
 
 
 
@@ -460,7 +460,7 @@ class AgentController extends Controller
             $timezone = $tz->timezone_name($client_timezone);
             $agents = Agent::with('warehouseAgent')->orderBy('id', 'DESC');
 
-            if (! empty($request->get('date_filter'))) {
+            if (!empty($request->get('date_filter'))) {
                 $dateFilter = explode('to', $request->get('date_filter'));
                 if (count($dateFilter) > 1) {
                     $agents->whereBetween('created_at', [
@@ -474,20 +474,20 @@ class AgentController extends Controller
                     ]);
                 }
             }
-            if (! empty($request->get('geo_filter'))) {
+            if (!empty($request->get('geo_filter'))) {
                 $geo_id = $request->get('geo_filter');
                 $agents->whereHas('geoFence', function ($q) use ($geo_id) {
                     $q->where('geo_id', $geo_id);
                 });
             }
-            if (! empty($request->get('search'))) {
+            if (!empty($request->get('search'))) {
                 $search = $request->get('search');
                 $agents->where(function ($query) use ($search) {
                     $query->where('name', 'like', '%' . $search . '%');
-                    });
+                });
 
             }
-            if (! empty($request->get('tag_filter'))) {
+            if (!empty($request->get('tag_filter'))) {
                 $tag_id = $request->get('tag_filter');
                 $agents->whereHas('tags', function ($q) use ($tag_id) {
                     $q->where('tag_id', $tag_id);
@@ -506,9 +506,9 @@ class AgentController extends Controller
                 $agents = $agents->withTrashed()
                     ->where('is_approved', $request->status)
                     ->orWhere(function ($query) {
-                    return $query->where('is_approved', 1)
-                        ->where('deleted_at', '!=', NULL);
-                })
+                        return $query->where('is_approved', 1)
+                            ->where('deleted_at', '!=', NULL);
+                    })
                     ->orderBy('id', 'desc');
             } else {
                 $agents = $agents->where('is_approved', $request->status)->orderBy('id', 'desc');
@@ -520,12 +520,12 @@ class AgentController extends Controller
             // You can also pass the pagination links to the view
             $paginationLinks = $agents->links()->toHtml() ?? "";
 
-             $returnHTML['html'] = view ('agent/agent-index')->with(['agents' => $agents,'timezone' => $timezone])->render();
+            $returnHTML['html'] = view('agent/agent-index')->with(['agents' => $agents, 'timezone' => $timezone])->render();
 
-             $returnHTML['pagination'] =$paginationLinks;
+            $returnHTML['pagination'] = $paginationLinks;
 
 
-            return response()->json($returnHTML,200);
+            return response()->json($returnHTML, 200);
 
 
         } catch (Exception $e) {
@@ -556,7 +556,7 @@ class AgentController extends Controller
     protected function validator(array $data)
     {
         $full_number = '';
-        if (isset($data['country_code']) && ! empty($data['country_code']) && isset($data['phone_number']) && ! empty($data['phone_number']))
+        if (isset($data['country_code']) && !empty($data['country_code']) && isset($data['phone_number']) && !empty($data['phone_number']))
             $full_number = '+' . $data['country_code'] . $data['phone_number'];
 
         $data['phone_number'] = '+' . $data['country_code'] . $data['phone_number'];
@@ -580,7 +580,7 @@ class AgentController extends Controller
                 'min:6',
                 'max:15',
                 Rule::unique('agents')->where(function ($query) use ($full_number) {
-                    return $query->where(['phone_number'=> $full_number,'deleted_at' => NULL]);
+                    return $query->where(['phone_number' => $full_number, 'deleted_at' => NULL]);
                 })
             ],
             // 'color' => ['required'],
@@ -605,7 +605,7 @@ class AgentController extends Controller
         $newtag = explode(",", $request->tags);
         $tag_id = [];
         foreach ($newtag as $key => $value) {
-            if (! empty($value)) {
+            if (!empty($value)) {
                 $check = TagsForAgent::firstOrCreate([
                     'name' => $value
                 ]);
@@ -620,14 +620,14 @@ class AgentController extends Controller
             $file = $request->file('profile_picture');
             if(is_azureEnable())
             {
-               $getFileName = uploadAzureImage($file);
-            }else{
+                $getFileName = uploadAzureImage($file);
+            } else {
                 $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
                 $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
                 $getFileName = $path;
             }
-           
+
         }
 
         $data = [
@@ -650,7 +650,7 @@ class AgentController extends Controller
         $agent->tags()->sync($tag_id);
         if (checkTableExists('agent_warehouse')) {
             $warehouse_ids = $request->warehouse_id;
-            if (! empty($warehouse_ids)) {
+            if (!empty($warehouse_ids)) {
                 $agent->warehouseAgent()->sync($warehouse_ids);
             }
         }
@@ -667,8 +667,8 @@ class AgentController extends Controller
                     $file = $request->file($name);
                     if(is_azureEnable())
                     {
-                       $getFileName = uploadAzureImage($file);
-                    }else{
+                        $getFileName = uploadAzureImage($file);
+                    } else {
                         $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
                         $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
                         $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
@@ -725,7 +725,7 @@ class AgentController extends Controller
 
         $tagIds = [];
         $returnHTML = '';
-        if (! empty($agent)) {
+        if (!empty($agent)) {
             foreach ($agent->tags as $tag) {
                 $tagIds[] = $tag->name;
             }
@@ -850,7 +850,7 @@ class AgentController extends Controller
                 'min:6',
                 'max:15',
                 Rule::unique('agents')->where(function ($query) use ($full_number, $id) {
-                    return $query->where(['phone_number'=> $full_number,'deleted_at' => NULL])
+                    return $query->where(['phone_number' => $full_number, 'deleted_at' => NULL])
                         ->where('id', '!=', $id);
                 })
             ],
@@ -892,7 +892,7 @@ class AgentController extends Controller
         $tag_id = [];
 
         foreach ($newtag as $key => $value) {
-            if (! empty($value)) {
+            if (!empty($value)) {
                 $check = TagsForAgent::firstOrCreate([
                     'name' => $value
                 ]);
@@ -907,8 +907,8 @@ class AgentController extends Controller
             $file = $request->file('profile_picture');
             if(is_azureEnable())
             {
-               $getFileName = uploadAzureImage($file);
-            }else{
+                $getFileName = uploadAzureImage($file);
+            } else {
 
                 $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
                 $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
@@ -928,7 +928,7 @@ class AgentController extends Controller
 
         if (checkTableExists('agent_warehouse')) {
             $warehouse_ids = $request->warehouse_id;
-            if (! empty($warehouse_ids)) {
+            if (!empty($warehouse_ids)) {
                 $agent->warehouseAgent()->sync($warehouse_ids);
             }
         }
@@ -943,12 +943,12 @@ class AgentController extends Controller
                     $file = $request->file($name);
                     if(is_azureEnable())
                     {
-                       $getFileName = uploadAzureImage($file);
-                    }else{
-                    $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
-                    $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
-                    $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
-                    $getFileName = $path;
+                        $getFileName = uploadAzureImage($file);
+                    } else {
+                        $file_name = uniqid() . '.' . $file->getClientOriginalExtension();
+                        $s3filePath = '/assets/' . $folder . '/agents' . $file_name;
+                        $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
+                        $getFileName = $path;
                     }
                     $agent_docs = AgentDocs::firstOrNew([
                         'agent_id' => $agent->id,
@@ -1016,19 +1016,19 @@ class AgentController extends Controller
                         'Wallet has been <b>Credited</b>'
                     ]);
                 } elseif ($request->payment_type == 2) {
-                    $final_balance = agentEarningManager::getAgentEarning($agent->id,0);
-                    if($request->payment_from == 1){
+                    $final_balance = agentEarningManager::getAgentEarning($agent->id, 0);
+                    if ($request->payment_from == 1) {
                         if ($amount > $agent->balanceFloat) {
                             return $this->error(__('Amount is greater than ' . getAgentNomenclature() . ' available funds'), 422);
                         }
                         $wallet->withdrawFloat($amount, [
                             'Wallet has been <b>Dedited</b>'
                         ]);
-                    }else{
-                        if($amount > abs($final_balance)){
+                    } else {
+                        if ($amount > abs($final_balance)) {
                             return $this->error(__('Amount is greater than ' . getAgentNomenclature() . ' final balance'), 422);
-                        }else{
-                           
+                        } else {
+
                             $wallet->depositFloat($amount, [
                                 'Wallet has been <b>Credited</b>'
                             ]);
@@ -1060,7 +1060,7 @@ class AgentController extends Controller
         $agent = Agent::where('id', $id)->first();
         $wallet_balance = 0;
         if (isset($agent)) {
-            if($agent->wallet){
+            if ($agent->wallet) {
                 $wallet_balance = $agent->balanceFloat;
             }
             $cash = $agent->order->sum('cash_to_be_collected');
@@ -1068,7 +1068,7 @@ class AgentController extends Controller
             $order = $agent->order->sum('order_cost');
             $credit = $agent->agentPayment->sum('cr');
             $debit = $agent->agentPayment->sum('dr');
-            $final_balance = agentEarningManager::getAgentEarning($agent->id,0);
+            $final_balance = agentEarningManager::getAgentEarning($agent->id, 1);
         } else {
             $cash = 0;
             $order = 0;
@@ -1128,7 +1128,7 @@ class AgentController extends Controller
             $keyData = [];
             $sms_body = sendSmsTemplate($slug, $keyData);
 
-            if (! empty($sms_body) && ! empty($sms_body['body'])) {
+            if (!empty($sms_body) && !empty($sms_body['body'])) {
                 $send = $this->sendSmsNew($agent_approval->phone_number, $sms_body)->getData();
             }
 
@@ -1142,7 +1142,7 @@ class AgentController extends Controller
             $agentNotAvailable = count($agents->where('is_available', 0));
             $agentIsApproved = count($agents->where('is_approved', 1));
             $agentNotApproved = count($agents->where('is_approved', 0));
-            $agentRejected = count($agents->where('is_approved', 2)->whereNull('deleted_at')) +count($agents->whereIn('is_approved', [0,1,2])->whereNotNull('deleted_at'));
+            $agentRejected = count($agents->where('is_approved', 2)->whereNull('deleted_at')) + count($agents->whereIn('is_approved', [0, 1, 2])->whereNotNull('deleted_at'));
 
             return response()->json([
                 'status' => 1,
@@ -1173,26 +1173,26 @@ class AgentController extends Controller
     {
         // ->limit(10)
         $search = $request->search;
-        $vehicle_type = $request->has('vehicle_type') ? $request->vehicle_type : '' ;
+        $vehicle_type = $request->has('vehicle_type') ? $request->vehicle_type : '';
         $drivers = Agent::orderby('name', 'asc')->select('id', 'name', 'phone_number')
-                    ->where('is_approved', 1);
+            ->where('is_approved', 1);
 
-            if ($search) {
-                $drivers =    $drivers->where('name', 'like', '%' . $search . '%');
-            }
-            if ($vehicle_type) {
-                $drivers =    $drivers->whereIn('vehicle_type_id', $vehicle_type);
-            }
-            $drivers =    $drivers->get();
-            $response = array();
-            foreach ($drivers as $driver) {
-                $response[] = array(
-                    "value" => $driver->id,
-                    "label" => $driver->name . '(' . $driver->phone_number . ')'
-                );
-            }
+        if ($search) {
+            $drivers =    $drivers->where('name', 'like', '%' . $search . '%');
+        }
+        if ($vehicle_type) {
+            $drivers =    $drivers->whereIn('vehicle_type_id', $vehicle_type);
+        }
+        $drivers =    $drivers->get();
+        $response = array();
+        foreach ($drivers as $driver) {
+            $response[] = array(
+                "value" => $driver->id,
+                "label" => $driver->name . '(' . $driver->phone_number . ')'
+            );
+        }
 
-            return response()->json($response);
+        return response()->json($response);
 
     }
 
@@ -1235,13 +1235,13 @@ class AgentController extends Controller
             elseif($client_preference->sms_provider == 6) //for Vonage (nexmo)
             {
                 $crendentials = json_decode($client_preference->sms_credentials);
-                $send = $this->vonage_sms($to,$body,$crendentials);
+                $send = $this->vonage_sms($to, $body, $crendentials);
             }
             elseif($client_preference->sms_provider == 7) // for SMS Partner France
             {
                 $crendentials = json_decode($client_preference->sms_credentials);
-                $send = $this->sms_partner_gateway($to,$body,$crendentials);
-                if( isset($send->code) && $send->code != 200){
+                $send = $this->sms_partner_gateway($to, $body, $crendentials);
+                if (isset($send->code) && $send->code != 200) {
                     return $this->error("SMS could not be deliver. Please check sms gateway configurations", 404);
                 }
             } else {
@@ -1265,7 +1265,7 @@ class AgentController extends Controller
 
     public function refreshWalletbalance(Request $request, $domain = '', $id = '')
     {
-        if (! empty($id)) {
+        if (!empty($id)) {
             $user = Agent::find($id);
             if ($user) {
                 if ($user->wallet) {

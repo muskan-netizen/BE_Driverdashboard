@@ -53,6 +53,12 @@ use Illuminate\Support\Str;
               'tags' => '{OTP}',
               'label' => 'Sign In Success',
               'content' => 'You are login successfully.',
+            ],
+            [
+              'slug'    => 'send-task-otp',
+              'tags'    => '{otp},{order-number}',
+              'label'   => 'Task Otp',
+              'content' => 'We have delivered your order number {order-number} please provide your OTP {otp} to your agent to order delivery',
             ]
         );
         if($option_count == 0)

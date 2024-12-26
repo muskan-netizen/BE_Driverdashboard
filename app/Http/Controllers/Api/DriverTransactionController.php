@@ -48,7 +48,6 @@ class DriverTransactionController extends BaseController
             $pendingpayout = AgentPayout::where(['agent_id' => $agent->id, 'status' => 0])->sum('amount');
 
             $balance = agentEarningManager::getAgentEarning($agent->id, 1);
-
             $final_balance = number_format($balance, 2, '.', '');
 
             //-----------------------------------------------------------------------------------------------//

@@ -526,10 +526,13 @@ class AgentController extends Controller
 
 
             return response()->json($returnHTML, 200);
+
+
         } catch (Exception $e) {
 
             \Log::info($e->getMessage());
         }
+
     }
 
     public function export()
@@ -1188,6 +1191,7 @@ class AgentController extends Controller
         }
 
         return response()->json($response);
+
     }
 
     protected function sendSms2($to, $body)
@@ -1230,7 +1234,8 @@ class AgentController extends Controller
             {
                 $crendentials = json_decode($client_preference->sms_credentials);
                 $send = $this->vonage_sms($to, $body, $crendentials);
-            } elseif ($client_preference->sms_provider == 7) // for SMS Partner France
+            }
+            elseif($client_preference->sms_provider == 7) // for SMS Partner France
             {
                 $crendentials = json_decode($client_preference->sms_credentials);
                 $send = $this->sms_partner_gateway($to, $body, $crendentials);

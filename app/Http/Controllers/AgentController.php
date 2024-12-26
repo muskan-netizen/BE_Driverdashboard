@@ -627,6 +627,7 @@ class AgentController extends Controller
                 $path = Storage::disk('s3')->put($s3filePath, $file, 'public');
                 $getFileName = $path;
             }
+
         }
 
         $data = [
@@ -904,7 +905,8 @@ class AgentController extends Controller
             $folder = str_pad(Auth::user()->id, 8, '0', STR_PAD_LEFT);
             $folder = 'client_' . $folder;
             $file = $request->file('profile_picture');
-            if (is_azureEnable()) {
+            if(is_azureEnable())
+            {
                 $getFileName = uploadAzureImage($file);
             } else {
 

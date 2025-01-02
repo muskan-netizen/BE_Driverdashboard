@@ -38,7 +38,7 @@ class DriverTransactionController extends BaseController
             //-----------------------------function calculation modified by surendra singh-------------------//
             $page = $request->has('page') ? $request->page : 1;
             $limit = $request->has('limit') ? $request->limit : 30;
-            $cash  = $agent->order->where('status', 'completed')->sum('cash_to_be_collected');
+            $cash  = $agent->order->where('payment_mode','Cash On Delivery')->where('status', 'completed')->sum('cash_to_be_collected');
             $driver_cost  = $agent->order->where('status', 'completed')->sum('driver_cost');
             //$order_cost = $agent->order->where('status', 'completed')->sum('order_cost');
             $order_cost = $driver_cost;

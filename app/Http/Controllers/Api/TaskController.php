@@ -2721,28 +2721,28 @@ class TaskController extends BaseController
             }
         } else {
             $geoagents = $this->getGeoBasedAgentsData($geo, $is_cab_pooling, $agent_tag, $date, $cash_at_hand,$orders_id,$particular_driver_id);
-            $distanceResults = $this->haversineGreatCircleDistance($geoagents->toArray(), $finalLocation, $unit, $max_redius, $max_task);
 
-            if(count($distanceResults) > 0){
+          
+            if(count($geoagents) > 0){
                 for ($i = 1; $i <= $try; $i++) {
-                    foreach ($distanceResults as $key =>  $geoitem) {
-                        if (!empty($geoitem['device_token']) && !empty($geoitem['device_type'])  && $geoitem['is_available'] == 1) {
+                    foreach ($geoagents as $key =>  $geoitem) {
+                        if (!empty($geoitem->device_token) && !empty($geoitem->device_type)  && $geoitem->is_available == 1) {
                             $datas = [
                                 'order_id'            => $orders_id,
-                                'driver_id'           => $geoitem['id'],
+                                'driver_id'           => $geoitem->id,
                                 'notification_time'   => $time,
                                 'type'                => $allcation_type,
                                 'client_code'         => $auth->code,
                                 'created_at'          => Carbon::now()->toDateTimeString(),
                                 'updated_at'          => Carbon::now()->toDateTimeString(),
-                                'device_type'         => $geoitem['device_type'],
-                                'device_token'        => $geoitem['device_token'],
+                                'device_type'         => $geoitem->device_type,
+                                'device_token'        => $geoitem->device_token,
                                 'detail_id'           => $randem,
 
                             ];
                             array_push($data, $datas);
                             if ($allcation_type == 'N' && 'ACK') {
-                                Order::where('id', $orders_id)->update(['driver_id' => $geoitem['id']]);
+                                Order::where('id', $orders_id)->update(['driver_id' => $geoitem->id]);
                                 break;
                             }
                         }
@@ -2757,7 +2757,7 @@ class TaskController extends BaseController
             }
            if(!empty($data))
 
-
+         
             $this->dispatch(new RosterCreate($data, $extraData));
         }
     }

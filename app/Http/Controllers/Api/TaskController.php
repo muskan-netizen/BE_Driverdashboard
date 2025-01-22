@@ -861,14 +861,14 @@ class TaskController extends BaseController
             }
 
             $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $order_details->unique_id;
-           
+
             $client = new GClient([
                 'content-type' => 'application/json',
                 'User-Agent: Mozilla/5.0'
             ]);
             $url = $order_details->call_back_url;
             $url1 = $url . '?dispatcher_status_option_id=' . $dispatcher_status_option_id . '&dispatch_traking_url=' . $dispatch_traking_url . '&task_type=' . $task_type;
-         
+
             $res = $client->get($url . '?dispatcher_status_option_id=' . $dispatcher_status_option_id . '&dispatch_traking_url=' . $dispatch_traking_url . '&task_type=' . $task_type);
             $response = json_decode($res->getBody(), true);
             if ($response) {
@@ -1746,8 +1746,8 @@ class TaskController extends BaseController
                 $toll_amount = ($toll_amount / $orders->available_seats) * $orders->no_seats_for_pooling;
             }
 
-   
-            
+
+
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
                 if ($agent_details->type == 'Employee') {
@@ -1758,7 +1758,7 @@ class TaskController extends BaseController
             }
 
 
-          
+
 
             // update order with order cost details
 
@@ -1855,7 +1855,7 @@ class TaskController extends BaseController
                     if ($client->getPreference->create_batch_hours > 0) {
                         $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $orders->unique_id;
 
-                       
+
                         $orderdata = Order::select('id', 'order_time', 'status', 'driver_id')->with('agent')
                             ->where('id', $orders->id)
                             ->first();
@@ -1974,8 +1974,8 @@ class TaskController extends BaseController
                         $this->OneByOne($geo, $notification_time, $agent_id, $orders->id, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, $is_one_push_booking);
                         break;
                     case 'send_to_all':
-                       
-                        
+
+
                         //this is called when allocation type is send to all
                         $this->SendToAll($geo, $notification_time, $agent_id, $orders->id, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, $is_one_push_booking);
                         break;
@@ -2655,8 +2655,8 @@ class TaskController extends BaseController
     public function SendToAll($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $header, $allocation, $is_cab_pooling, $agent_tag = '', $is_order_updated, $is_one_push_booking = 0,$particular_driver_id = 0)
     {
 
-       
-        
+
+
         $allcation_type    = 'AR';
         $date              = \Carbon\Carbon::today();
         $auth              = Client::where('database_name', $header['client'][0])->with(['getAllocation', 'getPreference'])->first();
@@ -2673,7 +2673,7 @@ class TaskController extends BaseController
         $randem            = rand(11111111, 99999999);
         $data = [];
 
- 
+
 
         if ($type == 'acceptreject') {
             $allcation_type = 'AR';
@@ -2729,7 +2729,7 @@ class TaskController extends BaseController
                         if (!empty($geoitem['device_token']) && !empty($geoitem['device_type'])  && $geoitem['is_available'] == 1) {
                             $datas = [
                                 'order_id'            => $orders_id,
-                                'driver_id'           => $geoitem['id'],
+                                'driver_id'           => $geoitem['driver_id'],
                                 'notification_time'   => $time,
                                 'type'                => $allcation_type,
                                 'client_code'         => $auth->code,
@@ -2742,7 +2742,7 @@ class TaskController extends BaseController
                             ];
                             array_push($data, $datas);
                             if ($allcation_type == 'N' && 'ACK') {
-                                Order::where('id', $orders_id)->update(['driver_id' => $geoitem['id']]);
+                                Order::where('id', $orders_id)->update(['driver_id' => $geoitem['driver_id']]);
                                 break;
                             }
                         }
@@ -4012,12 +4012,12 @@ class TaskController extends BaseController
             $paid_duration = $paid_duration < 0 ? 0 : $paid_duration;
             $paid_distance = $paid_distance < 0 ? 0 : $paid_distance;
             $total = $pricingRule->base_price + ($paid_distance * $pricingRule->distance_fee) + ($paid_duration * $pricingRule->duration_price);
-          
+
 
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
                 if ($agent_details->type == 'Employee') {
-                   
+
                     $percentage = $pricingRule->agent_commission_fixed + (($total / 100) * $pricingRule->agent_commission_percentage);
                 } else {
                     $percentage = $pricingRule->freelancer_commission_percentage + (($total / 100) * $pricingRule->freelancer_commission_fixed);
@@ -4409,7 +4409,7 @@ class TaskController extends BaseController
             }
 
             // update order with order cost details
-       
+
 
             $updateorder = [
                 'base_price' => $pricingRule->base_price,
@@ -4592,7 +4592,7 @@ class TaskController extends BaseController
                 $total = ($total / $orders->available_seats) * $orders->no_seats_for_pooling;
                 $toll_amount = ($toll_amount / $orders->available_seats) * $orders->no_seats_for_pooling;
             }
-          
+
             if (isset($agent_id)) {
                 $agent_details = Agent::where('id', $agent_id)->first();
                 if ($agent_details->type == 'Employee') {

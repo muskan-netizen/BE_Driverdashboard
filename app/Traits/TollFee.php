@@ -114,7 +114,7 @@ trait TollFee{
                     $toll_array['duration']     = round($durationInSec/60);
                     if(isset($routes->travelAdvisory) && !empty($routes->travelAdvisory)){
                         if(isset($routes->travelAdvisory->tollInfo) && !empty($routes->travelAdvisory->tollInfo)){
-                            foreach($routes->travelAdvisory->tollInfo->estimatedPrice as $estimatedPrice){
+                            foreach($routes->travelAdvisory->tollInfo->estimatedPrice ?? [] as $estimatedPrice){
                                 $toll_array['currency'] = $estimatedPrice->currencyCode;
                                 $toll_array['toll_amount'] = $estimatedPrice->units;
                             }

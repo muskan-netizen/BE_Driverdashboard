@@ -3179,7 +3179,7 @@ class TaskController extends BaseController
 
 
         if ($auth->getPreference->toll_fee == 1) {
-            $getdata = $this->toll_fee($latitude, $longitude, (isset($request->toll_passes) ? $request->toll_passes : ''), (isset($request->VehicleEmissionType) ? $request->VehicleEmissionType : ''), (isset($request->travelMode) ? $request->travelMode : ''));
+            $getdata = $this->toll_fee($latitude, $longitude, (isset($request->toll_passes) ? $request->toll_passes : null), (isset($request->VehicleEmissionType) ? $request->VehicleEmissionType : null), (isset($request->travelMode) ? $request->travelMode : null));
         } else {
             $getdata = $this->GoogleDistanceMatrix($latitude, $longitude);
         }

@@ -33,6 +33,7 @@ class RosterCreate implements ShouldQueue
     }
     public function handle()
     {
+        \Log::info('Roster Create Job Started');
         try {
             $schemaName = 'royodelivery_db';
             $default = [

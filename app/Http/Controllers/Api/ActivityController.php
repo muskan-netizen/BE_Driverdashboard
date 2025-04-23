@@ -310,6 +310,7 @@ class ActivityController extends BaseController
             $custom_mode = !empty($preferences->custom_mode) ? json_decode($preferences->custom_mode) : [];
             $clientPreference = !empty($preferences->customer_notification_per_distance) ? json_decode($preferences->customer_notification_per_distance) : [];
 
+
             if(!empty($custom_mode->is_hide_customer_notification) && ($custom_mode->is_hide_customer_notification == 1) && !empty($clientPreference->is_send_customer_notification) && ($clientPreference->is_send_customer_notification == 'on')){
 
             //    \Log::info('permission success');
@@ -328,7 +329,8 @@ class ActivityController extends BaseController
 
                        $tasks = Task::whereIn('order_id', $orders)->where('task_status', 2)->with(['location','tasktype','order.customer','order.additionData'])->orderBy('order_id', 'desc')->orderBy('id', 'ASC')->get()->first();
                    }
-                    if (!empty($tasks)) {
+
+                    if (! empty($tasks)) {
 
                         //\Log::info('get tasks--');
                         //\Log::info($tasks);
@@ -380,6 +382,10 @@ class ActivityController extends BaseController
 
                         }
                     }
+                }
+
+                else {
+                    $this->updateAgentLog($data); 
                 }
             }else{
               

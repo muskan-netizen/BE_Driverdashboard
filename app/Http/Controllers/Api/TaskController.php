@@ -2550,8 +2550,7 @@ class TaskController extends BaseController
             foreach ($orders as $ids) {
                 array_push($allreadytaken, $ids->driver_id);
             }
-            // print_r($allreadytaken);
-            // die;
+            
             $counter = 0;
             $data = [];
             if ($totalcount > 0) {
@@ -2722,7 +2721,6 @@ class TaskController extends BaseController
         } else {
             $geoagents = $this->getGeoBasedAgentsData($geo, $is_cab_pooling, $agent_tag, $date, $cash_at_hand,$orders_id,$particular_driver_id);
             $distanceResults = $this->haversineGreatCircleDistance($geoagents->toArray(), $finalLocation, $unit, $max_redius, $max_task);
-            \Log::info($geoagents);
 
             if(count($distanceResults) > 0){
                 for ($i = 1; $i <= $try; $i++) {
@@ -2756,10 +2754,9 @@ class TaskController extends BaseController
                     }
                 }
             }
-           if(!empty($data))
-
-           \Log::info('check_dispatch');
-            $this->dispatch(new RosterCreate($data, $extraData));
+           if(!empty($data)){
+                $this->dispatch(new RosterCreate($data, $extraData));
+           }
         }
     }
 

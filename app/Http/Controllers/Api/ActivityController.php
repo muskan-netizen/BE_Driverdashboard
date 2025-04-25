@@ -316,7 +316,7 @@ class ActivityController extends BaseController
             //    \Log::info('permission success');
                 //get agent orders
                 $orders = Order::where('driver_id', Auth::user()->id)->where('status', 'assigned')->orderBy('order_time')->pluck('id')->toArray();
-                if (count($orders) > 0 || ! AgentLog::query()->where('agent_id', Auth::user()->id)->exists()) {
+                if (count($orders) > 0) {
                     //\Log::info('get order');
 
 
@@ -382,6 +382,8 @@ class ActivityController extends BaseController
 
                         }
                     }
+                }else{
+                    $this->updateAgentLog($data,$request->order_id);
                 }
             }else{
               

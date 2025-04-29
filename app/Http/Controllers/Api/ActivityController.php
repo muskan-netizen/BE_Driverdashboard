@@ -381,6 +381,8 @@ class ActivityController extends BaseController
                             }
 
                         }
+                    }else{
+                        $this->updateAgentLog($data,$request->order_id);
                     }
                 }else{
                     $this->updateAgentLog($data,$request->order_id);

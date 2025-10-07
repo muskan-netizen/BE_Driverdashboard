@@ -72,9 +72,11 @@ trait GlobalFunction{
     {
         try {
             $preference = ClientPreference::select('manage_fleet', 'is_cab_pooling_toggle', 'is_threshold','is_go_to_home','go_to_home_radians','driver_subscription')->first();
-            $geoagents_ids =DriverGeo::where('geo_id',$geo);
-
+            
+            $geoagents_ids =DriverGeo::where('geo_id',$geo)->get();
+              
             if($preference->is_cab_pooling_toggle == 1 && $is_cab_pooling == 1){
+               
                 $geoagents_ids = $geoagents_ids->whereHas('agent', function($q) use ($geo, $is_cab_pooling){
                     $q->where('is_pooling_available', $is_cab_pooling);
                 });
@@ -83,6 +85,7 @@ trait GlobalFunction{
             $agents = [];
 
             if ($preference->driver_subscription) {
+            
                 $now = Carbon::now();
                 $current_date = $now->toDateString();
                 $agentids=[];
@@ -122,16 +125,17 @@ trait GlobalFunction{
                 $geoagents_ids=$geoagents_ids->whereIn('driver_id',$agentids);
             }
             else{
+               
                 if (!empty($agent_tag)) {
-
+                    
                     if (is_array($agent_tag)) {
-
+                        
                         $agents = AgentsTag::whereIn('tag_id', $agent_tag)->whereHas('agent',function($qry){
                             $qry->where('is_available',1);
                         })->pluck('agent_id')->toArray();
 
                     } else {
-
+                          
                         // Case 2: $agent_tag is a string
 
                         $agents = AgentsTag::whereHas('tags', function ($qry) use ($agent_tag) {
@@ -143,18 +147,19 @@ trait GlobalFunction{
                         })->pluck('agent_id')->toArray();
 
                     }
-                    $geoagents_ids =  DriverGeo::where('geo_id', $geo)->whereIn('driver_id', $agents);
+                    // $geoagents_ids =  DriverGeo::where('geo_id', $geo)->whereIn('driver_id', $agents);
                 }
                 $order = Order::find($order_id);
-                if($order)
-                {
-                    $geoagents_ids = $geoagents_ids->whereHas('agent', function($q) use ($order){
-                        $q->where('id', '!=', $order->driver_id);
-                    });
-                }
+                // if($order)
+                // {
+                //     $geoagents_ids = $geoagents_ids->whereHas('agent', function($q) use ($order){
+                //         $q->where('id', '!=', $order->driver_id);
+                //     });
+                // }
             }
      
             $geoagents_ids =  $geoagents_ids->pluck('driver_id');
+          
          
             $geoagents = Agent::whereIn('id',  $geoagents_ids)
             ->with(['logs',
@@ -162,30 +167,31 @@ trait GlobalFunction{
                 $f->whereDate('order_time', $date)->with('task');
             }
         ]);
-           
-            if($particular_driver_id){
-                $geoagents = $geoagents->where('id','!=',$particular_driver_id);
-            }
-            if(@$preference->is_threshold == 1){
-                $geoagents = $geoagents->where('is_threshold', 1);
-            }
+          
+            // if($particular_driver_id){
+            //     $geoagents = $geoagents->where('id','!=',$particular_driver_id);
+            // }
+            // if(@$preference->is_threshold == 1){
+            //     $geoagents = $geoagents->where('is_threshold', 1);
+            // }
 
-            if(@$preference->manage_fleet){
-                $geoagents = $geoagents->whereHas('agentFleet');
-            }
-            // geting task only
-            if((@$preference->is_go_to_home ==1) && ($order_id!='')){
-                $dropOfTask = Task::with('location')->where(['order_id'=>$order_id,'task_type_id'=>2])->first();
-                $dropLat  = $dropOfTask ?  ($dropOfTask->location ? $dropOfTask->location->latitude : '' ) : '' ;
-                $dropLong =$dropOfTask ?  ($dropOfTask->location ? $dropOfTask->location->longitude : '') : '' ;
-                $radians = (int)($preference->go_to_home_radians ?? 0) ;
-                if($dropLat !='' && $dropLong !='' ){
-                    $geoagents = $geoagents->onlyGetingAgentByHomeAddress($dropLat, $dropLong, $radians);
-                }
-            }
+            // if(@$preference->manage_fleet){
+            //     $geoagents = $geoagents->whereHas('agentFleet');
+            // }
+            // // geting task only
+            // if((@$preference->is_go_to_home ==1) && ($order_id!='')){
+            //     $dropOfTask = Task::with('location')->where(['order_id'=>$order_id,'task_type_id'=>2])->first();
+            //     $dropLat  = $dropOfTask ?  ($dropOfTask->location ? $dropOfTask->location->latitude : '' ) : '' ;
+            //     $dropLong =$dropOfTask ?  ($dropOfTask->location ? $dropOfTask->location->longitude : '') : '' ;
+            //     $radians = (int)($preference->go_to_home_radians ?? 0) ;
+            //     if($dropLat !='' && $dropLong !='' ){
+            //         $geoagents = $geoagents->onlyGetingAgentByHomeAddress($dropLat, $dropLong, $radians);
+            //     }
+            // }
 
-            $geoagents = $geoagents->orderBy('id', 'DESC');
-            $geoagents = $geoagents->get()->where("agent_cash_at_hand", '<', $cash_at_hand);
+            $geoagents = $geoagents->orderBy('id', 'DESC')->get();
+            // Log::info('Cash at hand filter: ' . $geoagents);
+            // $geoagents = $geoagents->get()->where("agent_cash_at_hand", '<', $cash_at_hand);
 
             return $geoagents;
 

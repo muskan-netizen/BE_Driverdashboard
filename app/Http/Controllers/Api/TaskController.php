@@ -1319,6 +1319,7 @@ class TaskController extends BaseController
 
     public function addRosterNotification($order_id,$header)
     {
+        
         try{
             $orders = Order::findOrFail($order_id);
             $taskcount = $orders->task->count();
@@ -1346,6 +1347,7 @@ class TaskController extends BaseController
                     break;
                 case 'send_to_all':
                     //this is called when allocation type is send to all
+
                     $this->SendToAll($geo, $notification_time, $agent_id, $orders->id, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, $is_one_push_booking);
                     break;
                 case 'round_robin':
@@ -1957,6 +1959,18 @@ class TaskController extends BaseController
             }
             //Commit Transaction befor send notification
             DB::commit();
+           if(isset($request->is_taxi) && $request->is_taxi == 1){
+                  
+               $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $orders->unique_id;
+            return response()->json([
+                'message' => __('Task Added Successfully'),
+                'task_id' => $orders->id,
+                'status' => $orders->status,
+                'dispatch_traking_url' => $dispatch_traking_url ?? null,
+                'invalid_agent' => $inValidAgent
+            ], 200);
+        }
+            
 
 
             if(@$client->is_lumen_enabled)
@@ -1965,6 +1979,7 @@ class TaskController extends BaseController
                 lumenDispatchToQueue($geoid,$orders);
 
             }
+
             if ($request->allocation_type === 'a' || $request->allocation_type === 'm') {
                 $allocation = AllocationRule::where('id', 1)->first();
                 $is_one_push_booking = isset($orders->is_one_push_booking) ? $orders->is_one_push_booking : 0;
@@ -1988,8 +2003,7 @@ class TaskController extends BaseController
                         $this->batchWise($geo, $notification_time, $agent_id, $orders->id, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, $is_one_push_booking);
                 }
             }
-
-            $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $orders->unique_id;
+               $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $orders->unique_id;
             return response()->json([
                 'message' => __('Task Added Successfully'),
                 'task_id' => $orders->id,
@@ -1997,6 +2011,9 @@ class TaskController extends BaseController
                 'dispatch_traking_url' => $dispatch_traking_url ?? null,
                 'invalid_agent' => $inValidAgent
             ], 200);
+            
+
+         
        } catch (\Exception $e) {
             DB::rollback();
             \Log::info("dispatch error ". $e->getMessage());
@@ -2720,7 +2737,10 @@ class TaskController extends BaseController
             }
         } else {
             $geoagents = $this->getGeoBasedAgentsData($geo, $is_cab_pooling, $agent_tag, $date, $cash_at_hand,$orders_id,$particular_driver_id);
+          
+            
             $distanceResults = $this->haversineGreatCircleDistance($geoagents->toArray(), $finalLocation, $unit, $max_redius, $max_task);
+          
 
             if(count($distanceResults) > 0){
                 for ($i = 1; $i <= $try; $i++) {
@@ -3006,7 +3026,8 @@ class TaskController extends BaseController
         foreach ($geoagents as $item) {
             $latitudeTo = $item['logs']['lat'] ?? null;
             $longitudeTo = $item['logs']['long'] ?? null;
-
+          
+         
             if (!empty($latitudeTo) && !empty($longitudeTo)) {
                 if (isset($latitudeFrom) && isset($latitudeFrom) && isset($latitudeTo) && isset($longitudeTo)) {
                     $latFrom = deg2rad($latitudeFrom);
@@ -5408,6 +5429,7 @@ class TaskController extends BaseController
     }
 
     public function autoallocated($request){
+      
         $header = $request->header();
         $orders=Order::where('id',$request->order_id)->first();
         $task=Task::where('order_id',$request->order_id)->get();

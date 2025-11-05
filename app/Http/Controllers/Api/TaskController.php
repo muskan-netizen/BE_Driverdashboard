@@ -5327,6 +5327,7 @@ class TaskController extends BaseController
 
     public function OneByOne($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $header, $allocation, $is_cab_pooling, $agent_tag = '', $is_order_updated, $is_one_push_booking=0,$particular_driver_id = 0)
     {
+        \Log::info('OneByOne called');
         $allcation_type    = 'AR';
         $date              = \Carbon\Carbon::today();
         $auth              = Client::where('database_name', $header['client'][0])->with(['getAllocation', 'getPreference'])->first();
@@ -5365,6 +5366,7 @@ class TaskController extends BaseController
         ];
 
         if (!isset($geo)) {
+            \Log::info('No geo found');
             $oneagent = Agent::where('id', $agent_id)->first();
             if(!empty($oneagent->device_token) && $oneagent->is_available == 1){
                 $data = [
@@ -5382,8 +5384,10 @@ class TaskController extends BaseController
                 $this->dispatch(new RosterCreate($data, $extraData));
             }
         } else {
+            \Log::info('Geo found');
             $geoagents = $this->getGeoBasedAgentsData($geo, $is_cab_pooling, $agent_tag, $date, $cash_at_hand,$orders_id,$particular_driver_id);
             if($allcation_type == 'ACK'){
+                \Log::info('ACK found');
                 // Get first agent from geoagents or find first available agent
                 $selected_agent_id = null;
                 

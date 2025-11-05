@@ -1231,7 +1231,7 @@ class TaskController extends BaseController
     public function assignAgent(Request $request)
     {
 
-        try {
+        // try {
 
             // dd($request->all());
             if ($request->type != 'B') {
@@ -1403,10 +1403,10 @@ class TaskController extends BaseController
                 $this->MassAndEditNotification($batchs->batchDetails[0]->order->id, $request->agent_id, $request->batchId);
                 return redirect()->back();
             }
-        } catch (\Exception $e) {
-            \Log::info("catch",[$e->getMessage()]);
-            dd($e->getMessage());
-        }
+        // } catch (\Exception $e) {
+        //     \Log::info("catch",[$e->getMessage()]);
+        //     dd($e->getMessage());
+        // }
     }
 
     // function for updating date of orders

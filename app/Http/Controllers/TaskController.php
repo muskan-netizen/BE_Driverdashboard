@@ -1443,7 +1443,7 @@ class TaskController extends BaseController
             'agent',
             'task.location'
         ])->first();
-        $auth = Client::where('code', Auth::user()->code)->with([
+        $auth = Client::with([
             'getAllocation',
             'getPreference'
         ])->first();

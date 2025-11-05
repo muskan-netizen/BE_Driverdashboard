@@ -1485,7 +1485,7 @@ class TaskController extends BaseController
             'notification_time' => $time,
             'notification_befor_time' => $rostersbeforetime,
             'type' => $allcation_type,
-            'client_code' => Auth::user()->code,
+            'client_code' => $auth->code,
             'created_at' => Carbon::now()->toDateTimeString(),
             'updated_at' => Carbon::now()->toDateTimeString(),
             'device_type' => $oneagent->device_type,

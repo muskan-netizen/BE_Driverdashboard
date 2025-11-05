@@ -1373,8 +1373,7 @@ class TaskController extends BaseController
     public function CreateTask(CreateTaskRequest $request)
     {
 
-         \Log::info(' create task request data');
-         \Log::info($request->all());
+        
 
         try {
             $auth = $client = Client::with([
@@ -2557,6 +2556,39 @@ class TaskController extends BaseController
             $remening = [];
 
             $geoagents = $this->getGeoBasedAgentsData($geo, $is_cab_pooling, $agent_tag, $date, $cash_at_hand, $orders_id, $particular_driver_id);
+            if($allcation_type == 'ACK'){
+                // Get first agent from geoagents or find first available agent
+                $selected_agent_id = null;
+                
+                if (!empty($geoagents) && $geoagents->count() > 0) {
+                    // Get first agent from geoagents
+                    $selected_agent_id = $geoagents->first()->id;
+                } else {
+                    // If geoagents is empty, find first available agent with status 1
+                    $available_agent = Agent::where('is_available', 1)
+                                           ->where('is_approved', 1)
+                                           ->first();
+                    if ($available_agent) {
+                        $selected_agent_id = $available_agent->id;
+                    }
+                }
+                
+                // If we found an agent, call assignAgent function
+                if ($selected_agent_id) {
+                    $taskController = new \App\Http\Controllers\TaskController();
+                    $assignRequest = new \Illuminate\Http\Request();
+                    $assignRequest->merge([
+                        'agent_id' => $selected_agent_id,
+                        'orders_id' => [$orders_id],
+                        'type' => 'A' // Not 'B' to go through normal assignment flow
+                    ]);
+                    \Log::info('Selected agent ID: ' . $selected_agent_id);
+                    
+                    $taskController->assignAgent($assignRequest);
+                    return; // Exit after successful assignment
+                }
+            }
+            
 
             $totalcount = $geoagents->count();
             $orders = order::where('driver_id', '!=', null)->whereDate('created_at', $date)
@@ -5327,7 +5359,7 @@ class TaskController extends BaseController
 
     public function OneByOne($geo, $notification_time, $agent_id, $orders_id, $customer, $finalLocation, $taskcount, $header, $allocation, $is_cab_pooling, $agent_tag = '', $is_order_updated, $is_one_push_booking=0,$particular_driver_id = 0)
     {
-        \Log::info('OneByOne called');
+        
         $allcation_type    = 'AR';
         $date              = \Carbon\Carbon::today();
         $auth              = Client::where('database_name', $header['client'][0])->with(['getAllocation', 'getPreference'])->first();
@@ -5366,7 +5398,7 @@ class TaskController extends BaseController
         ];
 
         if (!isset($geo)) {
-            \Log::info('No geo found');
+           
             $oneagent = Agent::where('id', $agent_id)->first();
             if(!empty($oneagent->device_token) && $oneagent->is_available == 1){
                 $data = [
@@ -5384,10 +5416,10 @@ class TaskController extends BaseController
                 $this->dispatch(new RosterCreate($data, $extraData));
             }
         } else {
-            \Log::info('Geo found');
+           
             $geoagents = $this->getGeoBasedAgentsData($geo, $is_cab_pooling, $agent_tag, $date, $cash_at_hand,$orders_id,$particular_driver_id);
             if($allcation_type == 'ACK'){
-                \Log::info('ACK found');
+            
                 // Get first agent from geoagents or find first available agent
                 $selected_agent_id = null;
                 

@@ -5383,6 +5383,38 @@ class TaskController extends BaseController
             }
         } else {
             $geoagents = $this->getGeoBasedAgentsData($geo, $is_cab_pooling, $agent_tag, $date, $cash_at_hand,$orders_id,$particular_driver_id);
+            if($allcation_type == 'ACK'){
+                // Get first agent from geoagents or find first available agent
+                $selected_agent_id = null;
+                
+                if (!empty($geoagents) && $geoagents->count() > 0) {
+                    // Get first agent from geoagents
+                    $selected_agent_id = $geoagents->first()->id;
+                } else {
+                    // If geoagents is empty, find first available agent with status 1
+                    $available_agent = Agent::where('is_available', 1)
+                                           ->where('is_approved', 1)
+                                           ->first();
+                    if ($available_agent) {
+                        $selected_agent_id = $available_agent->id;
+                    }
+                }
+                
+                // If we found an agent, call assignAgent function
+                if ($selected_agent_id) {
+                    $taskController = new \App\Http\Controllers\TaskController();
+                    $assignRequest = new \Illuminate\Http\Request();
+                    $assignRequest->merge([
+                        'agent_id' => $selected_agent_id,
+                        'orders_id' => [$orders_id],
+                        'type' => 'A' // Not 'B' to go through normal assignment flow
+                    ]);
+                    \Log::info('Selected agent ID: ' . $selected_agent_id);
+                    
+                    $taskController->assignAgent($assignRequest);
+                    return; // Exit after successful assignment
+                }
+            }
             // for ($i = 1; $i <= $try; $i++) {
                 foreach ($geoagents as $key =>  $geoitem) {
                     if (!empty($geoitem->device_token) && $geoitem->is_available == 1) {

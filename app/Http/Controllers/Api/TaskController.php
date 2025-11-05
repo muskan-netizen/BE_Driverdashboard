@@ -5496,6 +5496,7 @@ class TaskController extends BaseController
 
     public function autoallocated($request){
       
+        \Log::info('autoallocated called');
         $header = $request->header();
         $orders=Order::where('id',$request->order_id)->first();
         $task=Task::where('order_id',$request->order_id)->get();
@@ -5509,6 +5510,8 @@ class TaskController extends BaseController
         $customer=Customer::where('id',$orders->customer_id)->first();
         $notification_time=Carbon::now()->toDateTimeString();
       //  if ($orders->auto_alloction === 'a') {
+
+      \Log::info('Allocation logic: ' . $allocation->auto_assign_logic);
         switch ($allocation->auto_assign_logic) {
             case 'one_by_one':
                 //this is called when allocation type is one by one

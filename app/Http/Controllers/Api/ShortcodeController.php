@@ -47,7 +47,7 @@ class ShortcodeController extends BaseController
         }
         
 
-
+        \Log::warning("client", (array)$client);
         if (!empty($client)) {
             $database_name =  'db_'.$client->database_name;
             $database_host = !empty($client->database_host) ? $client->database_host : env('DB_HOST','127.0.0.1');

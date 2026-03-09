@@ -18,6 +18,7 @@ use DB;
 use Auth,URL,Route;
 use Log;
 use Schema;
+use Illuminate\Support\Facades\Event;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -27,7 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+           putenv('AWS_SUPPRESS_PHP_DEPRECATION_WARNING=true');
+
     }
 
     /**
@@ -88,6 +90,10 @@ class AppServiceProvider extends ServiceProvider
 
         view()->share('khalti_api_key', $khalti_api_key);
         view()->share('favicon', $favicon_url);
+
+        // \Event::listen('Illuminate\Foundation\Http\Events\RequestHandled', function ($event) {
+        //     \Log::info('Route hit: ' . $event->request->method() . ' ' . $event->request->path());
+        // });
     }
 
     public function connectDynamicDb($request)

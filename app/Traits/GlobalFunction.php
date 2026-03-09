@@ -5,7 +5,7 @@ use App\AgentOrderLog;
 use DB;
 use Illuminate\Support\Collection;
 use Log;
-use App\Model\{ChatSocket, Client, Agent, ClientPreference, DistanceWisePricingRule, DriverGeo,Order,Task,OrderAdditionData, PricingRule, DriverHomeAddress, Location,Team,LocationDistance,AgentLog,Countries,AgentsTag};
+use App\Model\{ChatSocket, Client, Agent, ClientPreference, DistanceWisePricingRule, DriverGeo,Order,Task,OrderAdditionData, PricingRule, DriverHomeAddress, Location,Team,TeamTag,TaskTeamTag,TagsForTeam,LocationDistance,AgentLog,Countries,AgentsTag};
 use Illuminate\Support\Facades\Config;
 use PhpParser\Node\Stmt\Else_;
 use App\Model\Timezone;
@@ -136,7 +136,7 @@ trait GlobalFunction{
 
                     } else {
                           
-                        // Case 2: $agent_tag is a string
+                        // Case 2: $agent_tag is a string coming from request (e.g. "chef")
 
                         $agents = AgentsTag::whereHas('tags', function ($qry) use ($agent_tag) {
 
@@ -147,7 +147,24 @@ trait GlobalFunction{
                         })->pluck('agent_id')->toArray();
 
                     }
-                    // $geoagents_ids =  DriverGeo::where('geo_id', $geo)->whereIn('driver_id', $agents);
+
+                    \Log::info('AutoAllocation agent-tag filter prepared', [
+                        'order_id' => $order_id,
+                        'agent_tag_raw' => $agent_tag,
+                        'matched_agent_ids' => $agents,
+                    ]);
+
+                    if (!empty($agents)) {
+                        // Restrict geo candidates to only agents having this tag
+                        $geoagents_ids = $geoagents_ids->whereIn('driver_id', $agents);
+                    } else {
+                        // No agent has this tag: return empty result early
+                        \Log::warning('AutoAllocation agent-tag filter: no agents for tag', [
+                            'order_id' => $order_id,
+                            'agent_tag_raw' => $agent_tag,
+                        ]);
+                        return collect();
+                    }
                 }
                 $order = Order::find($order_id);
                 // if($order)
@@ -159,9 +176,73 @@ trait GlobalFunction{
             }
      
             $geoagents_ids =  $geoagents_ids->pluck('driver_id');
+
+            // Team-tag based filtering (order_team_tag -> tags_for_teams -> team_tags -> agents.team_id)
+            // Applied only when the order has team-tags assigned (via task_team_tags with task_id = order_id).
+            $teamTagIdsForOrder = [];
+            $eligibleTeamIds = [];
+            if (!empty($order_id)) {
+                $teamTagIdsForOrder = TaskTeamTag::where('task_id', $order_id)
+                    ->pluck('tag_id')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                if (!empty($teamTagIdsForOrder)) {
+                    $eligibleTeamIds = TeamTag::whereIn('tag_id', $teamTagIdsForOrder)
+                        ->pluck('team_id')
+                        ->filter()
+                        ->unique()
+                        ->values()
+                        ->all();
+
+                    $teamTagNames = TagsForTeam::whereIn('id', $teamTagIdsForOrder)->pluck('name')->values()->all();
+
+                    \Log::info('AutoAllocation team-tag filter prepared', [
+                        'order_id' => $order_id,
+                        'team_tag_ids' => $teamTagIdsForOrder,
+                        'team_tag_names' => $teamTagNames,
+                        'eligible_team_ids' => $eligibleTeamIds,
+                        'geo_candidates_count' => is_object($geoagents_ids) ? $geoagents_ids->count() : count((array)$geoagents_ids),
+                    ]);
+
+                    // If no teams are mapped to this tag, just log and continue WITHOUT filtering.
+                    // This allows agent-tag / geo filters to still send notifications.
+                    if (empty($eligibleTeamIds)) {
+                        \Log::warning('AutoAllocation team-tag filter: no teams mapped for tag(s), skipping team filter', [
+                            'order_id' => $order_id,
+                            'team_tag_ids' => $teamTagIdsForOrder,
+                            'team_tag_names' => $teamTagNames,
+                        ]);
+                    }
+
+                    // Log per-agent match decision for confirmation.
+                    $candidateAgents = Agent::whereIn('id', $geoagents_ids)->get(['id', 'team_id']);
+                    $chunkIndex = 0;
+                    foreach ($candidateAgents->chunk(200) as $chunk) {
+                        $rows = $chunk->map(function ($a) use ($eligibleTeamIds) {
+                            return [
+                                'agent_id' => $a->id,
+                                'team_id' => $a->team_id,
+                                'matches_team_tag' => in_array($a->team_id, $eligibleTeamIds),
+                            ];
+                        })->values()->all();
+                        \Log::info('AutoAllocation team-tag candidate match', [
+                            'order_id' => $order_id,
+                            'chunk' => $chunkIndex,
+                            'rows' => $rows,
+                        ]);
+                        $chunkIndex++;
+                    }
+                }
+            }
           
          
             $geoagents = Agent::whereIn('id',  $geoagents_ids)
+            ->when(!empty($eligibleTeamIds), function ($q) use ($eligibleTeamIds) {
+                $q->whereIn('team_id', $eligibleTeamIds);
+            })
             ->with(['logs',
             'order'=> function ($f) use ($date) {
                 $f->whereDate('order_time', $date)->with('task');

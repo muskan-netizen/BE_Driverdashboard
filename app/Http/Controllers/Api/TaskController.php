@@ -1376,6 +1376,9 @@ class TaskController extends BaseController
         
 
         try {
+            \Log::info('CreateTask request', [
+                'request' => $request->all()
+            ]);
             $auth = $client = Client::with([
                 'getAllocation',
                 'getPreference'
@@ -1534,6 +1537,14 @@ class TaskController extends BaseController
                 $request->allocation_type = 'u' ;
                  $agent_id = $request->agent ?? null ;
             }
+            \Log::info('CreateTask allocation prepared', [
+                'order_number'      => $request->order_number ?? null,
+                'task_type'         => $request->task_type ?? null,
+                'allocation_type'   => $request->allocation_type ?? null,
+                'agent_id_initial'  => $agent_id,
+                'rejectable_order'  => $rejectable_order,
+                'driver_unique_id'  => $request->driver_unique_id ?? null,
+            ]);
             $order = [
                 'notify_all' => isset($request->notify_all)?$request->notify_all:0,
                 'order_number' => $request->order_number ?? null,
@@ -1854,6 +1865,13 @@ class TaskController extends BaseController
             if (isset($client->getPreference)) {
                 if (isset($client->getPreference->create_batch_hours)) {
                     if ($client->getPreference->create_batch_hours > 0) {
+                        \Log::info('CreateTask returning early due to create_batch_hours', [
+                            'order_id'         => $orders->id ?? null,
+                            'order_number'     => $orders->order_number ?? null,
+                            'create_batch_hours' => $client->getPreference->create_batch_hours,
+                            'allocation_type'  => $request->allocation_type ?? null,
+                            'task_type'        => $request->task_type ?? null,
+                        ]);
                         $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $orders->unique_id;
 
 
@@ -1899,6 +1917,14 @@ class TaskController extends BaseController
                 $to_time = strtotime($to);
                 $from_time = strtotime($from);
                 if ($to_time >= $from_time) {
+                    \Log::info('CreateTask schedule block: send immediately (time passed)', [
+                        'order_id'        => $orders->id ?? null,
+                        'order_number'    => $orders->order_number ?? null,
+                        'notification_time' => $notification_time,
+                        'now_utc'         => $to,
+                        'allocation_type' => $request->allocation_type ?? null,
+                        'rejectable_order'=> $rejectable_order,
+                    ]);
                     DB::commit();
                     // $orderdata = Order::select('id', 'order_time', 'status', 'driver_id')->with('agent')->where('id', $orders->id)->first();
                     // event(new \App\Events\loadDashboardData($orderdata));
@@ -1939,6 +1965,15 @@ class TaskController extends BaseController
                         scheduleNotification::dispatch($schduledata)->delay(now());
                     }
                     $schduledata['notification_time'] = $notification_time;
+                    \Log::info('CreateTask schedule block: queued scheduleNotification job', [
+                        'order_id'         => $orders->id ?? null,
+                        'order_number'     => $orders->order_number ?? null,
+                        'finaldelay_minutes' => $finaldelay,
+                        'beforetime'       => $beforetime,
+                        'notification_time'=> $notification_time,
+                        'allocation_type'  => $request->allocation_type ?? null,
+                        'rejectable_order' => $rejectable_order,
+                    ]);
                     scheduleNotification::dispatch($schduledata)->delay(now()->addMinutes($finaldelay));
                     DB::commit();
 
@@ -1959,6 +1994,11 @@ class TaskController extends BaseController
             //Commit Transaction befor send notification
             DB::commit();
            if(isset($request->is_taxi) && $request->is_taxi == 1){
+               \Log::info('CreateTask taxi flow: returning without auto-allocation', [
+                   'order_id'        => $orders->id ?? null,
+                   'order_number'    => $orders->order_number ?? null,
+                   'allocation_type' => $request->allocation_type ?? null,
+               ]);
                   
                $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $orders->unique_id;
             return response()->json([
@@ -1981,6 +2021,15 @@ class TaskController extends BaseController
 
             if ($request->allocation_type === 'a' || $request->allocation_type === 'm') {
                 $allocation = AllocationRule::where('id', 1)->first();
+                \Log::info('CreateTask auto-allocation dispatch', [
+                    'order_id'          => $orders->id ?? null,
+                    'order_number'      => $orders->order_number ?? null,
+                    'allocation_type'   => $request->allocation_type ?? null,
+                    'auto_assign_logic' => $allocation->auto_assign_logic ?? null,
+                    'agent_id_final'    => $agent_id,
+                    'has_geo'           => !empty($geo),
+                    'task_type'         => $request->task_type ?? null,
+                ]);
                 $is_one_push_booking = isset($orders->is_one_push_booking) ? $orders->is_one_push_booking : 0;
                 switch ($allocation->auto_assign_logic) {
                     case 'one_by_one':
@@ -2722,7 +2771,15 @@ class TaskController extends BaseController
         $data = [];
 
 
-
+        \Log::info('SendToAll called', [
+            'order_id'          => $orders_id,
+            'agent_id'          => $agent_id,
+            'has_geo'           => !empty($geo),
+            'is_cab_pooling'    => $is_cab_pooling,
+            'agent_tag'         => $agent_tag,
+            'is_one_push_booking' => $is_one_push_booking,
+            'allocation_logic'  => $allocation->auto_assign_logic ?? null,
+        ]);
         if ($type == 'acceptreject') {
             $allcation_type = 'AR';
         } elseif ($type == 'acknowledge') {
@@ -2748,7 +2805,12 @@ class TaskController extends BaseController
             'updated_at' => Carbon::now()->toDateTimeString()
         ];
 
-        if (!isset($geo) && !empty($geo)) {
+        // If geo roster is not available, notify the specific/manual agent directly.
+        if (!isset($geo) || empty($geo)) {
+            \Log::info('SendToAll using single-agent path (no geo)', [
+                'order_id' => $orders_id,
+                'agent_id' => $agent_id,
+            ]);
             $oneagent = Agent::where('id', $agent_id)->first();
             if (isset($oneagent) && !empty($oneagent->device_token) && $oneagent->is_available == 1) {
                 $allcation_type = 'ACK';
@@ -2765,10 +2827,22 @@ class TaskController extends BaseController
                     'detail_id'           => $randem,
 
                 ];
+                \Log::info('SendToAll dispatching RosterCreate for single agent', [
+                    'order_id'   => $orders_id,
+                    'agent_id'   => $agent_id,
+                    'type'       => $allcation_type,
+                    'time'       => $time,
+                ]);
                 $this->dispatch(new RosterCreate($data, $extraData));
             }
         } else {
             $geoagents = $this->getGeoBasedAgentsData($geo, $is_cab_pooling, $agent_tag, $date, $cash_at_hand,$orders_id,$particular_driver_id);
+            $geoagentsCount = !empty($geoagents) ? (method_exists($geoagents, 'count') ? $geoagents->count() : count($geoagents)) : 0;
+            \Log::info('SendToAll geo-based agents fetched', [
+                'order_id'          => $orders_id,
+                'geoagents_count'   => $geoagentsCount,
+                'allcation_type'    => $allcation_type,
+            ]);
             if($allcation_type == 'ACK'){
                 // Get first agent from geoagents or find first available agent
                 $selected_agent_id = null;
@@ -2837,7 +2911,17 @@ class TaskController extends BaseController
                 }
             }
            if(!empty($data)){
+                \Log::info('SendToAll dispatching RosterCreate for multiple agents', [
+                    'order_id'        => $orders_id,
+                    'notifications'   => count($data),
+                    'allcation_type'  => $allcation_type,
+                ]);
                 $this->dispatch(new RosterCreate($data, $extraData));
+           } else {
+                \Log::warning('SendToAll found no eligible agents to notify', [
+                    'order_id'        => $orders_id,
+                    'geoagents_count' => $geoagentsCount,
+                ]);
            }
         }
     }
@@ -5286,6 +5370,16 @@ class TaskController extends BaseController
         date_default_timezone_set('UTC');
         $date  =  Carbon::now()->toDateTimeString();
 
+        \Log::info('OneByOneUniqueDriver called', [
+            'order_id'          => $orders->id ?? null,
+            'order_number'      => $orders->order_number ?? null,
+            'agent_id'          => $agent_id,
+            'notification_time' => $notification_time,
+            'task_type'         => $orders->order_type ?? null,
+            'notify_hour'       => $notify_hour,
+            'reminder_hour'     => $reminder_hour,
+        ]);
+
         $extraData = [
             'customer_name'            => $customer->name,
             'customer_phone_number'    => $customer->phone_number,
@@ -5353,6 +5447,11 @@ class TaskController extends BaseController
             array_push($rosterData, $data3);
         }
 
+        \Log::info('OneByOneUniqueDriver dispatching RosterCreate entries', [
+            'order_id'        => $orders->id ?? null,
+            'agent_id'        => $agent_id,
+            'entries_count'   => count($rosterData),
+        ]);
         $this->dispatch(new RosterCreate($rosterData, $extraData));
 
     }
@@ -5384,6 +5483,16 @@ class TaskController extends BaseController
             $allcation_type = 'N';
         }
 
+        \Log::info('OneByOne called', [
+            'order_id'          => $orders_id,
+            'agent_id'          => $agent_id,
+            'has_geo'           => !empty($geo),
+            'is_cab_pooling'    => $is_cab_pooling,
+            'agent_tag'         => $agent_tag,
+            'is_one_push_booking' => $is_one_push_booking,
+            'allocation_logic'  => $allocation->auto_assign_logic ?? null,
+        ]);
+
         $extraData = [
             'customer_name'            => $customer->name,
             'customer_phone_number'    => $customer->phone_number,
@@ -5413,11 +5522,23 @@ class TaskController extends BaseController
                     'device_token'        => $oneagent->device_token,
                     'detail_id'           => $randem,
                 ];
+                \Log::info('OneByOne dispatching RosterCreate for single agent', [
+                    'order_id'   => $orders_id,
+                    'agent_id'   => $agent_id,
+                    'type'       => $allcation_type,
+                    'time'       => $time,
+                ]);
                 $this->dispatch(new RosterCreate($data, $extraData));
             }
         } else {
            
             $geoagents = $this->getGeoBasedAgentsData($geo, $is_cab_pooling, $agent_tag, $date, $cash_at_hand,$orders_id,$particular_driver_id);
+            $geoagentsCount = !empty($geoagents) ? (method_exists($geoagents, 'count') ? $geoagents->count() : count($geoagents)) : 0;
+            \Log::info('OneByOne geo-based agents fetched', [
+                'order_id'          => $orders_id,
+                'geoagents_count'   => $geoagentsCount,
+                'allcation_type'    => $allcation_type,
+            ]);
             if($allcation_type == 'ACK'){
             
                 // Get first agent from geoagents or find first available agent
@@ -5478,7 +5599,19 @@ class TaskController extends BaseController
                     }
                 }
             // }
-            $this->dispatch(new RosterCreate($data, $extraData));
+            if (!empty($data)) {
+                \Log::info('OneByOne dispatching RosterCreate for multiple agents', [
+                    'order_id'        => $orders_id,
+                    'notifications'   => count($data),
+                    'allcation_type'  => $allcation_type,
+                ]);
+                $this->dispatch(new RosterCreate($data, $extraData));
+            } else {
+                \Log::warning('OneByOne found no eligible agents to notify', [
+                    'order_id'        => $orders_id,
+                    'geoagents_count' => $geoagentsCount,
+                ]);
+            }
         }
     }
 

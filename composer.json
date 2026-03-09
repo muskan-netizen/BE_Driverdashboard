@@ -7,67 +7,48 @@
 
     "require": {
         "php": "7.4.33",
-
+        "artisangang/jwt": "^0.2.0",
+        "barryvdh/laravel-dompdf": "^0.9.0",
+        "bavix/laravel-wallet": "^7.3",
+        "beyondcode/laravel-websockets": "^1.13",
+        "cboden/ratchet": "^0.4.4",
+        "doctrine/dbal": "^2.13",
+        "fideloper/proxy": "^4.2",
+        "fruitcake/laravel-cors": "^1.0",
+        "geocoder-php/nominatim-provider": "^5.7",
+        "google/auth": "^1.37",
+        "guzzlehttp/guzzle": "^7.5",
+        "intervention/image": "^2.5",
+        "kawankoding/laravel-fcm": "^0.2.0",
+        "kreait/laravel-firebase": "^2.4",
         "laravel/framework": "^7.30",
         "laravel/tinker": "^2.5",
         "laravel/ui": "^2.4",
         "laravelcollective/html": "^6.2",
-
-        "artisangang/jwt": "^0.2.0",
         "lcobucci/jwt": "3.3.3",
-
-        "barryvdh/laravel-dompdf": "^0.9.0",
-        "intervention/image": "^2.5",
-        "maatwebsite/excel": "^3.1",
-
-        "bavix/laravel-wallet": "^7.3",
-        "beyondcode/laravel-websockets": "^1.13",
-        "cboden/ratchet": "^0.4.4",
-        "ratchet/rfc6455": "^0.3.1",
-
-        "doctrine/dbal": "^2.13",
-        "fideloper/proxy": "^4.2",
-        "fruitcake/laravel-cors": "^1.0",
-
-        "geocoder-php/nominatim-provider": "^5.7",
-        "google/auth": "^1.37",
-
-        "guzzlehttp/guzzle": "^7.5",
-
-        "kreait/laravel-firebase": "^2.4",
-        "kawankoding/laravel-fcm": "^0.2.0",
-
         "league/flysystem-aws-s3-v3": "~1.0",
         "league/omnipay": "^3.2",
-
+        "maatwebsite/excel": "^3.1",
         "microsoft/azure-storage-blob": "^1.5",
         "multicaret/laravel-unifonic": "^2.0",
-
         "omnipay/stripe": "^3.1",
         "paystackhq/omnipay-paystack": "^1.0",
-        "razorpay/razorpay": "2.*",
-        "stripe/stripe-php": "^7.116",
-
         "predis/predis": "^1.1",
-
         "pusher/pusher-php-server": "^4.1",
-
+        "rap2hpoutre/laravel-log-viewer": "^1.7",
+        "ratchet/rfc6455": "^0.3.1",
+        "razorpay/razorpay": "2.*",
         "react/event-loop": "^1.5",
         "react/react": "^1.2",
         "react/socket": "^1.10",
-
         "rinvex/countries": "^6.1",
-
         "sarav/laravel-multiauth": "dev-master",
-
         "sentry/sentry-laravel": "^2.10",
-
+        "stripe/stripe-php": "^7.116",
         "symfony/http-foundation": "^5.4",
         "symfony/routing": "^5.4",
-
         "twilio/sdk": "^6.13",
         "vonage/client": "2.4.0",
-
         "yajra/laravel-datatables-oracle": "~9.0"
     },
 
@@ -90,7 +71,29 @@
         },
         "allow-plugins": {
             "php-http/discovery": false
-        }
+        },
+"audit": {
+    "ignore": {
+        "PKSA-qstp-ffwg-8hp6": "dompdf legacy advisory (PHP 7.4)",
+        "PKSA-5vz3-q51h-7mg4": "dompdf legacy advisory (PHP 7.4)",
+        "PKSA-7ztm-rpt3-qqzk": "dompdf legacy advisory (PHP 7.4)",
+        "PKSA-4jrs-y99s-q8j6": "dompdf legacy advisory (PHP 7.4)",
+        "PKSA-hbk6-2vfz-8f8n": "dompdf legacy advisory (PHP 7.4)",
+        "PKSA-kj9c-tr41-t8mj": "dompdf legacy advisory (PHP 7.4)",
+        "PKSA-872h-8556-2chm": "dompdf legacy advisory (PHP 7.4)",
+        "PKSA-99tj-gg5v-4g74": "dompdf legacy advisory (PHP 7.4)",
+
+        "PKSA-dxyf-6n16-t87m": "aws-sdk legacy advisory (PHP 7.4)",
+        "PKSA-n3s6-289w-qtqb": "aws-sdk legacy advisory (PHP 7.4)",
+        "PKSA-stsw-jsf7-f6vs": "aws-sdk legacy advisory (PHP 7.4)",
+
+"PKSA-qsyb-3psh-f1t3": "php-svg-lib legacy advisory (PHP 7.4)",
+"PKSA-3dsp-r6t7-8xmz": "php-svg-lib legacy advisory (PHP 7.4)",
+"PKSA-cwpj-dtf9-6fg1": "php-svg-lib legacy advisory (PHP 7.4)"
+
+    }
+}
+
     },
 
     "autoload": {

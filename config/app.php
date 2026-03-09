@@ -184,7 +184,8 @@ return [
         App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        R0bdiabl0\Laravel5Phumbor\Laravel5PhumborServiceProvider::class,
+       // Robdiablo\Laravel5Phumbor\Laravel5PhumborServiceProvider::class,
+
         Intervention\Image\ImageServiceProvider::class,
         Kawankoding\Fcm\FcmServiceProvider::class,
         // Barryvdh\DomPDF\ServiceProvider::class,

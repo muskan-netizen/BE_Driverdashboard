@@ -115,12 +115,16 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
                                 @endif
                             </div>
                         </div>
+                          <!-- <button class="btn btn-danger" onclick="deleteAllCustomers()">
+    Delete All Customers
+</button> -->
                         <div class="col-sm-4">
                             <button type="button" class="btn btn-blue waves-effect waves-light openModal" data-toggle="modal" data-target="" data-backdrop="static" data-keyboard="false"><i class="mdi mdi-plus-circle mr-1"></i> {{__("Add Customer")}}</button>
                         </div>
                     </div>
 
                     <div class="table-responsive nagtive-margin">
+                      
                         <table class="table table-striped dt-responsive nowrap w-100"  id="pricing-datatable">
                             <thead>
                                 <tr>
@@ -129,7 +133,7 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
                                     <th>{{__("Dial Code")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                     <th>{{__("Phone number")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                     <th>{{__("Status")}}</th>
-                                    <th style="width: 85px;">{{__("Action")}}</th>
+                                    <th style="width: 85px; color:red;">{{__("Action")}}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -151,6 +155,31 @@ $imgproxyurl = 'https://imgproxy.royodispatch.com/insecure/fill/90/90/sm/0/plain
 @section('script')
     <script src="{{asset('assets/js/storeAgent.js')}}"></script>
     <script src="{{ asset('assets/libs/datatables/datatables.min.js') }}"></script>
+
 @include('Customer.pagescript')  
 
 @endsection
+
+  <!-- <script>
+function deleteAllCustomers() {
+    if (!confirm('⚠️ This will delete ALL customers permanently. Are you sure?')) {
+        return;
+    }
+
+    fetch('/internal/delete-all-customers', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        location.reload();
+    })
+    .catch(err => {
+        alert('Server Error');
+        console.error(err);
+    });
+}
+</script> -->

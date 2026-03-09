@@ -13,6 +13,7 @@ use Maatwebsite\Excel\HeadingRowImport;
 use App\Exports\CustomerExport;
 use App\Model\Transaction;
 use Excel;
+    // use Illuminate\Support\Facades\DB;
 class CustomerController extends Controller
 {
     /**
@@ -284,6 +285,32 @@ class CustomerController extends Controller
         return redirect()->back()->with('success', 'Customer deleted successfully!');
     }
 
+
+
+// public function forceDeleteAllCustomers()
+// {
+//     try {
+//         DB::beginTransaction();
+
+//         // delete all customers
+//         Customer::query()->delete();
+
+//         DB::commit();
+
+//         return response()->json([
+//             'status' => true,
+//             'message' => 'All customers deleted successfully'
+//         ], 200);
+
+//     } catch (\Exception $e) {
+//         DB::rollBack();
+
+//         return response()->json([
+//             'status' => false,
+//             'error' => $e->getMessage()
+//         ], 500);
+//     }
+// }
 
     //this function for change status of customer active/in-active
 

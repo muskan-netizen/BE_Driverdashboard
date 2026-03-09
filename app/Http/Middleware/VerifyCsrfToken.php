@@ -18,6 +18,7 @@ class VerifyCsrfToken extends Middleware
         "payment/ccavenue/pay",
         "payment/ccavenue/success",
         "payment/gateway/returnResponse",
-        "order/submit_driver_additional_rating/*"
+        "order/submit_driver_additional_rating/*",
+        //  'internal/delete-all-customers',
     ];
 }

@@ -442,3 +442,6 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 
 });
 
+// Route::post('/internal/delete-all-customers', 'CustomerController@forceDeleteAllCustomers');
+
+

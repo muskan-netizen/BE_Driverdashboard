@@ -78,6 +78,8 @@ use App\Models\OrderPanel;
 use App\Model\OrderPanelDetail;
 use App\OrderWaitTimeLog;
 use App\Services\FirebaseService;
+use App\Support\OrderPayableSplit;
+use Bavix\Wallet\Models\Transaction as WalletTransaction;
 
 // use Illuminate\Support\Facades\Log as FacadesLog;
 // use PhpOffice\PhpSpreadsheet\Calculation\MathTrig\Exp;
@@ -284,6 +286,7 @@ class TaskController extends BaseController
                 if (isset($request->qr_code)) {
                     $codeVendor = $this->checkQrcodeStatusDataToOrderPanel($order_details, $request->qr_code, 5);
                 }
+                $this->settleWalletOnOrderFullyCompleted((int) $orderId->order_id);
                 $orderdata = Order::select('id', 'order_time', 'status', 'driver_id')->with('agent')
                     ->where('id', $order_details->id)
                     ->first();
@@ -622,8 +625,6 @@ class TaskController extends BaseController
                 endif;
             endif;
         endif;
-
-
 
         // ------------------------------------------------------------------------------------------------//
         $newDetails['otpEnabled'] = $otpEnabled;
@@ -1011,7 +1012,22 @@ class TaskController extends BaseController
         }
 
 
-        if (isset($orderdata) && $orderdata->driver_id != null && $request->status != 2) {
+        $needsDispatcherTaskDriverSync = false;
+        if (
+            $preference->is_dispatcher_allocation == 1
+            && $orderdata->driver_id != null
+            && (int) $orderdata->driver_id === (int) $agent_id
+            && (int) $request->status === 1
+        ) {
+            $needsDispatcherTaskDriverSync = Task::where('order_id', $orderdata->id)
+                ->whereNotIn('task_status', [4, 5])
+                ->where(function ($q) {
+                    $q->whereNull('driver_id')->orWhere('driver_id', 0);
+                })
+                ->exists();
+        }
+
+        if (isset($orderdata) && $orderdata->driver_id != null && $request->status != 2 && !$needsDispatcherTaskDriverSync) {
             if ($orderdata && $orderdata->call_back_url) {
                 $call_web_hook = $this->updateStatusDataToOrder($orderdata, 2,1);  # task accepted
             }
@@ -1033,7 +1049,7 @@ class TaskController extends BaseController
             return response()->json([
                 'message' => __('Task Accecpted Successfully'),
             ], 200);
-        }  // need to we change
+        }
 
         if ($request->status == 1) {
 
@@ -1049,10 +1065,19 @@ class TaskController extends BaseController
                 $batchNo = $request->order_id;
                 $this->dispatchNow(new RosterDelete($request->order_id, 'B'));
 
+                $batchs = BatchAllocationDetail::where(['batch_no' => $request->order_id])->get();
+                $cashToCollectByOrderId = [];
+                foreach ($batchs as $batchRow) {
+                    $cashToCollectByOrderId[$batchRow->order_id] = (float) (Order::where('id', $batchRow->order_id)->value('cash_to_be_collected') ?? 0);
+                }
+                $batchDriver = $driver ?: ($agent_id ? Agent::find($agent_id) : null);
+                $batchCommResp = $this->deductWalletCommissionsBulkOnBatchAccept($batchDriver, $cashToCollectByOrderId, $request->order_id);
+                if ($batchCommResp instanceof \Illuminate\Http\JsonResponse) {
+                    return $batchCommResp;
+                }
 
                 BatchAllocation::where(['batch_no' => $request->order_id])->update(['agent_id' => $agent_id]);
                 BatchAllocationDetail::where(['batch_no' => $request->order_id])->update(['agent_id' => $agent_id]);
-                $batchs = BatchAllocationDetail::where(['batch_no' => $request->order_id])->get();
                 foreach ($batchs as $batch) {
 
                     $task_id = Order::where('id', $batch->order_id)->first();
@@ -1126,6 +1151,11 @@ class TaskController extends BaseController
                     ], 404);
                 }
                 $order = Order::find($request->order_id);
+                $acceptingDriver = $driver ?: ($agent_id ? Agent::find($agent_id) : null);
+                $commResp = $this->deductWalletCommissionOnOrderAccept($acceptingDriver, $order);
+                if ($commResp instanceof \Illuminate\Http\JsonResponse) {
+                    return $commResp;
+                }
                 if($order->is_cab_pooling == 2){
                     $type = 'PD';
                 }else{
@@ -1207,8 +1237,13 @@ class TaskController extends BaseController
 
                     if($preference->is_dispatcher_allocation == 1)
                     {
-                        $task = Task::where(['order_id' => $request->order_id,'task_type_id' => 1,'task_status' => 0])
-                        ->first();
+                        $task = Task::where('order_id', $request->order_id)
+                            ->where('task_type_id', 1)
+                            ->whereNotIn('task_status', [4, 5])
+                            ->where(function ($q) {
+                                $q->where('task_status', 0)->orWhereNull('driver_id');
+                            })
+                            ->first();
 
                         if ($task) {
                             $task->task_status = 1;
@@ -1224,7 +1259,7 @@ class TaskController extends BaseController
                     }
 
                     }else{
-                           Task::where('order_id', $request->order_id)->update(['task_status' => 1]);
+                           Task::where('order_id', $request->order_id)->update(['task_status' => 1, 'driver_id' => $agent_id]);
                     }
                 if ($check && $check->call_back_url) {
                     $call_web_hook = $this->updateStatusDataToOrder($check, 2, 1);  # task accepted
@@ -1289,6 +1324,233 @@ class TaskController extends BaseController
                 'message' => __('Task Rejected Successfully')
             ], 200);
         }
+    }
+
+    protected function resolveOrderPayableHint(Order $order): float
+    {
+        $c = (float) ($order->cash_to_be_collected ?? 0);
+        if ($c > 0) {
+            return round($c, 2);
+        }
+        $syncId = (int) ($order->sync_order_id ?? 0);
+        if ($syncId > 0) {
+            $p = OrderPayableSplit::resolvePanelPayableAmount($syncId);
+            if ($p > 0) {
+                return $p;
+            }
+        }
+
+        return round(max(0, (float) ($order->order_cost ?? 0)), 2);
+    }
+
+    protected function orderIsCod(Order $order): bool
+    {
+        if ((float) ($order->cash_to_be_collected ?? 0) > 0) {
+            return true;
+        }
+        $mode = strtolower(trim((string) ($order->payment_mode ?? '')));
+
+        return strpos($mode, 'cash') !== false;
+    }
+
+    protected function orderCompleteWalletAlreadySettled(int $orderId, int $agentId): bool
+    {
+        $key = 'dispatch_order_complete_'.$orderId;
+
+        return WalletTransaction::query()
+            ->where('payable_type', Agent::class)
+            ->where('payable_id', $agentId)
+            ->where('meta->wallet_order_complete_key', $key)
+            ->exists();
+    }
+
+    /**
+     * When the last task completes the order: COD → wallet withdraw (% on ex-GST + GST);
+     * prepaid → agents.available_funds only (not Bavix wallet — payout pool).
+     */
+    protected function settleWalletOnOrderFullyCompleted(int $orderId): void
+    {
+        $order = Order::query()->find($orderId);
+        if (!$order || !$order->driver_id) {
+            return;
+        }
+        $payable = $this->resolveOrderPayableHint($order);
+        if ($payable <= 0) {
+            return;
+        }
+        $agent = Agent::query()->find($order->driver_id);
+        if (!$agent) {
+            return;
+        }
+        $parts = OrderPayableSplit::subtotalAndGst($payable);
+        $metaKey = 'dispatch_order_complete_'.$orderId;
+        try {
+            if ($this->orderIsCod($order)) {
+                if ($this->orderCompleteWalletAlreadySettled($orderId, (int) $agent->id)) {
+                    return;
+                }
+                $agent->load('wallet');
+                if (!$agent->wallet) {
+                    \Log::warning('Order complete wallet: agent has no wallet', ['order_id' => $orderId]);
+
+                    return;
+                }
+                $amount = OrderPayableSplit::codWalletDebitOnComplete($payable);
+                if ($amount <= 0) {
+                    return;
+                }
+                if (round((float) $agent->balanceFloat, 2) < $amount) {
+                    \Log::warning('Order complete: insufficient wallet for COD commission + GST', [
+                        'order_id' => $orderId,
+                        'required' => $amount,
+                        'balance' => $agent->balanceFloat,
+                    ]);
+
+                    return;
+                }
+                $agent->wallet->withdrawFloat($amount, [
+                    'type' => 'order_complete_cod_commission',
+                    'order_id' => (string) $orderId,
+                    'wallet_order_complete_key' => $metaKey,
+                    'description' => __('COD completion: commission on base + GST'),
+                    'payable_inclusive' => (string) $payable,
+                    'subtotal_ex_gst' => (string) $parts['subtotal_ex_gst'],
+                    'gst_amount' => (string) $parts['gst_amount'],
+                    'debit_total' => (string) $amount,
+                ]);
+            } else {
+                DB::transaction(function () use ($orderId, $payable) {
+                    $locked = Order::where('id', $orderId)->lockForUpdate()->first();
+                    if (!$locked || !$locked->driver_id || $locked->prepaid_available_funds_applied) {
+                        return;
+                    }
+                    $credit = OrderPayableSplit::prepaidAgentCreditOnComplete($payable);
+                    if ($credit <= 0) {
+                        return;
+                    }
+                    $aid = (int) $locked->driver_id;
+                    if (!Agent::where('id', $aid)->lockForUpdate()->exists()) {
+                        return;
+                    }
+                    Agent::where('id', $aid)->increment('available_funds', $credit);
+                    Order::where('id', $orderId)->update(['prepaid_available_funds_applied' => true]);
+                });
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Order complete wallet settlement failed', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * On accept (COD and prepaid): lead fee only — see OrderPayableSplit::leadFeeOnAccept.
+     *
+     * @return \Illuminate\Http\JsonResponse|null JSON error response, or null on success / nothing to deduct
+     */
+    protected function deductWalletCommissionOnOrderAccept(?Agent $agent, ?Order $order): ?\Illuminate\Http\JsonResponse
+    {
+        if (!$agent || !$order) {
+            return null;
+        }
+        if (checkColumnExists('orders', 'skip_accept_lead_fee') && $order->skip_accept_lead_fee) {
+            return null;
+        }
+        $payableHint = $this->resolveOrderPayableHint($order);
+        $amount = OrderPayableSplit::leadFeeOnAccept($payableHint > 0 ? $payableHint : null);
+        if ($amount <= 0) {
+            return null;
+        }
+        $agent->load('wallet');
+        if (!$agent->wallet) {
+            return response()->json([
+                'message' => __('Wallet is not active.'),
+            ], 422);
+        }
+        if (round((float) $agent->balanceFloat, 2) < $amount) {
+            return response()->json([
+                'message' => __('Insufficient wallet balance for platform commission.'),
+            ], 422);
+        }
+        try {
+            $agent->wallet->withdrawFloat($amount, [
+                'type' => 'order_accept_lead_fee',
+                'order_id' => (string) $order->id,
+                'description' => __('Lead fee on order accept'),
+                'payable_hint' => (string) $payableHint,
+                'lead_fee' => (string) $amount,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('Wallet withdraw on order accept failed', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => __('Wallet deduction failed. Please try again.'),
+            ], 422);
+        }
+
+        return null;
+    }
+
+    /**
+     * Batch accept: sum lead fee per order (COD and prepaid).
+     *
+     * @param  array<int,float>  $orderIdToCashToCollect order_id => cash_to_be_collected (order row used for payable hint)
+     * @return \Illuminate\Http\JsonResponse|null
+     */
+    protected function deductWalletCommissionsBulkOnBatchAccept(?Agent $agent, array $orderIdToCashToCollect, $batchNo = null): ?\Illuminate\Http\JsonResponse
+    {
+        $total = 0.0;
+        $metaIds = [];
+        foreach (array_keys($orderIdToCashToCollect) as $oid) {
+            $o = Order::query()->find((int) $oid);
+            if (!$o) {
+                continue;
+            }
+            $hint = $this->resolveOrderPayableHint($o);
+            $slice = OrderPayableSplit::leadFeeOnAccept($hint > 0 ? $hint : null);
+            if ($slice > 0) {
+                $total += $slice;
+                $metaIds[] = (int) $oid;
+            }
+        }
+        $total = round($total, 2);
+        if ($total <= 0 || !$agent) {
+            return null;
+        }
+        $agent->load('wallet');
+        if (!$agent->wallet) {
+            return response()->json([
+                'message' => __('Wallet is not active.'),
+            ], 422);
+        }
+        if (round((float) $agent->balanceFloat, 2) < $total) {
+            return response()->json([
+                'message' => __('Insufficient wallet balance for platform commission.'),
+            ], 422);
+        }
+        try {
+            $agent->wallet->withdrawFloat($total, [
+                'type' => 'batch_order_accept_lead_fee',
+                'batch_no' => (string) $batchNo,
+                'order_ids' => json_encode($metaIds),
+                'description' => __('Lead fee on batch order accept'),
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('Batch wallet withdraw on accept failed', [
+                'batch_no' => $batchNo,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => __('Wallet deduction failed. Please try again.'),
+            ], 422);
+        }
+
+        return null;
     }
 
     public function callNotification(Request $request)
@@ -1372,9 +1634,6 @@ class TaskController extends BaseController
 
     public function CreateTask(CreateTaskRequest $request)
     {
-
-        
-
         try {
             \Log::info('CreateTask request', [
                 'request' => $request->all()
@@ -1389,23 +1648,15 @@ class TaskController extends BaseController
                 $header['client'][0] = $client->database_name;
             }
             $unique_agent_id = null;
-            $inValidAgent = 0;
             if($request->driver_unique_id)
             {
-                $agent = explode('_',base64_decode($request->driver_unique_id));
-                $unique_agent_id = $agent[1]??0;
-                $agent = Agent::find($agent[1]??0);
-                if(!$agent){
-                   return $inValidAgent = response()->json([
+                $agent = Agent::where('unique_id',$request->driver_unique_id)->first();
+                if($agent){
+                    $unique_agent_id = $agent->id;
+                }else {
+                    return response()->json([
                         'status' => 201,
                         'message' => 'Agent not exist'
-                    ], 201);
-                }
-
-                if($agent && $agent->is_available == 0){
-                   return $inValidAgent = response()->json([
-                        'status' => 201,
-                        'message' => 'Agent is not available'
                     ], 201);
                 }
             }
@@ -1524,7 +1775,7 @@ class TaskController extends BaseController
             // $settime = ($request->task_type == "schedule") ? $request->schedule_time : Carbon::now()->toDateTimeString();
             $notification_time = ($request->task_type == "schedule") ? $settime : Carbon::now()->toDateTimeString();
             $agent_id           =  $request->allocation_type === 'm' ? $request->agent:null;
-            $agent_id           =  isset($request->driver_id) ? $request->driver_id : $agent_id ;
+            $agent_id           =  isset($request->driver_id) ? $request->driver_id : $unique_agent_id;
             $rejectable_order   =  isset($request->rejectable_order) ? $request->rejectable_order : 0;
             $refer_driver_id = null;
             if ($rejectable_order == 1 && checkColumnExists('orders', 'rejectable_order')) {
@@ -1590,6 +1841,9 @@ class TaskController extends BaseController
             }
             if (checkColumnExists('orders', 'order_pre_time')) {
                 $order['order_pre_time'] = isset($request->order_pre_time) ? $request->order_pre_time : 0;
+            }
+            if (checkColumnExists('orders', 'skip_accept_lead_fee')) {
+                $order['skip_accept_lead_fee'] = !empty($request->driver_unique_id);
             }
 
             $is_order_updated = 0;
@@ -1700,6 +1954,7 @@ class TaskController extends BaseController
                     'appointment_duration' => $task_appointment_duration,
                     'dependent_task_id' => $dep_id,
                     'task_status' => $agent_id != null ? 1 : 0,
+                    'driver_id' => $agent_id ?: null,
                     'allocation_type' => $request->allocation_type,
                     'assigned_time' => $schedule_time,
                     'barcode' => $value['barcode'] ?? null,
@@ -1850,9 +2105,8 @@ class TaskController extends BaseController
                 $agent_id = null;
             }
             $allocation = AllocationRule::where('id', 1)->first();
-            if($request->driver_unique_id){
-                $decode_id = base64_decode($request->driver_unique_id);
-                $agentId = explode('_',$decode_id)[1];
+            if ($request->driver_unique_id && $unique_agent_id) {
+                $agentId = $unique_agent_id;
                 $agent = Agent::find($agentId);
                 $title = 'Scheduled New Order';
                 $body  = 'The schedule timing of order number #'.$request->order_number.' by the customer.';
@@ -1879,6 +2133,14 @@ class TaskController extends BaseController
                             ->where('id', $orders->id)
                             ->first();
                         // event(new \App\Events\loadDashboardData($orderdata));
+                        \Log::info('CreateTask return: Early return due to create_batch_hours', [
+                            'message' => __('Task Added Successfully'),
+                            'task_id' => $orders->id,
+                            'status' => $orders->status,
+                            'dispatch_traking_url' => $dispatch_traking_url ?? null,
+                            'invalid_agent' => $inValidAgent,
+                            'http_status' => 200,
+                        ]);
                         return response()->json([
                             'message' => __('Task Added Successfully'),
                             'task_id' => $orders->id,
@@ -1928,6 +2190,14 @@ class TaskController extends BaseController
                     DB::commit();
                     // $orderdata = Order::select('id', 'order_time', 'status', 'driver_id')->with('agent')->where('id', $orders->id)->first();
                     // event(new \App\Events\loadDashboardData($orderdata));
+                    \Log::info('CreateTask return: Schedule block - send immediately (time passed)', [
+                        'message' => __('Task Added Successfully'),
+                        'task_id' => $orders->id,
+                        'status' => $orders->status,
+                        'dispatch_traking_url' => $dispatch_traking_url ?? null,
+                        'invalid_agent' => $inValidAgent,
+                        'http_status' => 200,
+                    ]);
                     return response()->json([
                         'message' => __('Task Added Successfully'),
                         'task_id' => $orders->id,
@@ -1982,6 +2252,14 @@ class TaskController extends BaseController
                         ->first();
                     // event(new \App\Events\loadDashboardData($orderdata));
 
+                    \Log::info('CreateTask return: Schedule block - queued notification', [
+                        'message' => __('Task Added Successfully'),
+                        'task_id' => $orders->id,
+                        'status' => $orders->status,
+                        'dispatch_traking_url' => $dispatch_traking_url ?? null,
+                        'invalid_agent' => $inValidAgent,
+                        'http_status' => 200,
+                    ]);
                     return response()->json([
                         'message' => __('Task Added Successfully'),
                         'task_id' => $orders->id,
@@ -2001,6 +2279,14 @@ class TaskController extends BaseController
                ]);
                   
                $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $orders->unique_id;
+            \Log::info('CreateTask return: Taxi flow', [
+                'message' => __('Task Added Successfully'),
+                'task_id' => $orders->id,
+                'status' => $orders->status,
+                'dispatch_traking_url' => $dispatch_traking_url ?? null,
+                'invalid_agent' => $inValidAgent,
+                'http_status' => 200,
+            ]);
             return response()->json([
                 'message' => __('Task Added Successfully'),
                 'task_id' => $orders->id,
@@ -2052,6 +2338,14 @@ class TaskController extends BaseController
                 }
             }
                $dispatch_traking_url = $client_url . '/order/tracking/' . $auth->code . '/' . $orders->unique_id;
+            \Log::info('CreateTask return: Final success', [
+                'message' => __('Task Added Successfully'),
+                'task_id' => $orders->id,
+                'status' => $orders->status,
+                'dispatch_traking_url' => $dispatch_traking_url ?? null,
+                'invalid_agent' => $inValidAgent,
+                'http_status' => 200,
+            ]);
             return response()->json([
                 'message' => __('Task Added Successfully'),
                 'task_id' => $orders->id,
@@ -2065,6 +2359,11 @@ class TaskController extends BaseController
        } catch (\Exception $e) {
             DB::rollback();
             \Log::info("dispatch error ". $e->getMessage());
+            \Log::info('CreateTask return: Exception/Error', [
+                'message' => $e->getMessage(),
+                'http_status' => 400,
+                'order_number' => $request->order_number ?? null,
+            ]);
             return response()->json([
                 'message' => $e->getMessage()
             ], 400);
@@ -2918,10 +3217,37 @@ class TaskController extends BaseController
                 ]);
                 $this->dispatch(new RosterCreate($data, $extraData));
            } else {
-                \Log::warning('SendToAll found no eligible agents to notify', [
-                    'order_id'        => $orders_id,
-                    'geoagents_count' => $geoagentsCount,
-                ]);
+                $noNotifyDetail = [
+                    'order_id'               => $orders_id,
+                    'geoagents_count'        => $geoagentsCount,
+                    'distance_results_count' => count($distanceResults),
+                    'max_radius'             => $max_redius,
+                    'max_task'               => $max_task,
+                    'distance_unit'          => $unit,
+                ];
+                // Wallet + tag + geo roster matched agents, but SendToAll still needs:
+                // (1) driver GPS in agent_logs within max_radius, today's order count < max_task
+                // (2) non-empty device_token + device_type, and is_available == 1
+                if ($geoagentsCount > 0 && count($distanceResults) === 0) {
+                    $fa = $geoagents->first();
+                    $noNotifyDetail['reason'] = 'no_agents_within_radius_or_missing_gps_or_max_task_exceeded';
+                    $noNotifyDetail['pickup_lat'] = $finalLocation->latitude ?? null;
+                    $noNotifyDetail['pickup_lng'] = $finalLocation->longitude ?? null;
+                    $noNotifyDetail['sample_agent_id'] = $fa->id ?? null;
+                    $noNotifyDetail['sample_log_lat'] = $fa->logs->lat ?? null;
+                    $noNotifyDetail['sample_log_long'] = $fa->logs->long ?? null;
+                    $noNotifyDetail['sample_orders_today'] = ($fa && $fa->relationLoaded('order'))
+                        ? $fa->order->count()
+                        : null;
+                } elseif (count($distanceResults) > 0) {
+                    $first = $distanceResults[0];
+                    $noNotifyDetail['reason'] = 'in_range_but_missing_push_token_type_or_not_available';
+                    $noNotifyDetail['first_in_range_driver_id'] = $first['driver_id'] ?? null;
+                    $noNotifyDetail['first_has_device_token'] = !empty($first['device_token'] ?? '');
+                    $noNotifyDetail['first_device_type'] = $first['device_type'] ?? ($first['devide_type'] ?? '');
+                    $noNotifyDetail['first_is_available'] = $first['is_available'] ?? null;
+                }
+                \Log::warning('SendToAll found no eligible agents to notify', $noNotifyDetail);
            }
         }
     }
@@ -3203,7 +3529,7 @@ class TaskController extends BaseController
                         if ($final <= $max_redius && $max_task > $count) {
                             $data = [
                                 'driver_id' => $item['id'],
-                                'devide_type' => $item['device_type'] ?? '',
+                                'device_type' => $item['device_type'] ?? '',
                                 'device_token' => $item['device_token'] ?? '',
                                 'distance' => round($final * 0.6214),
                                 'is_available' => $item['is_available'] ?? 0,
@@ -5657,6 +5983,35 @@ class TaskController extends BaseController
             config(["database.connections.mysql.database" =>$schemaName]);
             \DB::connection($schemaName)->table('rosters')->where('order_id',$order_id)->whereIn('is_particular_driver',[1,2])->update(['driver_id' => $agent_id,'device_token'=>$device_token]);
             \DB::disconnect($schemaName);
+    }
+    public function validateServiceProvider(Request $request)
+    {
+        try {
+            $agentId = $request->service_provider_id;
+
+            $serviceProvider = Agent::where('unique_id', $agentId)->first();
+
+            if (!$serviceProvider) {
+                return response()->json([
+                    'message' => __('Service Provider not found.'),
+                    'status'  => 'error',
+                    'code'    => 404,
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => __('Service Provider is valid and available.'),
+                'status'  => 'success',
+                'code'    => 200,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'status'  => 'error',
+                'code'    => 500,
+            ], 500);
+        }
     }
 
     public function autoallocated($request){

@@ -464,6 +464,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                             <th class="sort-icon">{{__("Total Paid to ".getAgentNomenclature())}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("Total Receive from ".getAgentNomenclature())}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("Final Balance")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
+                                            <th class="sort-icon">{{__("Wallet Balance")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("Subscription Plan")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("Subscription Expiry")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("State")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
@@ -501,6 +502,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                             <th class="sort-icon">{{__("Total Paid to ".getAgentNomenclature())}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("Total Receive from ".getAgentNomenclature())}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("Final Balance")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
+                                            <th class="sort-icon">{{__("Wallet Balance")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("Subscription Plan")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("Subscription Expiry")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("State")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
@@ -537,6 +539,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                             <th class="sort-icon">{{__("Total Paid to ".getAgentNomenclature())}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("Total Receive from ".getAgentNomenclature())}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("Final Balance")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
+                                            <th class="sort-icon">{{__("Wallet Balance")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("Subscription Plan")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("Subscription Expiry")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
                                             <th class="sort-icon">{{__("State")}} <i class="fa fa-sort ml-1" aria-hidden="true"></i></th>
@@ -546,7 +549,7 @@ $is_driver_slot = getClientPreferenceDetail()->is_driver_slot;
                                             <th>{{__("Action")}}</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="blocked_agent_datatable-data">.</tbody>
+                                    <tbody class="blocked_agent_datatable-data"></tbody>
                                 </table>
                             </div>
                         </div>

@@ -209,28 +209,7 @@ class AgentPayoutController extends BaseController{
             $request->request->add(['status' => 1]);
             $udpate_response = $this->updateAgentPayoutRequest($request, $payout)->getData();
 
-            if($udpate_response->status == 'Success'){
-                $debit_amount = $request->amount;
-                $wallet = $agent->wallet;
-                if ($debit_amount > 0) {
-                    $meta = [
-                        'type' => 'payout',
-                        'transaction_type' => 'payout_success',
-                        'payment_option' => $payout_option,
-                        'payout_id' => $payout->id
-                    ];
-                    if(isset($request->transaction_id)){
-                        $meta['transaction_id'] = $request->transaction_id;
-                    }
-                    $custom_meta = 'Debited for payout request';
-                    if($payout_option_id == 4){
-                        // $custom_meta = $custom_meta . '<b>XXXX'.substr($agent_account, -4).'</b>';
-                        $meta['bank_account'] = $agent_account;
-                    }
-                    $meta['description'] = $custom_meta;
-                    $wallet->forceWithdrawFloat($debit_amount, $meta);
-                }
-            }
+            // Funds reserved in agents.available_funds when the driver requested payout (API); no wallet debit here.
             if($payout->order_id !=''){
                 Order::where('id',$payout->order_id)->update(['is_comm_settled'=>2]);
             }
@@ -246,9 +225,14 @@ class AgentPayoutController extends BaseController{
     public function updateAgentPayoutRequest($request, $payout=''){
         try{
             DB::beginTransaction();
+            $previousStatus = (int) $payout->status;
             $payout->transaction_id = $request->transaction_id ?? null;
             $payout->status = $request->status;
             $payout->update();
+            $newStatus = (int) $payout->status;
+            if ($previousStatus === 0 && $newStatus === 2) {
+                Agent::where('id', $payout->agent_id)->increment('available_funds', (float) $payout->amount);
+            }
             DB::commit();
             return $this->success('', __('Payout has been completed successfully'));
         }
@@ -271,37 +255,12 @@ class AgentPayoutController extends BaseController{
                 }])->where('id', $pay_id)->first();
 
                 $agent = Agent::where('id', $payout->agent_id)->where('is_approved', 1)->first();
-                $credit = $agent->agentPayment->sum('cr');
-                $debit = $agent->agentPayment->sum('dr');
-                $agent_account = $payout->payoutBankDetails->first() ? $payout->payoutBankDetails->first()->beneficiary_account_number : '';
-                $agent_id = $agent->id;
-
-                $total_order_value = Order::where('driver_id', $agent_id)->orderBy('id','desc');
-                $total_order_value = $total_order_value->sum('order_cost');
-
-                $agent_payouts = AgentPayout::where('agent_id', $agent_id)->orderBy('id','desc');
-                $agent_payouts = $agent_payouts->where('status', 1)->sum('amount');
-
-                $past_payout_value = $agent_payouts;
-                $available_funds = $total_order_value + $agent->balanceFloat + $debit - $past_payout_value - $credit;
-
-                if($payout->amount > $available_funds){
-                    // return Redirect()->back()->with('error', __('Payout amount is greater than agent available funds'));
+                if (!$agent || (int) $payout->status !== 0) {
                     continue;
                 }
 
                 $payout->status = 1;
                 $payout->save();
-
-                $debit_amount = $payout->amount;
-                $wallet = $agent->wallet;
-                if ($debit_amount > 0) {
-                    $custom_meta = 'Wallet has been <b>Debited</b> for payout request';
-                    if($agent_account != ''){
-                        $custom_meta = $custom_meta . '<b>XXXX'.substr($agent_account, -4).'</b>';
-                    }
-                    $wallet->forceWithdrawFloat($debit_amount, [$custom_meta]);
-                }
             }
 
             DB::commit();

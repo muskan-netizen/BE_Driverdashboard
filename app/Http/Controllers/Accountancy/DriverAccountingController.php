@@ -220,9 +220,9 @@ class DriverAccountingController extends BaseController
                         $agent_id = $agent->id;
                         
 
-                        $available_funds = agentEarningManager::getAgentEarning($payout->agent_id, 1);
+                        $available_funds = round((float) ($agent->available_funds ?? 0), 2);
 
-                        if($request->amount > $available_funds){
+                        if ($payout->amount > $available_funds) {
                             return Redirect()->back()->with('error', __('Payout amount is greater than '.getAgentNomenclature().' available funds'));
                         }
 
@@ -245,28 +245,7 @@ class DriverAccountingController extends BaseController
                         $request->request->add(['status' => 1]);
                         $udpate_response = $this->updateAgentPayoutRequest($request, $payout)->getData();
 
-                        if($udpate_response->status == 'Success'){
-                            $debit_amount = $request->amount;
-                            $wallet = $agent->wallet;
-                            if ($debit_amount > 0) {
-                                $meta = [
-                                    'type' => 'payout',
-                                    'transaction_type' => 'payout_success',
-                                    'payment_option' => $payout_option,
-                                    'payout_id' => $payout->id
-                                ];
-                                if(isset($request->transaction_id)){
-                                    $meta['transaction_id'] = $request->transaction_id;
-                                }
-                                $custom_meta = 'Debited for payout request';
-                                if($payout_option_id == 4){
-                                    // $custom_meta = $custom_meta . '<b>XXXX'.substr($agent_account, -4).'</b>';
-                                    $meta['bank_account'] = $agent_account;
-                                }
-                                $meta['description'] = $custom_meta;
-                                $wallet->forceWithdrawFloat($debit_amount, $meta);
-                            }
-                        }
+                        // Payout amount was reserved in agents.available_funds when the driver created the request.
                         
                         
                     }
@@ -290,15 +269,18 @@ class DriverAccountingController extends BaseController
     public function updateAgentPayoutRequest($request, $payout=''){
         try{
             DB::beginTransaction();
+            $previousStatus = (int) $payout->status;
             $payout->transaction_id = $request->transaction_id ?? null;
             $payout->status = $request->status;
             $payout->update();
+            $newStatus = (int) $payout->status;
+            if ($previousStatus === 0 && $newStatus === 2) {
+                Agent::where('id', $payout->agent_id)->increment('available_funds', (float) $payout->amount);
+            }
             DB::commit();
             return $this->success('', __('Payout has been completed successfully'));
         }
         catch(\Exception $ex){
-            dump($ex->getMessage());
-            dd($ex->getLine());
             DB::rollback();
             return $this->error($ex->getMessage(), $ex->getCode());
         }

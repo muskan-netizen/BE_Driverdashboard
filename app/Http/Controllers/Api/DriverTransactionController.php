@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Traits\agentEarningManager;
 use App\Model\{Agent, AgentPayment, AgentPayout, Order, Task, Transaction};
+use App\Support\OrderPayableSplit;
 
 class DriverTransactionController extends BaseController
 {
@@ -42,6 +43,8 @@ class DriverTransactionController extends BaseController
             $driver_cost  = $agent->order->where('status', 'completed')->sum('driver_cost');
             //$order_cost = $agent->order->where('status', 'completed')->sum('order_cost');
             $order_cost = $driver_cost;
+
+            $lifetimeEarnings80 = OrderPayableSplit::lifetimeAgentEarningsForDriver((int) $id);
 
             $payout = AgentPayout::where(['agent_id' => $agent->id, 'status' => 1])->sum('amount');
             $refferal_balance = Transaction::where('payable_id', $agent->id)->sum('amount') / 100;
@@ -97,10 +100,11 @@ class DriverTransactionController extends BaseController
 
         $data['order_cost'] = $order_cost ?? 0;
         $data['driver_cost'] = $driver_cost;
-        $data['lifetime_earnings'] = $order_cost;
+        $data['lifetime_earnings'] = isset($lifetimeEarnings80) ? $lifetimeEarnings80 : ($order_cost ?? 0);
         $data['cash_to_be_collected'] = $cash;
         $data['wallet_balance'] = $final_balance + $refferal_balance;
         $data['actual_wallet_balance'] = $wallet_balance;
+        $data['available_funds'] = isset($agent) ? round((float) ($agent->available_funds ?? 0), 2) : 0;
         $data['payments'] = $tasks;
         $data['totalCashCollected'] = $totalCashCollected;
         // $data['refferaltransaction'] = $wallet_transactions;

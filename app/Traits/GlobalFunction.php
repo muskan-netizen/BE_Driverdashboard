@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Arr;
 use App\Traits\googleMapApiFunctions;
+use App\Support\OrderPayableSplit;
 use File;
 
 trait GlobalFunction{
@@ -237,17 +238,33 @@ trait GlobalFunction{
                     }
                 }
             }
-          
-         
+
+            // COD: wallet must cover lead on accept + (20% of ex-GST + GST) debited on complete.
+            // Prepaid: lead on accept only (completion credits wallet).
+            $cashToCollectForWallet = 0.0;
+            $needWalletFilterForLead = !empty($order_id);
+            if (!empty($order_id)) {
+                $cashRaw = Order::query()->whereKey($order_id)->value('cash_to_be_collected');
+                if ($cashRaw !== null && (float) $cashRaw > 0) {
+                    $cashToCollectForWallet = (float) $cashRaw;
+                }
+            }
+
+            $agentWithRelations = [
+                'logs',
+                'order' => function ($f) use ($date) {
+                    $f->whereDate('order_time', $date)->with('task');
+                },
+            ];
+            if ($needWalletFilterForLead) {
+                $agentWithRelations[] = 'wallet';
+            }
+
             $geoagents = Agent::whereIn('id',  $geoagents_ids)
             ->when(!empty($eligibleTeamIds), function ($q) use ($eligibleTeamIds) {
                 $q->whereIn('team_id', $eligibleTeamIds);
             })
-            ->with(['logs',
-            'order'=> function ($f) use ($date) {
-                $f->whereDate('order_time', $date)->with('task');
-            }
-        ]);
+            ->with($agentWithRelations);
           
             // if($particular_driver_id){
             //     $geoagents = $geoagents->where('id','!=',$particular_driver_id);
@@ -271,8 +288,36 @@ trait GlobalFunction{
             // }
 
             $geoagents = $geoagents->orderBy('id', 'DESC')->get();
-            // Log::info('Cash at hand filter: ' . $geoagents);
-            // $geoagents = $geoagents->get()->where("agent_cash_at_hand", '<', $cash_at_hand);
+
+            if ($needWalletFilterForLead) {
+                if ($cashToCollectForWallet > 0) {
+                    $includeLeadFeeOnAccept = true;
+                    if (!empty($order_id) && checkColumnExists('orders', 'skip_accept_lead_fee')) {
+                        $skipLead = Order::query()->whereKey($order_id)->value('skip_accept_lead_fee');
+                        if ($skipLead) {
+                            $includeLeadFeeOnAccept = false;
+                        }
+                    }
+                    $minWalletForCommission = OrderPayableSplit::minWalletBalanceRequiredForCodAllocation(
+                        $cashToCollectForWallet,
+                        $includeLeadFeeOnAccept
+                    );
+                } else {
+                    $minWalletForCommission = OrderPayableSplit::leadFeeOnAccept(null);
+                }
+                $beforeWalletFilter = $geoagents->count();
+                $geoagents = $geoagents->filter(function ($agent) use ($minWalletForCommission) {
+                    return round((float) $agent->balanceFloat, 2) >= $minWalletForCommission;
+                })->values();
+                \Log::info('AutoAllocation wallet filter', [
+                    'order_id' => $order_id,
+                    'cash_to_be_collected' => $cashToCollectForWallet,
+                    'is_cod_wallet_rule' => $cashToCollectForWallet > 0,
+                    'min_wallet_balance_required' => $minWalletForCommission,
+                    'agents_before' => $beforeWalletFilter,
+                    'agents_after' => $geoagents->count(),
+                ]);
+            }
 
             return $geoagents;
 

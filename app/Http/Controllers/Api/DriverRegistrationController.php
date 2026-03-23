@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Api\BaseController;
 use App\Model\{Agent, AgentDocs, AgentSmsTemplate, ClientPreference, DriverRegistrationDocument, TagsForAgent, AgentsTag, Team, Otp,client};
+use Illuminate\Support\Str;
 
 class DriverRegistrationController extends BaseController
 {
@@ -221,6 +222,7 @@ class DriverRegistrationController extends BaseController
                 'profile_picture' => $getFileName != null ? $getFileName : 'assets/client_00000051/agents5fedb209f1eea.jpeg/Ec9WxFN1qAgIGdU2lCcatJN5F8UuFMyQvvb4Byar.jpg',
                 'uid' => $request->uid,
                 'is_approved' => 0,
+                'unique_id' => strtoupper(Str::random(4)) . rand(1000, 9999),
                 'team_id' => $request->team_id == null ? $team_id = null : $request->team_id
             ];
             $agent = Agent::create($data);

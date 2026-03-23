@@ -1,6 +1,3 @@
-
-
-</tr>
 @if(count($agents) > 0 )
   @foreach ($agents as $agent)
 
@@ -121,6 +118,12 @@ $cash = $agent->order->where('status', 'completed')
 
       </td>
       <td>
+        @php
+            $walletBalance = ($agent->wallet) ? (float) $agent->balanceFloat : 0;
+        @endphp
+        {{ number_format($walletBalance, 2, '.', '') }}
+      </td>
+      <td>
         {{  $agent->subscriptionPlan ? $agent->subscriptionPlan->plan->title : ''}}
       </td>
       <td>
@@ -209,7 +212,7 @@ if (! empty($agent->agentRating())) {
 @else
 
 <tr>
-    <td colspan="12" style="text-align: center;">
+    <td colspan="20" style="text-align: center;">
         No Agent
     </td>
 </tr>

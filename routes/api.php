@@ -42,6 +42,7 @@ Route::get('get-agent-tags', 'Api\TaskController@getAgentTags')->middleware('Con
 Route::get('get-all-teams', 'Api\TaskController@getAllTeams')->middleware('ConnectDbFromOrder');
 Route::post('update-create-vendor-order', 'Api\AuthController@updateCreateVendorOrder')->middleware('ConnectDbFromOrder');
 Route::post('task/update', 'Api\TaskController@UpdateTask')->middleware('ConnectDbFromOrder');
+Route::post('validate-service_provider', 'Api\TaskController@validateServiceProvider')->middleware('ConnectDbFromOrder');
 
 
 Route::post('task/addwaitingtime', 'Api\TaskController@addWaitingTime')->middleware('ConnectDbFromOrder');

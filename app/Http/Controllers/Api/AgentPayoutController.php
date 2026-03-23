@@ -51,17 +51,17 @@ class AgentPayoutController extends BaseController{
             }
 
             DB::beginTransaction();
-            $agent = Agent::where('id',$id);
-            // $langId = Session::has('adminLanguage') ? Session::get('adminLanguage') : 1;
-            $user = Auth::user();
-            $agent = $agent->first();
+            $agent = Agent::where('id', $id)->lockForUpdate()->first();
+            if (!$agent) {
+                DB::rollBack();
+
+                return $this->error(__('Agent not found'), 404);
+            }
             $agent_id = $agent->id;
-            //-----------------Code modified by Surendra Singh--------------------------//
-            $pending_payout_value  = AgentPayout::where('agent_id', $agent_id)->whereIn('status', [0])->sum('amount');
-            $available_funds = agentEarningManager::getAgentEarning($agent_id, 1) - $pending_payout_value;
-         
-            //-------------------------------------------------------------------------//
-            if($request->amount > $available_funds){
+            $available_funds = round((float) ($agent->available_funds ?? 0), 2);
+            if ($request->amount > $available_funds) {
+                DB::rollBack();
+
                 return $this->error(__('Payout amount is greater than available funds'), 402);
             }
 
@@ -138,10 +138,20 @@ class AgentPayoutController extends BaseController{
                 $payout->agent_bank_detail_id = $agent_bank_account->id;
             }
             $payout->save();
+            $amt = round((float) $request->amount, 2);
+            $n = DB::update(
+                'UPDATE agents SET available_funds = available_funds - ? WHERE id = ? AND available_funds >= ?',
+                [$amt, $agent_id, $amt]
+            );
+            if ($n !== 1) {
+                DB::rollBack();
+
+                return $this->error(__('Payout amount is greater than available funds'), 402);
+            }
             DB::commit();
             return $this->success('', __('Payout is created successfully'), 201);
         }
-        catch(Exception $ex){
+        catch(\Exception $ex){
             DB::rollback();
             return $this->error($ex->getMessage(), $ex->getCode());
         }
@@ -165,10 +175,7 @@ class AgentPayoutController extends BaseController{
         $past_payout_value  = AgentPayout::where('agent_id', $agent_id)->whereIn('status', [1])->sum('amount');
         $pending_payout_value  = AgentPayout::where('agent_id', $agent_id)->whereIn('status', [0])->sum('amount');
 
-
-        $available_funds    = agentEarningManager::getAgentEarning($agent->id, 1) - $pending_payout_value;
-
-        $available_funds    = number_format($available_funds, 2, '.', ',');
+        $available_funds = number_format(round((float) ($agent->available_funds ?? 0), 2), 2, '.', ',');
         $past_payout_value  = number_format($past_payout_value, 2, '.', ',');
 
         //-------------------------------------------------------------------------------------//

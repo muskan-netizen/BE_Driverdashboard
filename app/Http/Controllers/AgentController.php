@@ -310,7 +310,7 @@ class AgentController extends Controller
         $user = Auth::user();
         $managerWarehouses = Client::with('warehouse')->where('id', $user->id)->first();
         $managerWarehousesIds = $managerWarehouses->warehouse->pluck('id');
-        $agents = Agent::with('warehouseAgent')->orderBy('id', 'DESC');
+        $agents = Agent::with(['warehouseAgent', 'wallet'])->orderBy('id', 'DESC');
         // if (!empty($request->date)) {
         // $agents->whereBetween('created_at', [$request->date . " 00:00:00", $request->date . " 23:59:59"]);
         // }
@@ -458,7 +458,7 @@ class AgentController extends Controller
 
             $client_timezone = $client->getTimezone ? $client->getTimezone->timezone : 251;
             $timezone = $tz->timezone_name($client_timezone);
-            $agents = Agent::with('warehouseAgent')->orderBy('id', 'DESC');
+            $agents = Agent::with(['warehouseAgent', 'wallet'])->orderBy('id', 'DESC');
 
             if (!empty($request->get('date_filter'))) {
                 $dateFilter = explode('to', $request->get('date_filter'));
@@ -643,7 +643,8 @@ class AgentController extends Controller
             'color' => $request->color ?? null,
             'profile_picture' => $getFileName != null ? $getFileName : 'assets/client_00000051/agents5fedb209f1eea.jpeg/Ec9WxFN1qAgIGdU2lCcatJN5F8UuFMyQvvb4Byar.jpg',
             'uid' => $request->uid ?? null,
-            'is_approved' => 1
+            'is_approved' => 1,
+            'unique_id' => strtoupper(Str::random(4)) . rand(1000, 9999)
         ];
 
         $agent = Agent::create($data);
@@ -1085,6 +1086,7 @@ class AgentController extends Controller
         $data['debit'] = $debit;
         $data['final_balance'] = $final_balance;
         $data['wallet'] = $wallet_balance;
+        $data['available_funds'] = isset($agent) ? round((float) ($agent->available_funds ?? 0), 2) : 0;
 
         return response()->json($data);
     }

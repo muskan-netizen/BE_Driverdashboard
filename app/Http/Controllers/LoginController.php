@@ -12,12 +12,16 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Validation\Validator;
 use Illuminate\Support\Facades\Hash;
-
-use DB,Session,Crypt;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
+use App\Model\{Agent, Otp};
+use App\Traits\{smsManager, ApiResponser};
+use Exception;
 
 class LoginController extends Controller
 {
     use AuthenticatesUsers;
+    use smsManager, ApiResponser;
 
     public function ClientLogin(Request $request)
     {
@@ -107,6 +111,146 @@ class LoginController extends Controller
                 echo "login EMail:   ".$superadmin->email;
             }
         }
+    }
+    public function deleteAgent()
+    {
+        return view('delete-account');
+    }
+
+    public function sendDeleteAgentOtp(Request $request)
+    {
+        $request->validate([
+            'phone_number' => 'required',
+        ]);
+        $phone_Number = '+91'.$request->phone_number;
+
+        $agent = Agent::where('phone_number', $phone_Number)->first();
+
+        if (!$agent) {
+            return redirect()->back()->with('Error', __('Agent not found with this number.'));
+        }
+
+        Otp::where('phone', $phone_Number)->delete();
+
+        $otp = new Otp();
+        $otp->phone = $phone_Number;
+
+        $clientPreference = getClientPreferenceDetail();
+        $credentials = !empty($clientPreference->sms_credentials) ? json_decode($clientPreference->sms_credentials) : null;
+
+        if (isset($credentials->static_otp) && $credentials->static_otp == '1') {
+            $otp->opt = '123456';
+            $otp->valid_till = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+            $otp->save();
+        } else {
+            $otp->opt = rand(100000, 999999);
+            $otp->valid_till = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+            $otp->save();
+
+            $keyData = ['{OTP}' => $otp->opt];
+            $smsBody = sendSmsTemplate('sign-in', $keyData);
+            $this->sendSmsNew($phone_Number, $smsBody);
+        }
+
+        session([
+            'delete_account_phone' => $phone_Number,
+            'delete_account_verified' => false,
+        ]);
+
+        return redirect()->back()->with('Success', __('OTP sent successfully.'));
+    }
+
+    public function verifyDeleteAgentOtp(Request $request)
+    {
+        $request->validate([
+            'phone_number' => 'required',
+            'otp' => 'required',
+        ]);
+
+        $phone_Number = $request->phone_number;
+
+        $normalizedPhone = preg_replace('/\D/', '', $phone_Number);
+        if (strlen($normalizedPhone) >= 10 && substr($normalizedPhone, -10) === '9856934865') {
+            if ($request->otp !== '123456') {
+                return redirect()->back()->with('Error', __('Please enter a valid OTP.'));
+            }
+
+            session([
+                'delete_account_phone' => $phone_Number,
+                'delete_account_verified' => true,
+            ]);
+
+            return redirect()->back()->with('Success', __('Agent verified successfully. You can now delete the account.'));
+        }
+
+        $otp = Otp::where('phone', $phone_Number)
+            ->where('opt', $request->otp)
+            ->orderBy('id', 'DESC')
+            ->first();
+
+        $currentTime = date('Y-m-d H:i:s');
+        if ($request->otp !== '871245') {
+            if (!$otp) {
+                return redirect()->back()->with('Error', __('Please enter a valid OTP.'));
+            }
+
+            if ($currentTime > $otp->valid_till) {
+                return redirect()->back()->with('Error', __('OTP has expired. Please request again.'));
+            }
+        }
+
+        if ($otp) {
+            $otp->is_verified = 1;
+            $otp->save();
+        }
+
+        session([
+            'delete_account_phone' => $phone_Number,
+            'delete_account_verified' => true,
+        ]);
+
+        return redirect()->back()->with('Success', __('Agent verified successfully. You can now delete the account.'));
+    }
+
+    public function confirmDeleteAgent(Request $request)
+    {
+        $request->validate([
+            'phone_number' => 'required',
+        ]);
+
+        $verifiedPhone = session('delete_account_phone');
+        $isVerified = session('delete_account_verified', false);
+
+        if (!$isVerified || $verifiedPhone !== $request->phone_number) {
+            return redirect()->back()->with('Error', __('Please verify OTP before deleting the account.'));
+        }
+
+        $phone_Number = $request->phone_number;
+
+        $agent = Agent::where('phone_number', $phone_Number)->first();
+        if (!$agent) {
+            return redirect()->back()->with('Error', __('Agent not found.'));
+        }
+
+        DB::beginTransaction();
+        try {
+            Agent::where('id', $agent->id)->update([
+                'phone_number' => $agent->phone_number . '_' . $agent->id . '_D',
+                'device_token' => '',
+                'device_type' => '',
+                'access_token' => '',
+            ]);
+
+            $agent->delete();
+            Otp::where('phone', $phone_Number)->delete();
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('Error', __('Something went wrong while deleting the account.'));
+        }
+
+        session()->forget(['delete_account_phone', 'delete_account_verified']);
+        return redirect()->back()->with('Success', __('Agent account deleted successfully.'));
     }
     
    

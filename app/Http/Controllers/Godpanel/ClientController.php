@@ -113,8 +113,8 @@ class ClientController extends Controller
             'database_name' => $database_name,
             'company_name' => $request->company_name,
             'company_address'  => $request->company_address,
-            'database_username' => env('DB_USERNAME'),
-            'database_password' => env('DB_PASSWORD'),
+            'database_username' => config('database.connections.mysql.username'),
+            'database_password' => config('database.connections.mysql.password'),
             'logo' => isset($getFileName) ? $getFileName : 'assets/Clientlogo/5ff41c4b5a9f0.png/KQb50SOKZckXbcmMBXgqz3pqfCZcOTpkpljs8sJq.png',
             'status'=> 1,
             'timezone' => $request->timezone ? $request->timezone : 'America/New_York',
@@ -335,11 +335,11 @@ class ClientController extends Controller
             $schemaName = 'db_' . $getClient['database_name'];
             $default = [
             'driver' => env('DB_CONNECTION', 'mysql'),
-            'host' => env('DB_HOST'),
-            'port' => env('DB_PORT'),
+            'host' => config('database.connections.mysql.host'),
+            'port' => config('database.connections.mysql.port'),
             'database' => $schemaName,
-            'username' => env('DB_USERNAME'),
-            'password' => env('DB_PASSWORD'),
+            'username' => config('database.connections.mysql.username'),
+            'password' => config('database.connections.mysql.password'),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',
@@ -392,7 +392,7 @@ class ClientController extends Controller
                 foreach ($client as $key => $value) {
                    
                     if($key == 'database_host'){
-                        $clientData[$key] = env('DB_HOST_'.$stage);
+                        $clientData[$key] = config("database.connections.{$stage}.host");
                     }else{
                         $clientData[$key] = $value;
                     }

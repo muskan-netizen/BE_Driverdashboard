@@ -57,11 +57,11 @@ class NotifyDriverBeforePickup extends Command
             if ($db) {
                 $default = [
                     'driver' => env('DB_CONNECTION', 'mysql'),
-                    'host' => env('DB_HOST'),
-                    'port' => env('DB_PORT'),
+                    'host' => config('database.connections.mysql.host'),
+                    'port' => config('database.connections.mysql.port'),
                     'database' => $database_name,
-                    'username' => $client->database_username,
-                    'password' => $client->database_password,
+                    'username' => config('database.connections.mysql.username'),
+                    'password' => config('database.connections.mysql.password'),
                     'charset' => 'utf8mb4',
                     'collation' => 'utf8mb4_unicode_ci',
                     'prefix' => '',

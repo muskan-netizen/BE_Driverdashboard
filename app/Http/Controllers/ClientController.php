@@ -379,7 +379,7 @@ class ClientController extends Controller
                 $custom_db_name = Client::where('code', $id)->first();
                 $connectionToLocal = $this->createConnectionToClientDb($custom_db_name->database_name);
                 $dbname = DB::connection()->getDatabaseName();
-                if ($dbname != env('DB_DATABASE')) {
+                if ($dbname != config('database.connections.mysql.database')) {
                     Client::where('id', '!=', 0)->update(['custom_domain' => $request->custom_domain]);
                 }
             }
@@ -567,7 +567,7 @@ class ClientController extends Controller
             $custom_db_name = Client::where('code', $id)->first();
             $connectionToLocal = $this->createConnectionToClientDb($custom_db_name->database_name);
             $dbname = DB::connection()->getDatabaseName();
-            if ($dbname != env('DB_DATABASE')) {
+            if ($dbname != config('database.connections.mysql.database')) {
                 Client::where('id', '!=', 0)->update(['sub_domain' => $request->sub_domain]);
             }
             return true;
@@ -579,14 +579,14 @@ class ClientController extends Controller
     public function createConnectionToGodDb($id)
     {
         $already_db = DB::connection()->getDatabaseName();
-        $god_db = env('DB_DATABASE');
+        $god_db = config('database.connections.mysql.database');
         $default = [
                 'driver' => env('DB_CONNECTION', 'mysql'),
-                'host' => env('DB_HOST'),
-                'port' => env('DB_PORT'),
+                'host' => config('database.connections.mysql.host'),
+                'port' => config('database.connections.mysql.port'),
                 'database' => $god_db,
-                'username' => env('DB_USERNAME'),
-                'password' => env('DB_PASSWORD'),
+                'username' => config('database.connections.mysql.username'),
+                'password' => config('database.connections.mysql.password'),
                 'charset' => 'utf8mb4',
                 'collation' => 'utf8mb4_unicode_ci',
                 'prefix' => '',
@@ -605,11 +605,11 @@ class ClientController extends Controller
         $database_name = 'db_'.$db_name;
         $default = [
                 'driver' => env('DB_CONNECTION', 'mysql'),
-                'host' => env('DB_HOST'),
-                'port' => env('DB_PORT'),
+                'host' => config('database.connections.mysql.host'),
+                'port' => config('database.connections.mysql.port'),
                 'database' => $database_name,
-                'username' => env('DB_USERNAME'),
-                'password' => env('DB_PASSWORD'),
+                'username' => config('database.connections.mysql.username'),
+                'password' => config('database.connections.mysql.password'),
                 'charset' => 'utf8mb4',
                 'collation' => 'utf8mb4_unicode_ci',
                 'prefix' => '',

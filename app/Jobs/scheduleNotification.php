@@ -48,12 +48,12 @@ class scheduleNotification implements ShouldQueue
             $schemaName = 'db_'.$databaseName;
 
             $default = [
-                'driver'        => env('DB_CONNECTION', 'mysql'),
-                'host'          => env('DB_HOST'),
-                'port'          => env('DB_PORT'),
+                'driver'        => config('database.default', 'mysql'),
+                'host'          => config('database.connections.mysql.host'),
+                'port'          => config('database.connections.mysql.port'),
                 'database'      => $schemaName,
-                'username'      => env('DB_USERNAME'),
-                'password'      => env('DB_PASSWORD'),
+                'username'      => config('database.connections.mysql.username'),
+                'password'      => config('database.connections.mysql.password'),
                 'charset'       => 'utf8mb4',
                 'collation'     => 'utf8mb4_unicode_ci',
                 'prefix'        => '',

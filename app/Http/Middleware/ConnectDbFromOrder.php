@@ -49,17 +49,17 @@ class ConnectDbFromOrder
         }      
         if (isset($client)) {
             $database_name =  'db_'.$client['database_name'];
-            $database_host = !empty($client->database_host) ? $client->database_host : env('DB_HOST','127.0.0.1');
-            $database_port = !empty($client->database_port) ? $client->database_port : env('DB_PORT','3306');
-            $database_username = !empty($client->database_username) ? $client->database_username : env('DB_USERNAME','cbladmin');
-            $database_password = !empty($client->database_password) ? $client->database_password : env('DB_PASSWORD','');
+            $database_host = !empty($client->database_host) ? $client->database_host : config('database.connections.mysql.host');
+            $database_port = !empty($client->database_port) ? $client->database_port : config('database.connections.mysql.port');
+            $database_username = !empty($client->database_username) ? $client->database_username : config('database.connections.mysql.username');
+            $database_password = !empty($client->database_password) ? $client->database_password : config('database.connections.mysql.password');
             $default = [
                 'driver' => env('DB_CONNECTION', 'mysql'),
-                'host' => env('DB_HOST'),
-                'port' => env('DB_PORT'),
+                'host' => $database_host,
+                'port' => $database_port,
                 'database' => $database_name,
-                'username' => env('DB_USERNAME'),
-                'password' => env('DB_PASSWORD'),
+                'username' => $database_username,
+                'password' => $database_password,
                 'charset' => 'utf8mb4',
                 'collation' => 'utf8mb4_unicode_ci',
                 'prefix' => '',
@@ -67,7 +67,6 @@ class ConnectDbFromOrder
                 'strict' => false,
                 'engine' => null
             ];
-            
             
             Config::set("database.connections.$database_name", $default);
             Config::set("client_connected", true);

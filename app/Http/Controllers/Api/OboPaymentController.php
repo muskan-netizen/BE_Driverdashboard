@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Http\Traits\{ApiResponser}; //order tarit
-use App\Models\{Order, Payment, PaymentOption, User,ClientPreference,PaymentTransaction};
+use App\Traits\ApiResponser; //order tarit
+use App\Model\{Order, Payment, PaymentOption, User,ClientPreference,PaymentTransaction};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, Http};
 
-class OboPaymentController extends Controller
+class OboPaymentController extends BaseController
 {
     use ApiResponser;//order tarit
 
@@ -41,7 +41,7 @@ class OboPaymentController extends Controller
     public function beforePayment(Request $request, $domain = '', $app = '')
     {
         try {
-            $tokenData =  $this->token();
+            $tokenData =  $this->generateToken();
             if (isset($tokenData['httpStatus']) &&  $tokenData['httpStatus'] == "OK") {
                 $token = $tokenData['token'];
                 if (isset($token)) {
@@ -195,7 +195,7 @@ class OboPaymentController extends Controller
         }
     }
 
-    public function token()
+    public function generateToken()
     {
         try {
             if ($this->testMode == 1) {

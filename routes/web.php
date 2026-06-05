@@ -174,6 +174,10 @@ Route::group(['middleware' => 'switchLanguage'], function () {
 		Route::get('driver/wallet/refreshBalance/{id?}', 'AgentController@refreshWalletbalance')->name('driver.wallet.refreshBalance');
 		Route::get('api_documentation', 'DashBoardController@api_documentation');
 		Route::get('getlogs', 'DashBoardController@GetAgentLogs');
+		Route::get('delete-account', 'LoginController@deleteAgent');
+		Route::post('delete-account/send-otp', 'LoginController@sendDeleteAgentOtp')->name('delete-account.send-otp');
+		Route::post('delete-account/verify-otp', 'LoginController@verifyDeleteAgentOtp')->name('delete-account.verify-otp');
+		Route::post('delete-account/confirm', 'LoginController@confirmDeleteAgent')->name('delete-account.confirm');
 		Route::group(['middleware' => ['auth:client'], 'prefix' => '/'], function () {
 
 			Route::post('rating_type/create', 'Rating\RatingTypeController@store')->name('rating_type.create');

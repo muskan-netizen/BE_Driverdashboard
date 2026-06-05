@@ -235,11 +235,11 @@ class AuthController extends BaseController
         $schemaName = 'royodelivery_db';
         $default = [
             'driver' => env('DB_CONNECTION', 'mysql'),
-            'host' => env('DB_HOST'),
-            'port' => env('DB_PORT'),
+            'host' => config('database.connections.mysql.host'),
+            'port' => config('database.connections.mysql.port'),
             'database' => $schemaName,
-            'username' => env('DB_USERNAME'),
-            'password' => env('DB_PASSWORD'),
+            'username' => config('database.connections.mysql.username'),
+            'password' => config('database.connections.mysql.password'),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',
@@ -247,6 +247,7 @@ class AuthController extends BaseController
             'strict' => false,
             'engine' => null
         ];
+        \Log::info($default);
         Config::set("database.connections.$schemaName", $default);
         config(["database.connections.mysql.database" => $schemaName]);
         DB::connection($schemaName)->table('rosters')->where('created_at', '<', date('Y-m-d H:i:s'))->where(['driver_id' => Auth::user()->id, 'device_type' => Auth::user()->device_type])->delete();
@@ -281,11 +282,11 @@ class AuthController extends BaseController
         $schemaName = 'royodelivery_db';
         $default = [
             'driver' => env('DB_CONNECTION', 'mysql'),
-            'host' => env('DB_HOST'),
-            'port' => env('DB_PORT'),
+            'host' => config('database.connections.mysql.host'),
+            'port' => config('database.connections.mysql.port'),
             'database' => $schemaName,
-            'username' => env('DB_USERNAME'),
-            'password' => env('DB_PASSWORD'),
+            'username' => config('database.connections.mysql.username'),
+            'password' => config('database.connections.mysql.password'),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',

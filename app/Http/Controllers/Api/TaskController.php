@@ -97,7 +97,7 @@ class TaskController extends BaseController
 
     public function updateTaskStatus(Request $request)
     {
-
+        \Log::info('updateTaskStatus: '.json_encode($request->all()));
         $header = $request->header();
         $tasks = null;
         $client_details = Client::where('database_name', $header['client'][0])->first();
@@ -145,6 +145,74 @@ class TaskController extends BaseController
                 'message' => "You can not complete this order."
             ]);
         endif;
+        if ((int) $request->task_status === 4
+            && (int) $orderId->task_type_id === 2
+            && $request->filled('otp')) {
+            $dispatchOrderRow = Order::where('id', $orderId->order_id)->first(['id', 'order_number', 'sync_order_id']);
+            $panelOrder = null;
+            $panelLookupMethod = null;
+            if ($dispatchOrderRow && !empty($dispatchOrderRow->sync_order_id)) {
+                $panelOrder = \App\Model\Order\Order::query()
+                    ->whereKey($dispatchOrderRow->sync_order_id)
+                    ->first(['id', 'driver_share_otp']);
+                if ($panelOrder) {
+                    $panelLookupMethod = 'sync_order_id';
+                }
+            }
+            if (!$panelOrder && $dispatchOrderRow && $dispatchOrderRow->order_number !== null && $dispatchOrderRow->order_number !== '') {
+                $panelOrder = \App\Model\Order\Order::query()
+                    ->where('order_number', $dispatchOrderRow->order_number)
+                    ->first(['id', 'driver_share_otp']);
+                if ($panelOrder) {
+                    $panelLookupMethod = 'order_number';
+                }
+            }
+            $expectedOtp = $panelOrder && isset($panelOrder->driver_share_otp)
+                ? (string) $panelOrder->driver_share_otp
+                : '';
+            $submittedOtpTrimmed = trim((string) $request->otp);
+            $expectedOtpTrimmed = trim($expectedOtp);
+            $otpMatch = $expectedOtpTrimmed !== '' && $submittedOtpTrimmed === $expectedOtpTrimmed;
+
+            \Log::info('updateTaskStatus driver_share_otp check', [
+                'request_task_id' => $request->task_id,
+                'request_task_status' => (int) $request->task_status,
+                'request_otp_present' => true,
+                'request_otp_length' => strlen($submittedOtpTrimmed),
+                'task_order_id' => $orderId->order_id,
+                'task_type_id' => (int) $orderId->task_type_id,
+                'dispatch_order_id' => $dispatchOrderRow->id ?? null,
+                'dispatch_order_number' => $dispatchOrderRow->order_number ?? null,
+                'dispatch_sync_order_id' => $dispatchOrderRow->sync_order_id ?? null,
+                'panel_order_id' => $panelOrder->id ?? null,
+                'panel_lookup_method' => $panelLookupMethod,
+                'expected_driver_share_otp_set' => $expectedOtpTrimmed !== '',
+                'expected_otp_length' => strlen($expectedOtpTrimmed),
+                'otp_match' => $otpMatch,
+                'validation_result' => $otpMatch ? 'accepted' : 'rejected',
+            ]);
+
+            if ($expectedOtpTrimmed === '' || !$otpMatch) {
+                \Log::info('updateTaskStatus driver_share_otp rejected', [
+                    'request_task_id' => $request->task_id,
+                    'task_order_id' => $orderId->order_id,
+                    'reason' => $expectedOtpTrimmed === '' ? 'missing_panel_otp_or_panel_order' : 'otp_mismatch',
+                    'http_status' => 400,
+                ]);
+
+                return response()->json([
+                    'data' => [],
+                    'status' => 400,
+                    'message' => __('Otp not valid'),
+                ]);
+            }
+
+            \Log::info('updateTaskStatus driver_share_otp accepted', [
+                'request_task_id' => $request->task_id,
+                'task_order_id' => $orderId->order_id,
+                'panel_order_id' => $panelOrder->id ?? null,
+            ]);
+        }
 
         // dd($order_details->toArray());
         if (isset($request->qr_code) && ($order_details && $order_details->call_back_url)) {
@@ -1134,7 +1202,8 @@ class TaskController extends BaseController
                     ]);
 
 
-                        Task::where('order_id', $batch->order_id)->update(['task_status' => 1]);
+                        Task::where('order_id', $batch->order_id)->where('task_type_id', 2)->update(['task_status' => 1]);
+                        Task::where('order_id', $batch->order_id)->where('task_type_id', 1)->update(['task_status' => 4]);
                         $orderdata = Order::select('id', 'order_time', 'status', 'driver_id')->with('agent')->where('id', $batch->order_id)->first();
 
 
@@ -1246,7 +1315,7 @@ class TaskController extends BaseController
                             ->first();
 
                         if ($task) {
-                            $task->task_status = 1;
+                            $task->task_status = 4;
                             $task->driver_id = $agent_id;
                             $task->assigned_time = date('Y-m-d H:i:s');
                             $task->save();
@@ -1647,6 +1716,8 @@ class TaskController extends BaseController
             } else {
                 $header['client'][0] = $client->database_name;
             }
+            // Used in multiple return payloads/logs; must always be defined.
+            $inValidAgent = 0;
             $unique_agent_id = null;
             if($request->driver_unique_id)
             {
@@ -2110,6 +2181,13 @@ class TaskController extends BaseController
                 $agent = Agent::find($agentId);
                 $title = 'Scheduled New Order';
                 $body  = 'The schedule timing of order number #'.$request->order_number.' by the customer.';
+                \Log::info('CreateTask notification target: unique driver', [
+                    'order_id'            => $orders->id ?? null,
+                    'order_number'        => $orders->order_number ?? null,
+                    'notification_method' => 'OneByOneUniqueDriver',
+                    'target_agent_id'     => $agentId,
+                    'target_agent_unique' => $request->driver_unique_id ?? null,
+                ]);
                 DB::commit();
                 // $this->sendPushNotificationtoDriver($title,$body,$auth,[$agent->device_token],$dispatch_traking_url);
                 $this->OneByOneUniqueDriver($geo, $settime, $agentId, $orders, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, '',$request->notify_hour,$request->reminder_hour);
@@ -2152,6 +2230,12 @@ class TaskController extends BaseController
                 }
             }
             if(isset($request->bid_task_type)){
+                \Log::info('CreateTask notification target: bid ride', [
+                    'order_id'            => $orders->id ?? null,
+                    'order_number'        => $orders->order_number ?? null,
+                    'notification_method' => 'sendBidRideNotification',
+                    'target_agent_id'     => $agent_id,
+                ]);
                 $this->sendBidRideNotification($agent_id,1,$orders->id,$header);
             }
             // task schdule code is hare
@@ -2243,6 +2327,7 @@ class TaskController extends BaseController
                         'notification_time'=> $notification_time,
                         'allocation_type'  => $request->allocation_type ?? null,
                         'rejectable_order' => $rejectable_order,
+                        'target_agent_id'  => $agent_id,
                     ]);
                     scheduleNotification::dispatch($schduledata)->delay(now()->addMinutes($finaldelay));
                     DB::commit();
@@ -2320,20 +2405,48 @@ class TaskController extends BaseController
                 switch ($allocation->auto_assign_logic) {
                     case 'one_by_one':
                         //this is called when allocation type is one by one
+                        \Log::info('CreateTask notification target: auto-allocation', [
+                            'order_id'            => $orders->id ?? null,
+                            'order_number'        => $orders->order_number ?? null,
+                            'notification_method' => 'OneByOne',
+                            'target_agent_id'     => $agent_id,
+                            'target_scope'        => $agent_id ? 'single_agent' : 'eligible_pool',
+                        ]);
                         $this->OneByOne($geo, $notification_time, $agent_id, $orders->id, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, $is_one_push_booking);
                         break;
                     case 'send_to_all':
 
 
                         //this is called when allocation type is send to all
+                        \Log::info('CreateTask notification target: auto-allocation', [
+                            'order_id'            => $orders->id ?? null,
+                            'order_number'        => $orders->order_number ?? null,
+                            'notification_method' => 'SendToAll',
+                            'target_agent_id'     => $agent_id,
+                            'target_scope'        => $agent_id ? 'single_agent' : 'eligible_pool',
+                        ]);
                         $this->SendToAll($geo, $notification_time, $agent_id, $orders->id, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, $is_one_push_booking);
                         break;
                     case 'round_robin':
                         //this is called when allocation type is round robin
+                        \Log::info('CreateTask notification target: auto-allocation', [
+                            'order_id'            => $orders->id ?? null,
+                            'order_number'        => $orders->order_number ?? null,
+                            'notification_method' => 'roundRobin',
+                            'target_agent_id'     => $agent_id,
+                            'target_scope'        => $agent_id ? 'single_agent' : 'eligible_pool',
+                        ]);
                         $this->roundRobin($geo, $notification_time, $agent_id, $orders->id, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, $is_one_push_booking);
                         break;
                     default:
                         //this is called when allocation type is batch wise
+                        \Log::info('CreateTask notification target: auto-allocation', [
+                            'order_id'            => $orders->id ?? null,
+                            'order_number'        => $orders->order_number ?? null,
+                            'notification_method' => 'batchWise',
+                            'target_agent_id'     => $agent_id,
+                            'target_scope'        => $agent_id ? 'single_agent' : 'eligible_pool',
+                        ]);
                         $this->batchWise($geo, $notification_time, $agent_id, $orders->id, $customer, $pickup_location, $taskcount, $header, $allocation, $orders->is_cab_pooling, $agent_tags, $is_order_updated, $is_one_push_booking);
                 }
             }
@@ -4026,6 +4139,50 @@ class TaskController extends BaseController
 
 
             $customer = DB::table('customers')->where('id', $order->customer_id)->first();
+
+            // Backfill missing customer addresses using order-panel mapping and task locations.
+            $orderPanelCustomerId = null;
+            if (!empty($order->sync_order_id)) {
+                $orderPanelOrder = \App\Model\Order\Order::where('id', $order->sync_order_id)->first();
+                $orderPanelCustomerId = $orderPanelOrder->customer_id ?? null;
+            }
+
+            $syncCustomerId = $orderPanelCustomerId ?? $order->sync_customer_id ?? ($customer->sync_customer_id ?? null);
+            if (!empty($syncCustomerId)) {
+                $isAddressEmpty = empty($customer->address) || trim((string) $customer->address) === '';
+                if ($isAddressEmpty) {
+                    $resolvedAddress = DB::table('tasks')
+                        ->join('locations', 'tasks.location_id', '=', 'locations.id')
+                        ->where('tasks.order_id', $order->id)
+                        ->whereNotNull('locations.address')
+                        ->where('locations.address', '!=', '')
+                        ->orderBy('tasks.id', 'desc')
+                        ->value('locations.address');
+
+                    if (empty($resolvedAddress)) {
+                        $resolvedAddress = DB::table('orders')
+                            ->join('tasks', 'tasks.order_id', '=', 'orders.id')
+                            ->join('locations', 'tasks.location_id', '=', 'locations.id')
+                            ->where('orders.sync_customer_id', $syncCustomerId)
+                            ->whereNotNull('locations.address')
+                            ->where('locations.address', '!=', '')
+                            ->orderBy('orders.id', 'desc')
+                            ->orderBy('tasks.id', 'desc')
+                            ->value('locations.address');
+                    }
+
+                    if (!empty($resolvedAddress)) {
+                        DB::table('customers')
+                            ->where('sync_customer_id', $syncCustomerId)
+                            ->where(function ($query) {
+                                $query->whereNull('address')->orWhere('address', '');
+                            })
+                            ->update(['address' => $resolvedAddress]);
+
+                        $customer = DB::table('customers')->where('id', $order->customer_id)->first();
+                    }
+                }
+            }
             $order->order_cost = $order->cash_to_be_collected ?? $order->order_cost;
 
                 if($client_prefrence->is_dispatcher_allocation == 1 )
@@ -4040,7 +4197,12 @@ class TaskController extends BaseController
 
                 }
                 $db_name = client::select('database_name')->orderBy('id', 'asc')->first()->database_name;
-
+                \Log::info('allrsponse', [
+                    'tasks' => $tasks,
+                    'order' => $order,
+                    'customer' => $customer,
+                    'agent_dbname' => $db_name,
+                ]);
                 return response()->json([
                 'message' => 'Successfully',
                 'tasks' => $tasks,
@@ -5961,11 +6123,11 @@ class TaskController extends BaseController
     public function seperate_connection($schemaName){
         $default = [
             'driver' => env('DB_CONNECTION', 'mysql'),
-            'host' => env('DB_HOST'),
-            'port' => env('DB_PORT'),
+            'host' => config('database.connections.mysql.host'),
+            'port' => config('database.connections.mysql.port'),
             'database' => $schemaName,
-            'username' => env('DB_USERNAME'),
-            'password' => env('DB_PASSWORD'),
+            'username' => config('database.connections.mysql.username'),
+            'password' => config('database.connections.mysql.password'),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',

@@ -59,7 +59,7 @@ Route::post('sync-category-product', 'Api\SyncCategoryProductController@SyncCate
 
 Route::post('get-dispatch-panel-keys', 'Api\TaskController@checkDispatchPanelKeys')->middleware('ConnectDbForDispatch');
 Route::get('get-dispatch-panel-detail', 'Api\TaskController@getDispatchPanelDetails')->middleware('ConnectDbForDispatch');
-Route::post('sync-inventory-category-product', 'Api\SyncInventoryCategoryProductController@SyncInventoryCategoryProduct')->middleware('ConnectDbForDispatch');
+// Route::post('sync-inventory-category-product', 'Api\SyncInventoryCategoryProductController@SyncInventoryCategoryProduct')->middleware('ConnectDbForDispatch');
 
 Route::post('chat/sendNotificationToAgent',      'Api\ChatControllerOrderNotification@sendNotificationToAgent')->middleware('ConnectDbFromOrder');
 
@@ -203,8 +203,8 @@ Route::group(['middleware' => ['dbCheck', 'AppAuth','apiLocalization']], functio
 
     // All Payment gateways
     Route::get('payment/{gateway}', 'Api\PaymentOptionController@postPayment');
-    Route::post('before-payment/obo','Api\OboPaymentController@beforePayment')->name('obo.pay');
-    Route::get('after-payment/obo','Api\OboPaymentController@afterPayment')->name('after.obo.payment');
+    // Route::post('before-payment/obo','Api\OboPaymentController@beforePayment')->name('obo.pay');
+    // Route::get('after-payment/obo','Api\OboPaymentController@afterPayment')->name('after.obo.payment');
 
     //flutterwave payment gateway
         Route::post('payment/sdk_complete/{gateway?}','Api\PaymentOptionController@sdkResponsePayment');

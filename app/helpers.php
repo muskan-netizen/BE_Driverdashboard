@@ -26,7 +26,12 @@ if (!function_exists('setUserCode')) {
         $userCode = session()->has('userCode');
         if (!$userCode) {
             $user = ClientData::first();
-            session()->put('userCode', $user->code);
+            if($user){
+                session()->put('userCode', $user->code);
+            } else {
+                // For local development, set a default code
+                session()->put('userCode', 'DEFAULT');
+            }
         }
     }
 }

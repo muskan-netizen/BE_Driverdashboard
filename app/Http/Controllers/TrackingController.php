@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use Config;
 use Storage,PDF;
 use Carbon\Carbon;
-use App\Model\{Client, ClientPreference, Order,DriverRegistrationDocument, OrderFormAttribute};
+use App\Model\{Agent, Client, ClientPreference, Order,DriverRegistrationDocument, OrderFormAttribute};
+use App\Support\OrderPayableSplit;
+use Bavix\Wallet\Internal\Service\DatabaseServiceInterface;
+use Bavix\Wallet\Models\Transaction as WalletTransaction;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Traits\{sendCustomNotification,FormAttributeTrait,RatingTrait};
 
 class TrackingController extends Controller
@@ -19,7 +23,7 @@ class TrackingController extends Controller
     {
         $respnse = $this->connection($user);
         if ($respnse['status'] == 'connected') {
-            $order   = DB::connection($respnse['database'])->table('orders')->where('unique_id', $id)->leftJoin('agents', 'orders.driver_id', '=', 'agents.id')
+            $order   = DB::connection($respnse['database'])->table('orders')->where('orders.unique_id', $id)->leftJoin('agents', 'orders.driver_id', '=', 'agents.id')
                 ->select('orders.*', 'agents.name','agents.vehicle_type_id', 'agents.profile_picture', 'agents.phone_number')->first();
             if (isset($order->id)) {
                 $tasks = DB::connection($respnse['database'])->table('tasks')->where('order_id', $order->id)->leftJoin('locations', 'tasks.location_id', '=', 'locations.id')
@@ -110,11 +114,11 @@ class TrackingController extends Controller
 
             $default = [
                 'driver' => env('DB_CONNECTION', 'mysql'),
-                'host' => env('DB_HOST'),
-                'port' => env('DB_PORT'),
+                'host' => config('database.connections.mysql.host'),
+                'port' => config('database.connections.mysql.port'),
                 'database' => $database_name,
-                'username' => env('DB_USERNAME'),
-                'password' => env('DB_PASSWORD'),
+                'username' => config('database.connections.mysql.username'),
+                'password' => config('database.connections.mysql.password'),
                 'charset' => 'utf8mb4',
                 'collation' => 'utf8mb4_unicode_ci',
                 'prefix' => '',
@@ -142,7 +146,7 @@ class TrackingController extends Controller
         $noofCopassengers = 0;
         $agent = [];
         if ($respnse['status'] == 'connected') {
-            $order = DB::connection($respnse['database'])->table('orders')->where('unique_id', $id)->leftJoin('agents', 'orders.driver_id', '=', 'agents.id')
+            $order = DB::connection($respnse['database'])->table('orders')->where('orders.unique_id', $id)->leftJoin('agents', 'orders.driver_id', '=', 'agents.id')
                 ->select('orders.*', 'agents.name','agents.vehicle_type_id','agents.color','agents.plate_number', 'agents.profile_picture', 'agents.phone_number')->first();
             if (isset($order->id)) {
                 $tasks = DB::connection($respnse['database'])->table('tasks')->where('order_id', $order->id)->leftJoin('locations', 'tasks.location_id', '=', 'locations.id')
@@ -305,8 +309,16 @@ class TrackingController extends Controller
                         ];
                         $this->sendnotification($notificationdata, $client_preferences);
                     }
-                    
+
                     DB::connection($respnse['database'])->commit();
+
+                    // Lead-fee refund must run AFTER commit: (1) Bavix wallet uses database.default /
+                    // wallet.database.connection — if still "mysql", deposits go to the wrong DB while
+                    // withdraw lookups use the tenant connection. (2) Avoid nesting wallet ops inside
+                    // the cancel transaction.
+                    if (!empty($order->driver_id)) {
+                        $this->refundDriverLeadFeeOnOrderCancel($database_name, $order);
+                    }
                     return response()->json([
                         'status' => 'Success',
                         'message' => 'Order cancelled successfully',
@@ -332,7 +344,7 @@ class TrackingController extends Controller
         $respnse = $this->connection($user);
 
         if ($respnse['status'] == 'connected') {
-            $order   = DB::connection($respnse['database'])->table('orders')->where('unique_id', $id)->leftJoin('agents', 'orders.driver_id', '=', 'agents.id')
+            $order   = DB::connection($respnse['database'])->table('orders')->where('orders.unique_id', $id)->leftJoin('agents', 'orders.driver_id', '=', 'agents.id')
                 ->select('orders.*', 'agents.name', 'agents.profile_picture', 'agents.phone_number')->first();
             if (isset($order->id)) {
                 $tasks = DB::connection($respnse['database'])->table('tasks')->where('order_id', $order->id)->leftJoin('locations', 'tasks.location_id', '=', 'locations.id')
@@ -357,7 +369,7 @@ class TrackingController extends Controller
         $data['attribute'] = [];
         $data['ratingType'] = [];
         if ($respnse['status'] == 'connected') {
-            $order   = DB::connection($respnse['database'])->table('orders')->where('unique_id', $id)->leftJoin('agents', 'orders.driver_id', '=', 'agents.id')
+            $order   = DB::connection($respnse['database'])->table('orders')->where('orders.unique_id', $id)->leftJoin('agents', 'orders.driver_id', '=', 'agents.id')
                 ->select('orders.*', 'agents.name', 'agents.profile_picture', 'agents.phone_number')->first();
             if (isset($order->id)) {
                 
@@ -475,8 +487,275 @@ class TrackingController extends Controller
          view()->share( $sheredArray);  
          $pdf = PDF::loadView('Invoice.orderInvoicePdf');
          $pdfName = ($order->order_number ??$order->id)."_invoice.pdf";
-        return $pdf->download($pdfName);
-
+         return $pdf->download($pdfName);
     }
-   
+
+    /**
+     * When an assigned order is cancelled from the order panel, refund the lead fee
+     * previously withdrawn on driver accept ({@see \App\Http\Controllers\Api\TaskController::deductWalletCommissionOnOrderAccept}).
+     */
+    protected function refundDriverLeadFeeOnOrderCancel(string $dbConnection, object $order): void
+    {
+        $orderId = (int) ($order->id ?? 0);
+
+        if (empty($order->driver_id)) {
+            $this->logLeadFeeCancelRefund($dbConnection, $orderId, null, 'skip: no driver_id on order', [], 'info');
+
+            return;
+        }
+        // Explicit 1/0 only — avoid empty() quirks on string "0" / int 0 from DB.
+        if ((int) ($order->skip_accept_lead_fee ?? 0) === 1) {
+            $this->logLeadFeeCancelRefund($dbConnection, $orderId, (int) $order->driver_id, 'skip: skip_accept_lead_fee=1 (no lead fee charged)', [], 'info');
+
+            return;
+        }
+
+        $driverId = (int) $order->driver_id;
+
+        // Bavix wallet resolves DB via config('wallet.database.connection') or database.default.
+        // Tracking routes often leave default as "mysql" while tenant data is on $dbConnection,
+        // so depositFloat would write to the wrong database. Point default at the tenant for this refund.
+        $previousDefault = config('database.default');
+        config(['database.default' => $dbConnection]);
+        if (app()->bound(DatabaseServiceInterface::class)) {
+            app()->forgetInstance(DatabaseServiceInterface::class);
+        }
+
+        try {
+            if ($this->walletRefundAlreadyPosted($dbConnection, $driverId, $orderId)) {
+                $this->logLeadFeeCancelRefund($dbConnection, $orderId, $driverId, 'skip: refund deposit already exists for this order (idempotent)', [], 'info');
+
+                return;
+            }
+
+            $refundAmount = null;
+
+            $singleWithdraw = $this->findLeadFeeWithdrawForOrder($dbConnection, $driverId, $orderId, 'order_accept_lead_fee');
+
+            if ($singleWithdraw) {
+                $meta = is_array($singleWithdraw->meta) ? $singleWithdraw->meta : [];
+                if (isset($meta['lead_fee']) && (float) $meta['lead_fee'] > 0) {
+                    $refundAmount = round((float) $meta['lead_fee'], 2);
+                } else {
+                    $hint = $this->resolveOrderPayableHintFromOrderRow($order);
+                    $refundAmount = OrderPayableSplit::leadFeeOnAccept($hint > 0 ? $hint : null);
+                }
+                $this->logLeadFeeCancelRefund($dbConnection, $orderId, $driverId, 'resolved refund from order_accept_lead_fee withdraw', [
+                    'withdraw_transaction_id' => $singleWithdraw->id ?? null,
+                    'refund_amount' => $refundAmount,
+                ], 'info');
+            }
+
+            if ($refundAmount === null || $refundAmount <= 0) {
+                $batchWithdraws = WalletTransaction::on($dbConnection)
+                    ->whereIn('payable_type', $this->agentPayableTypes())
+                    ->where('payable_id', $driverId)
+                    ->where('type', 'withdraw')
+                    ->where('meta->type', 'batch_order_accept_lead_fee')
+                    ->orderByDesc('id')
+                    ->get();
+
+                foreach ($batchWithdraws as $tw) {
+                    $meta = is_array($tw->meta) ? $tw->meta : [];
+                    $rawIds = $meta['order_ids'] ?? null;
+                    if (is_string($rawIds)) {
+                        $oids = json_decode($rawIds, true) ?: [];
+                    } elseif (is_array($rawIds)) {
+                        $oids = $rawIds;
+                    } else {
+                        $oids = [];
+                    }
+                    $oids = array_map('intval', $oids);
+                    if (in_array($orderId, $oids, true)) {
+                        $hint = $this->resolveOrderPayableHintFromOrderRow($order);
+                        $refundAmount = OrderPayableSplit::leadFeeOnAccept($hint > 0 ? $hint : null);
+                        $this->logLeadFeeCancelRefund($dbConnection, $orderId, $driverId, 'resolved refund from batch_order_accept_lead_fee withdraw', [
+                            'batch_withdraw_transaction_id' => $tw->id ?? null,
+                            'refund_amount' => $refundAmount,
+                        ], 'info');
+                        break;
+                    }
+                }
+            }
+
+            // If DB JSON path queries missed the row (meta.order_id stored as int vs string, etc.), refund the configured lead fee.
+            if ($refundAmount === null || $refundAmount <= 0) {
+                $hint = $this->resolveOrderPayableHintFromOrderRow($order);
+                $refundAmount = OrderPayableSplit::leadFeeOnAccept($hint > 0 ? $hint : null);
+                $this->logLeadFeeCancelRefund($dbConnection, $orderId, $driverId, 'resolved refund from fallback leadFeeOnAccept (no matching withdraw row)', [
+                    'payable_hint' => $hint,
+                    'refund_amount' => $refundAmount,
+                ], $refundAmount > 0 ? 'info' : 'warning');
+            }
+
+            if ($refundAmount === null || $refundAmount <= 0) {
+                $hint = $this->resolveOrderPayableHintFromOrderRow($order);
+                $this->logLeadFeeCancelRefund($dbConnection, $orderId, $driverId, 'abort: refund amount is zero — no wallet transaction will be created', [
+                    'payable_hint' => $hint,
+                    'cash_to_be_collected' => $order->cash_to_be_collected ?? null,
+                    'sync_order_id' => $order->sync_order_id ?? null,
+                    'order_cost' => $order->order_cost ?? null,
+                ], 'warning');
+
+                return;
+            }
+
+            $agent = Agent::on($dbConnection)->find($driverId);
+            if (!$agent) {
+                $this->logLeadFeeCancelRefund($dbConnection, $orderId, $driverId, 'abort: agent row not found — cannot credit wallet', [
+                    'refund_amount' => $refundAmount,
+                ], 'warning');
+
+                return;
+            }
+            $agent->load('wallet');
+            if (!$agent->wallet) {
+                $this->logLeadFeeCancelRefund($dbConnection, $orderId, $driverId, 'abort: agent has no wallet — cannot deposit refund', [
+                    'refund_amount' => $refundAmount,
+                    'agent_found' => true,
+                ], 'warning');
+
+                return;
+            }
+
+            $deposit = $agent->wallet->depositFloat($refundAmount, [
+                'type' => 'order_cancel_lead_fee_refund',
+                'order_id' => (string) $orderId,
+                'description' => __('Refund of lead fee on order cancel'),
+                'refunded_lead_fee' => (string) $refundAmount,
+            ]);
+            $this->logLeadFeeCancelRefund($dbConnection, $orderId, $driverId, 'success: lead fee refund deposited to wallet', [
+                'refund_amount' => $refundAmount,
+                'wallet_transaction_id' => $deposit->id ?? null,
+                'wallet_id' => $deposit->wallet_id ?? ($agent->wallet->id ?? null),
+            ], 'info');
+        } catch (\Throwable $e) {
+            Log::warning('Lead fee refund on order cancel: exception (no wallet transaction)', [
+                'event' => 'lead_fee_cancel_refund',
+                'db_connection' => $dbConnection,
+                'order_id' => $orderId,
+                'driver_id' => $driverId,
+                'error' => $e->getMessage(),
+                'exception_class' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+        } finally {
+            config(['database.default' => $previousDefault]);
+            if (app()->bound(DatabaseServiceInterface::class)) {
+                app()->forgetInstance(DatabaseServiceInterface::class);
+            }
+        }
+    }
+
+    /**
+     * Structured logs for lead-fee refund on order-panel cancel (wallet / transactions table).
+     *
+     * @param  array<string, mixed>  $context
+     */
+    protected function logLeadFeeCancelRefund(string $dbConnection, int $orderId, ?int $driverId, string $message, array $context = [], string $level = 'info'): void
+    {
+        $payload = array_merge([
+            'event' => 'lead_fee_cancel_refund',
+            'db_connection' => $dbConnection,
+            'order_id' => $orderId,
+            'driver_id' => $driverId,
+        ], $context);
+
+        if ($level === 'warning') {
+            Log::warning($message, $payload);
+        } else {
+            Log::info($message, $payload);
+        }
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function agentPayableTypes(): array
+    {
+        return array_values(array_unique([
+            Agent::class,
+            'App\Model\Agent',
+            ltrim(Agent::class, '\\'),
+        ]));
+    }
+
+    /**
+     * Idempotency: prior refund deposit for this order.
+     */
+    protected function walletRefundAlreadyPosted(string $dbConnection, int $driverId, int $orderId): bool
+    {
+        $candidates = WalletTransaction::on($dbConnection)
+            ->whereIn('payable_type', $this->agentPayableTypes())
+            ->where('payable_id', $driverId)
+            ->where('type', 'deposit')
+            ->where('meta->type', 'order_cancel_lead_fee_refund')
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get();
+
+        foreach ($candidates as $row) {
+            $meta = is_array($row->meta) ? $row->meta : [];
+            if ($this->metaOrderIdMatches($meta, $orderId)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Find withdraw row where meta.type matches and meta.order_id matches (string or int in JSON).
+     */
+    protected function findLeadFeeWithdrawForOrder(string $dbConnection, int $driverId, int $orderId, string $metaType): ?WalletTransaction
+    {
+        $rows = WalletTransaction::on($dbConnection)
+            ->whereIn('payable_type', $this->agentPayableTypes())
+            ->where('payable_id', $driverId)
+            ->where('type', 'withdraw')
+            ->where('meta->type', $metaType)
+            ->orderByDesc('id')
+            ->limit(200)
+            ->get();
+
+        foreach ($rows as $row) {
+            $meta = is_array($row->meta) ? $row->meta : [];
+            if ($this->metaOrderIdMatches($meta, $orderId)) {
+                return $row;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $meta
+     */
+    protected function metaOrderIdMatches(array $meta, int $orderId): bool
+    {
+        if (!array_key_exists('order_id', $meta)) {
+            return false;
+        }
+        $v = $meta['order_id'];
+
+        return (string) $v === (string) $orderId || (int) $v === $orderId;
+    }
+
+    protected function resolveOrderPayableHintFromOrderRow(object $order): float
+    {
+        $c = (float) ($order->cash_to_be_collected ?? 0);
+        if ($c > 0) {
+            return round($c, 2);
+        }
+        $syncId = (int) ($order->sync_order_id ?? 0);
+        if ($syncId > 0) {
+            $p = OrderPayableSplit::resolvePanelPayableAmount($syncId);
+            if ($p > 0) {
+                return $p;
+            }
+        }
+
+        return round(max(0, (float) ($order->order_cost ?? 0)), 2);
+    }
 }

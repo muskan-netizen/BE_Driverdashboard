@@ -23,7 +23,7 @@ class CheckClient
     {
         $url = Request::url();
         $new_url = str_replace(array('http://', '.test.com/login'), '', $url);
-        $database = 'my_database';
+        $database = 'dispatcher';
         $client = Cache::get($database);
         $database_name = '';
         if (isset($client)) {
@@ -40,11 +40,11 @@ class CheckClient
         if (isset($database_name)) {
             $default = [
                 'driver' => env('DB_CONNECTION', 'mysql'),
-                'host' => env('DB_HOST'),
-                'port' => env('DB_PORT'),
+                'host' => config('database.connections.mysql.host'),
+                'port' => config('database.connections.mysql.port'),
                 'database' => $database_name,
-                'username' => env('DB_USERNAME'),
-                'password' => env('DB_PASSWORD'),
+                'username' => config('database.connections.mysql.username'),
+                'password' => config('database.connections.mysql.password'),
                 'charset' => 'utf8mb4',
                 'collation' => 'utf8mb4_unicode_ci',
                 'prefix' => '',

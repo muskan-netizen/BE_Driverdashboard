@@ -40,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(Request $request)
     {
         \Log::info('app_url: '.URL::current());
+<<<<<<< HEAD
 
         // Skip ALL database operations for local environment during bootstrap
         if(env('APP_ENV') === 'local') {
@@ -53,6 +54,10 @@ class AppServiceProvider extends ServiceProvider
         }
 
         if(env('APP_ENV') != 'local') {
+=======
+        $this->connectDynamicDb($request);
+        if(config('app.env') != 'local') {
+>>>>>>> origin/grocery_demo_delivery_production
             \URL::forceScheme('https');
         }
 

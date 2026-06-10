@@ -18,3 +18,4 @@ npm-debug.log
 yarn-error.log
 composer.lock
 /config/laravel5-phumbor.php
+public/fcm-service-account.json

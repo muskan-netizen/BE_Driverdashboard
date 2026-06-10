@@ -264,8 +264,11 @@ http://192.168.100.211:8888/unsafe/fit-in/90x50/https://royodelivery-assets.s3.u
             @php
                     $clientPreference = \App\Model\ClientPreference::select('id', 'theme')->where('id', '>', 0)->first();
 
+                    // Default logo so $image is always defined (client may have no logo set locally)
+                    $image = asset('assets/images/logo-dark.png');
+
                     // $urlImg = URL::to('/').'images/users/user-1.jpg';
-                    if(isset(Auth::user()->dark_logo) && $clientPreference->theme == 'dark'){
+                    if(isset(Auth::user()->dark_logo) && optional($clientPreference)->theme == 'dark'){
                         if(is_azureEnable()){
 
                             $image =  getAzureUrl().Auth::user()->dark_logo;

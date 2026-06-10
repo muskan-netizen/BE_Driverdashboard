@@ -40,30 +40,19 @@ class AppServiceProvider extends ServiceProvider
     public function boot(Request $request)
     {
         \Log::info('app_url: '.URL::current());
-<<<<<<< HEAD
-
-        // Skip ALL database operations for local environment during bootstrap
-        if(env('APP_ENV') === 'local') {
-            Builder::defaultStringLength(191);
-            return;
-        }
-
-        // Skip dynamic DB connection for local environment during bootstrap
-        if(env('APP_ENV') !== 'local') {
-            $this->connectDynamicDb($request);
-        }
-
-        if(env('APP_ENV') != 'local') {
-=======
         $this->connectDynamicDb($request);
+
         if(config('app.env') != 'local') {
->>>>>>> origin/grocery_demo_delivery_production
             \URL::forceScheme('https');
         }
 
-        // Skip database operations for local environment during bootstrap
-        if(env('APP_ENV') === 'local') {
-            Builder::defaultStringLength(191);
+        Builder::defaultStringLength(191);
+
+        // Skip the heavy DB-backed view sharing during console/bootstrap (artisan
+        // commands, migrations) where no views render and tables may not yet
+        // exist. HTTP requests still fall through so views get the shared vars
+        // (favicon, khalti_api_key, ...) they rely on, in every environment.
+        if ($this->app->runningInConsole()) {
             return;
         }
 

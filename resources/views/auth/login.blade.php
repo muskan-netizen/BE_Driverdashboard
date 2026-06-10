@@ -58,7 +58,7 @@
                                                 <img src="{{'https://imgproxy.royodispatch.com/insecure/fit/90/90/sm/0/plain/'.getAzureUrl().$pic}}" alt="" height="40">
 
                                                     @else
-                                                <img src="{{'https://imgproxy.royodispatch.com/insecure/fit/90/90/sm/0/plain/'.Storage::disk('s3')->url($pic)}}" alt="" height="40">
+                                                <img src="{{ !empty($pic) ? 'https://imgproxy.royodispatch.com/insecure/fit/90/90/sm/0/plain/'.Storage::disk('s3')->url($pic) : '' }}" alt="" height="40">
                                                         
                                                     @endif
                                             </span>
